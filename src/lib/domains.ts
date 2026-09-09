@@ -1,0 +1,33 @@
+export const DOMAINS = [
+  "Evenementiel",
+  "Restauration",
+  "Mode & Accessoires",
+  "Beaute & Soins",
+  "Immobilier",
+  "Business & Entreprise",
+  "Technologie",
+  "Education & Formation",
+  "Sport",
+  "Finance & Fintech",
+  "Sante & Clinique",
+  "Tourisme & Voyage",
+  "E-commerce",
+  "Mariage",
+  "Anniversaire",
+  "Emploi & Recrutement",
+  "Agriculture",
+  "Automobile",
+  "Musique",
+  "Associations",
+  "Religion & Culture",
+  "Services divers",
+] as const;
+
+export const ADAPTIVE_FIELDS: Record<string, string[]> = {
+  Restauration: ["plat", "menu", "livraison", "reservation", "horaires"],
+  Immobilier: ["type de bien", "localisation", "superficie", "chambres"],
+  Automobile: ["marque", "modele", "annee", "kilometrage", "financement"],
+  "Education & Formation": ["formation", "formateur", "duree", "certificat"],
+  Mariage: ["noms", "date", "lieu", "heure", "theme", "dress code"],
+  Evenementiel: ["nom", "date", "heure", "lieu", "invites", "artistes"],
+};

@@ -1,0 +1,178 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  CANCELLED
+  FAILED
+}
+
+enum CreditTransactionType {
+  FREE_GRANT
+  PURCHASE
+  GENERATION
+  REFUND
+  BONUS
+  ADMIN_ADD
+  ADMIN_REMOVE
+  EXPIRATION
+}
+
+enum GenerationStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id                 String              @id @default(cuid())
+  clerkUserId        String              @unique
+  email              String?
+  name               String?
+  role               UserRole            @default(USER)
+  status             UserStatus          @default(ACTIVE)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  creditAccount      CreditAccount?
+  creditBuckets      CreditBucket[]
+  creditTransactions CreditTransaction[]
+  payments           Payment[]
+  generations        Generation[]
+  adminLogs          AdminLog[]          @relation("AdminActorLogs")
+}
+
+model Plan {
+  id             String    @id @default(cuid())
+  code           String    @unique
+  name           String
+  priceFcfa      Int
+  mintAmount     Int
+  durationDays   Int?
+  editableExport Boolean   @default(false)
+  active         Boolean   @default(true)
+  sortOrder      Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  payments       Payment[]
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  planId         String
+  orderId        String        @unique
+  tokenPay       String?       @unique
+  amountFcfa     Int
+  provider       String        @default("MONEY_FUSION")
+  status         PaymentStatus @default(PENDING)
+  rawStatus      String?
+  rawResponse    Json?
+  webhookState   String?
+  creditedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  plan           Plan          @relation(fields: [planId], references: [id])
+  user           User          @relation(fields: [userId], references: [id])
+}
+
+model CreditAccount {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  balance      Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  user         User      @relation(fields: [userId], references: [id])
+}
+
+model CreditBucket {
+  id                 String   @id @default(cuid())
+  userId             String
+  sourceTransactionId String
+  sourceType         CreditTransactionType
+  totalAmount        Int
+  remainingAmount    Int
+  expiresAt          DateTime?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, expiresAt, remainingAmount])
+}
+
+model CreditTransaction {
+  id            String                @id @default(cuid())
+  userId        String
+  type          CreditTransactionType
+  amount        Int
+  balanceBefore Int
+  balanceAfter  Int
+  reference     String?
+  metadata      Json?
+  createdAt     DateTime              @default(now())
+  user          User                  @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Generation {
+  id             String           @id @default(cuid())
+  userId         String
+  mintCost       Int              @default(1)
+  brief          Json
+  artDirection   Json
+  prompt         String
+  model          String
+  rodiCost       Float?
+  status         GenerationStatus @default(PENDING)
+  outputUrl      String?
+  qualityScore   Float?
+  qualityDetails Json?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  user           User             @relation(fields: [userId], references: [id])
+}
+
+model Reference {
+  id              String   @id @default(cuid())
+  domain          String
+  style           String?
+  composition     String?
+  colorPalette    String?
+  typography      String?
+  imageTreatment  String?
+  layout          String?
+  density         String?
+  mood            String?
+  imageUrl        String?
+  tags            String[]
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model AdminLog {
+  id         String   @id @default(cuid())
+  adminUserId String
+  action     String
+  targetType String
+  targetId   String?
+  metadata   Json?
+  createdAt  DateTime @default(now())
+  admin      User     @relation("AdminActorLogs", fields: [adminUserId], references: [id])
+}

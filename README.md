@@ -1,36 +1,59 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+## FlyerMint MVP
 
-## Getting Started
+FlyerMint est un SaaS de creation d'affiches professionnelles avec IA.
 
-First, run the development server:
+Positionnement: **ton directeur artistique IA**, pas juste un generateur d'images.
+
+### Atouts differenciateurs integres
+
+- Questionnaire intelligent par domaine (questions adaptatives)
+- Rule engine business: `1 Mint = 1 affiche`
+- Ledger complet des Mints (FREE_GRANT, PURCHASE, GENERATION, REFUND, etc.)
+- Consommation FEFO (mints expirant bientot consommes d'abord)
+- Paiement Money Fusion avec idempotence webhook
+- Pipeline interne: brief -> art direction -> prompt -> generation -> quality score
+- Monitoring cout RODI (objectif 10-20 par affiche)
+- Base Admin separee et protegee cote serveur
+
+## Stack
+
+- Next.js 16 (App Router)
+- TypeScript
+- Tailwind CSS
+- Clerk
+- Prisma + PostgreSQL
+- Zod
+
+## Setup
+
+1) Installer les dependances
+
+```bash
+npm install
+```
+
+2) Configurer les variables:
+
+```bash
+cp .env.example .env
+```
+
+3) Migrer la base:
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+npm run db:seed
+```
+
+4) Lancer:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Notes importantes
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Ne jamais exposer de secret dans le frontend ou les logs.
+- `/payment/success` n'accorde jamais des Mints sans verification serveur.
+- Les endpoints admin exigent un role admin cote serveur.
