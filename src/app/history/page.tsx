@@ -45,7 +45,7 @@ export default async function HistoryPage() {
           {transactions.map((t) => (
             <div key={t.id} className="rounded bg-white/5 p-3">
               <p>{t.type} | {t.amount > 0 ? `+${t.amount}` : t.amount} Mint</p>
-              <p className="text-white/70">Solde: {t.balanceBefore} -> {t.balanceAfter}</p>
+              <p className="text-white/70">Solde: {t.balanceBefore} {"->"} {t.balanceAfter}</p>
             </div>
           ))}
           {transactions.length === 0 && <p className="text-white/70">Aucune transaction.</p>}
