@@ -39,3 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# inspiration binaries (principles live in src/lib/inspiration.ts)
+docs/inspirations/*.pdf
+docs/inspirations/*.docx

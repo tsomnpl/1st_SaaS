@@ -1,8 +1,10 @@
-Place tes sources d'inspiration PDF ici.
+Les fichiers d'inspiration servent UNIQUEMENT au moteur interne.
 
-Exemples:
+- Ne jamais les afficher sur l'accueil.
+- Ne jamais copier une affiche, une mise en page ou un visuel.
+- S'en servir pour: hierarchie, contraste, marges, CTA, style par domaine.
+
+Fichiers attendus (non versionnes s'ils sont trop lourds):
 - `references.pdf`
-- `les-bases-du-design-by-lpt.pdf`
-- `catalogue-affiches.pdf`
-
-Ne commit pas de documents si tu n'as pas les droits d'utilisation.
+- `catalogue-analyse-affiches.docx`
+- `bases-du-design-lpt.pdf`

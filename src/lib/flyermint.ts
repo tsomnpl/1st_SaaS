@@ -102,9 +102,7 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "CTA calibre pour conversion",
       "structure premium reutilisable multi-format",
       "adaptation domaine automatique",
-      "bibliotheque d'inspiration contextualisee par domaine",
       "coherence visuelle multi-campagne",
-      "architecture compatible brand kit evolutif",
     ],
   };
 }
@@ -144,7 +142,9 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
       ? "Use the user image as the primary subject. Do not replace the subject."
       : "Create a coherent primary subject matching the brief.",
     "Do not invent business details.",
-    "Do not copy references directly; keep original composition.",
+    "Do not copy any reference poster, layout, artwork, or composition from inspiration files.",
+    "Use design laws only: hierarchy, contrast, alignment, proximity, repetition, balance, white space, readable CTA.",
+    "If the user provided a photo, logo, or product image, it MUST remain the main subject.",
     "Prioritize readability over visual effects.",
   ]
     .filter(Boolean)

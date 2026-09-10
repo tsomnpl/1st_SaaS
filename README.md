@@ -61,18 +61,12 @@ npm run dev
 
 ## Money Fusion (URLs a configurer)
 
-Remplace `https://TON-DOMAINE` par ton domaine Vercel de production:
+Domaine de production actuel:
 
-- Adresse du site: `https://TON-DOMAINE`
-- Return URL: `https://TON-DOMAINE/payment/success`
-- Webhook URL: `https://TON-DOMAINE/api/webhooks/moneyfusion`
+- Adresse du site: `https://flyermint-t.vercel.app`
+- Return URL: `https://flyermint-t.vercel.app/payment/success`
+- Webhook URL: `https://flyermint-t.vercel.app/api/webhooks/moneyfusion`
 
-## References inspiration (PDF)
+Dans Vercel, `NEXT_PUBLIC_APP_URL` et `MONEY_FUSION_WEBHOOK_URL` doivent pointer vers ces URLs.
 
-Pour centraliser tes documents d'inspiration:
-
-1. Cree le dossier `docs/inspirations/`
-2. Depose ton fichier `references.pdf` dedans
-3. Ajoute si besoin d'autres PDF:
-   - `docs/inspirations/les-bases-du-design-by-lpt.pdf`
-   - `docs/inspirations/catalogue-affiches.pdf`
+Les references (PDF / catalogue) restent internes. Elles nourrissent les principes de composition, jamais une copie d'affiche pour le client.

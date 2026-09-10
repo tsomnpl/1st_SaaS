@@ -1,13 +1,19 @@
-import { prisma } from "@/lib/prisma";
 import { PaymentButton } from "@/components/payment-button";
+import { prisma } from "@/lib/prisma";
+import { OFFICIAL_PLANS } from "@/lib/plans";
 import { ensureOfficialPlans } from "@/server/plans";
 
+type PricingPlan = {
+  code: string;
+  name: string;
+  priceFcfa: number;
+  mintAmount: number;
+  durationDays: number | null;
+  editableExport: boolean;
+};
+
 export default async function PricingPage() {
-  await ensureOfficialPlans();
-  const plans = await prisma.plan.findMany({
-    where: { active: true, priceFcfa: { gt: 0 } },
-    orderBy: { sortOrder: "asc" },
-  });
+  const plans = await loadPlans();
 
   return (
     <div className="space-y-8">
@@ -22,7 +28,7 @@ export default async function PricingPage() {
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
         {plans.map((plan) => (
-          <article key={plan.id} className="flex flex-col rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
+          <article key={plan.code} className="flex flex-col rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
             <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
             <p className="mt-3 text-3xl font-semibold text-[#20C997]">
               {plan.priceFcfa.toLocaleString("fr-FR")} FCFA
@@ -44,4 +50,28 @@ export default async function PricingPage() {
       </div>
     </div>
   );
+}
+
+async function loadPlans(): Promise<PricingPlan[]> {
+  try {
+    await ensureOfficialPlans();
+    const rows = await prisma.plan.findMany({
+      where: { active: true, priceFcfa: { gt: 0 } },
+      orderBy: { sortOrder: "asc" },
+    });
+    if (rows.length > 0) {
+      return rows.map((plan) => ({
+        code: plan.code,
+        name: plan.name,
+        priceFcfa: plan.priceFcfa,
+        mintAmount: plan.mintAmount,
+        durationDays: plan.durationDays,
+        editableExport: plan.editableExport,
+      }));
+    }
+  } catch {
+    // Affiche les offres meme si la base est indisponible.
+  }
+
+  return OFFICIAL_PLANS.filter((plan) => plan.priceFcfa > 0);
 }
