@@ -127,7 +127,9 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
       where: { id: payment.id },
       data: {
         rawStatus: remoteStatus,
-        rawResponse: (payload ?? null) as Prisma.JsonObject | null,
+        rawResponse: payload
+          ? (payload as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
       },
     });
     return payment;
@@ -160,7 +162,9 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
       data: {
         status: PaymentStatus.COMPLETED,
         rawStatus: remoteStatus,
-        rawResponse: (payload ?? null) as Prisma.JsonObject | null,
+        rawResponse: payload
+          ? (payload as Prisma.InputJsonValue)
+          : Prisma.JsonNull,
         creditedAt: new Date(),
       },
     });

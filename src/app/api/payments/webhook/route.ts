@@ -4,8 +4,8 @@ import { confirmPaymentByToken } from "@/server/payments";
 export async function POST(request: Request) {
   try {
     const body = (await request.json()) as Record<string, unknown>;
-    const token =
-      String(body.tokenPay ?? body.token ?? body.data?.token ?? "").trim();
+    const nestedData = isRecord(body.data) ? body.data : undefined;
+    const token = String(body.tokenPay ?? body.token ?? nestedData?.token ?? "").trim();
 
     if (!token) {
       return NextResponse.json({ ok: false, error: "TOKEN_MISSING" }, { status: 400 });
@@ -23,4 +23,8 @@ export async function POST(request: Request) {
       { status: 400 },
     );
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
