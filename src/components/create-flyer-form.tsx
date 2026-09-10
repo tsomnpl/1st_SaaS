@@ -134,13 +134,25 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
 
       {error && <p className="text-sm text-red-300">{error}</p>}
       {result && (
-        <div className="card space-y-2 p-5 text-sm">
-          <p className="text-emerald-300">Generation creee: {result.generationId}</p>
-          <p>Modele: {result.model}</p>
-          <p>Cout RODI estime: {result.costRodi}</p>
-          <p>Output URL: {result.outputUrl ?? "non fournie par le modele"}</p>
-          <p>Differenciateurs: {(result.differentiators ?? []).join(" | ")}</p>
-          <p>Quality score global: {result.quality?.overall_score ?? "N/A"}</p>
+        <div className="card space-y-3 p-5">
+          <p className="text-[#20C997]">Ton affiche est prete.</p>
+          {result.outputUrl ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={result.outputUrl} alt="Affiche generee" className="w-full rounded-xl border border-white/10" />
+              <a
+                href={result.outputUrl}
+                download
+                className="inline-flex rounded-full bg-[#20C997] px-4 py-2 text-sm font-semibold text-[#111827]"
+              >
+                Telecharger
+              </a>
+            </>
+          ) : (
+            <p className="text-sm text-white/70">
+              La generation est enregistree. Le visuel n&apos;a pas encore d&apos;image a telecharger.
+            </p>
+          )}
         </div>
       )}
     </form>

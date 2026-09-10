@@ -3,6 +3,8 @@
 :root {
   --background: #111827;
   --foreground: #ffffff;
+  --mint: #20c997;
+  --mist: #dffaf0;
 }
 
 @theme inline {
@@ -12,19 +14,33 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(32, 201, 151, 0.16), transparent 50%),
+    radial-gradient(900px 420px at 100% 0%, rgba(223, 250, 240, 0.08), transparent 45%),
+    var(--background);
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
 
 .card {
-  @apply rounded-2xl border border-white/10 bg-white/5;
+  @apply rounded-2xl border border-white/10 bg-white/5 backdrop-blur-xl;
+}
+
+@keyframes floaty {
+  0%,
+  100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+.animate-float {
+  animation: floaty 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: floaty 7s ease-in-out infinite 0.8s;
 }

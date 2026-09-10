@@ -16,14 +16,14 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <section className="card p-6">
         <p className="text-sm text-white/70">Solde actuel</p>
-        <h1 className="mt-1 text-3xl font-bold text-emerald-300">
+        <h1 className="mt-1 text-3xl font-bold text-[#20C997]">
           {balance} Mints = {balance} affiches restantes
         </h1>
         <div className="mt-4 flex gap-3">
-          <Link href="/create" className="rounded bg-emerald-500 px-4 py-2 font-medium text-slate-900">
+          <Link href="/create" className="rounded-full bg-[#20C997] px-4 py-2 font-medium text-[#111827]">
             Creer une affiche
           </Link>
-          <Link href="/pricing" className="rounded border border-white/20 px-4 py-2">
+          <Link href="/pricing" className="rounded-full border border-white/20 px-4 py-2">
             Acheter des Mints
           </Link>
         </div>

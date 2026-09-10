@@ -127,7 +127,7 @@ function selectImageModel(brief: CreateBriefInput, finalPrompt: string) {
     return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "openai/gpt-image-2";
   }
   if (textHeavyFields >= 6) {
-    return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-2";
+    return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "google/gemini-3-pro-image";
   }
   if (premiumKeywords.some((k) => promptText.includes(k))) {
     return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "google/gemini-3-pro-image";

@@ -11,16 +11,16 @@ export default async function PaymentSuccessPage({
 
   return (
     <div className="card mx-auto max-w-2xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-emerald-300">Paiement en traitement</h1>
+      <h1 className="text-2xl font-bold text-[#20C997]">Paiement recu</h1>
       <p className="text-white/80">
-        Merci. La confirmation finale des Mints se fait cote serveur via webhook/verification.
+        Merci. Tes Mints seront credites automatiquement des que le paiement est confirme.
+        Tu peux revenir au dashboard dans un instant.
       </p>
-      <p className="text-sm text-white/70">
-        orderId: {params.orderId ?? "N/A"} | token: {params.token ?? "N/A"}
-      </p>
-      <p className="text-sm text-white/70">
-        Cette page ne valide jamais seule le paiement.
-      </p>
+      {params.orderId || params.token ? (
+        <p className="text-sm text-white/50">
+          Reference: {params.orderId ?? params.token}
+        </p>
+      ) : null}
       <Link href="/dashboard" className="inline-block rounded bg-emerald-500 px-4 py-2 font-semibold text-slate-900">
         Retour au dashboard
       </Link>
