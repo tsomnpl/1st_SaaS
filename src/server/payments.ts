@@ -59,10 +59,10 @@ export async function initMoneyFusionPayment(params: {
     numeroSend: params.numeroSend,
     nomclient: params.nomclient,
     personal_Info: payment.orderId,
-    return_url: `${env.NEXT_PUBLIC_APP_URL}/payment/success?orderId=${payment.orderId}`,
+    return_url: `${env.NEXT_PUBLIC_APP_URL}/payment/success`,
     webhook_url:
       env.MONEY_FUSION_WEBHOOK_URL ??
-      `${env.NEXT_PUBLIC_APP_URL}/api/payments/webhook`,
+      `${env.NEXT_PUBLIC_APP_URL}/api/webhooks/moneyfusion`,
   };
 
   const endpoint = `${env.MONEY_FUSION_API_URL}/paiement`;
@@ -121,6 +121,16 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   }
 
   const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
+  const payloadOrderId = getStringField(payload, ["orderId", "order_id", "personal_Info"]);
+  const payloadAmount = getNumericField(payload, ["amount", "totalPrice", "montant"]);
+
+  if (payloadOrderId && !String(payloadOrderId).includes(payment.orderId)) {
+    throw new Error("PAYMENT_ORDER_MISMATCH");
+  }
+  if (typeof payloadAmount === "number" && payloadAmount > 0 && payloadAmount !== payment.amountFcfa) {
+    throw new Error("PAYMENT_AMOUNT_MISMATCH");
+  }
+
   const shouldComplete = isCompletedStatus(remoteStatus);
   if (!shouldComplete) {
     await prisma.payment.update({
@@ -171,4 +181,35 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   });
 
   return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+}
+
+function getStringField(
+  payload: Record<string, unknown> | undefined,
+  keys: string[],
+) {
+  if (!payload) return undefined;
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (Array.isArray(value) && value.length > 0) {
+      return JSON.stringify(value);
+    }
+  }
+  return undefined;
+}
+
+function getNumericField(
+  payload: Record<string, unknown> | undefined,
+  keys: string[],
+) {
+  if (!payload) return undefined;
+  for (const key of keys) {
+    const value = payload[key];
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string" && value.trim()) {
+      const parsed = Number(value);
+      if (Number.isFinite(parsed)) return parsed;
+    }
+  }
+  return undefined;
 }

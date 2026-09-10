@@ -12,13 +12,15 @@ type Result = {
   quality?: Record<string, number>;
 };
 
-export function CreateFlyerForm() {
+export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
+  const [confirmMint, setConfirmMint] = useState(false);
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
+  const canGenerate = mintBalance > 0 && confirmMint;
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -108,13 +110,27 @@ export function CreateFlyerForm() {
         </div>
       )}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="rounded bg-emerald-500 px-4 py-2 font-semibold text-slate-900 disabled:opacity-60"
-      >
-        {loading ? "Generation en cours..." : "Generer mon affiche - 1 Mint"}
-      </button>
+      <label className="flex items-center gap-2 text-sm text-white/80">
+        <input
+          type="checkbox"
+          checked={confirmMint}
+          onChange={(event) => setConfirmMint(event.target.checked)}
+        />
+        Je confirme utiliser 1 Mint pour cette generation.
+      </label>
+      {mintBalance <= 0 ? (
+        <p className="text-sm text-amber-300">
+          Solde insuffisant. Recharge tes Mints depuis la page tarifs pour generer.
+        </p>
+      ) : (
+        <button
+          type="submit"
+          disabled={loading || !canGenerate}
+          className="rounded bg-emerald-500 px-4 py-2 font-semibold text-slate-900 disabled:opacity-60"
+        >
+          {loading ? "Generation en cours..." : "Generer mon affiche - 1 Mint"}
+        </button>
+      )}
 
       {error && <p className="text-sm text-red-300">{error}</p>}
       {result && (

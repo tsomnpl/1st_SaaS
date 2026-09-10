@@ -57,3 +57,22 @@ npm run dev
 - Ne jamais exposer de secret dans le frontend ou les logs.
 - `/payment/success` n'accorde jamais des Mints sans verification serveur.
 - Les endpoints admin exigent un role admin cote serveur.
+- Webhook Money Fusion public recommande: `/api/webhooks/moneyfusion`.
+
+## Money Fusion (URLs a configurer)
+
+Remplace `https://TON-DOMAINE` par ton domaine Vercel de production:
+
+- Adresse du site: `https://TON-DOMAINE`
+- Return URL: `https://TON-DOMAINE/payment/success`
+- Webhook URL: `https://TON-DOMAINE/api/webhooks/moneyfusion`
+
+## References inspiration (PDF)
+
+Pour centraliser tes documents d'inspiration:
+
+1. Cree le dossier `docs/inspirations/`
+2. Depose ton fichier `references.pdf` dedans
+3. Ajoute si besoin d'autres PDF:
+   - `docs/inspirations/les-bases-du-design-by-lpt.pdf`
+   - `docs/inspirations/catalogue-affiches.pdf`

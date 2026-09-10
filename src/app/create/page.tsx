@@ -13,7 +13,7 @@ export default async function CreatePage() {
       <p className="text-white/80">
         Solde: <span className="font-semibold text-emerald-300">{balance} Mints</span>.
       </p>
-      <CreateFlyerForm />
+      <CreateFlyerForm mintBalance={balance} />
     </div>
   );
 }

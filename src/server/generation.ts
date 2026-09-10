@@ -39,7 +39,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
-    const result = await generateWithRodium(prompt);
+    const result = await generateWithRodium({ prompt, brief });
     const parsedOutput = safeJsonParse(result.rawText);
     const outputUrl = String(
       (parsedOutput && (parsedOutput.imageUrl as string)) || "",

@@ -27,12 +27,18 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col bg-slate-950 text-white">
-          <header className="border-b border-white/10">
+          <header className="sticky top-0 z-40 border-b border-white/10 bg-slate-950/70 backdrop-blur-xl">
             <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-4">
               <Link href="/" className="text-xl font-bold text-emerald-400">
                 FlyerMint
               </Link>
-              <nav className="flex items-center gap-4 text-sm">
+              <nav className="flex items-center gap-4 text-sm text-white/80">
+                <Link href="/#creations" className="hover:text-emerald-300">
+                  Creations
+                </Link>
+                <Link href="/#comment-ca-marche" className="hover:text-emerald-300">
+                  Comment ca marche
+                </Link>
                 <Link href="/pricing" className="hover:text-emerald-300">
                   Tarifs
                 </Link>
@@ -55,6 +61,12 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
                     </button>
                   </SignInButton>
                 </SignedOut>
+                <Link
+                  href="/create"
+                  className="rounded border border-emerald-300/60 bg-emerald-400/10 px-3 py-1.5 font-medium text-emerald-200 hover:bg-emerald-400/20"
+                >
+                  Creer une affiche
+                </Link>
               </nav>
             </div>
           </header>
