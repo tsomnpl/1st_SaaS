@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeaderHost } from "@/components/site-header-host";
+import { CookieBanner } from "@/components/legal/cookie-banner";
+import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -16,6 +18,8 @@ export function AuthChrome({ children }: { children: ReactNode }) {
         <SiteHeaderHost />
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
         <SiteFooter />
+        <CookieBanner />
+        <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
       </body>
     </html>
   );

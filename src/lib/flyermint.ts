@@ -2,16 +2,16 @@ import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
-const imageRef = z
-  .string()
-  .refine(
-    (value) =>
-      value.startsWith("https://") ||
-      value.startsWith("http://") ||
-      value.startsWith("data:image/"),
-    "INVALID_IMAGE",
-  )
-  .optional();
+function isSafeImageRef(value: string) {
+  if (value.startsWith("https://")) return true;
+  const match = value.match(/^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) return false;
+  const padding = (match[2].match(/=+$/) ?? [""])[0].length;
+  const bytes = Math.floor((match[2].replace(/\s/g, "").length * 3) / 4) - padding;
+  return bytes > 0 && bytes <= 2_000_000;
+}
+
+const imageRef = z.string().refine(isSafeImageRef, "INVALID_IMAGE").optional();
 
 export const createBriefSchema = z.object({
   visualType: z.string().min(2),

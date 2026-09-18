@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import Link from "next/link";
+import { pageTitle } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: pageTitle("Profil"),
+  robots: { index: false, follow: false },
+};
 import { UserButton } from "@clerk/nextjs";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";

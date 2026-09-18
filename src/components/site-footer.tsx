@@ -27,6 +27,12 @@ export function SiteFooter() {
           <Link href="/sign-up" className="hover:text-[#6D28D9]">
             Inscription
           </Link>
+          <Link href="/privacy" className="hover:text-[#6D28D9]">
+            Confidentialité
+          </Link>
+          <Link href="/terms" className="hover:text-[#6D28D9]">
+            CGU
+          </Link>
         </div>
       </div>
     </footer>

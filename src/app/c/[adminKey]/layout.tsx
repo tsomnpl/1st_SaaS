@@ -1,9 +1,15 @@
 import type { ReactNode } from "react";
-import { notFound, redirect } from "next/navigation";
+import { forbidden, notFound, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { getAdminBasePath, getAdminPrivatePath } from "@/lib/env";
 import { requireAdminUser } from "@/lib/auth";
+import { pageTitle } from "@/lib/seo";
+
+export const metadata = {
+  title: pageTitle("Administration"),
+  robots: { index: false, follow: false },
+};
 
 type Params = Promise<{ adminKey: string }>;
 
@@ -27,7 +33,7 @@ export default async function AdminLayout({
   try {
     await requireAdminUser();
   } catch {
-    notFound();
+    forbidden();
   }
 
   return <AdminShell basePath={getAdminBasePath()}>{children}</AdminShell>;

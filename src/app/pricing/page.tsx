@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
+import { pageTitle } from "@/lib/seo";
 import { PricingGrid } from "@/components/pricing/pricing-grid";
+
+export const metadata: Metadata = {
+  title: pageTitle("Tarifs"),
+  description: "Packs de Mints FlyerMint. 1 Mint = 1 affiche. Sans fausse réduction.",
+};
 import { prisma } from "@/lib/prisma";
 import { OFFICIAL_PLANS, paidPlans } from "@/lib/plans";
 import { ensureOfficialPlans } from "@/server/plans";

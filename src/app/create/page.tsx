@@ -1,4 +1,11 @@
+import type { Metadata } from "next";
 import { CreateFlyerForm } from "@/components/create-flyer-form";
+import { pageTitle } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: pageTitle("Créer une affiche"),
+  robots: { index: false, follow: false },
+};
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { userHasEditableExport } from "@/server/generation";

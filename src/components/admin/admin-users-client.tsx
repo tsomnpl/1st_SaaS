@@ -23,6 +23,8 @@ export function AdminUsersClient({ users }: { users: UserRow[] }) {
   );
 
   async function adjust(targetUserId: string, amount: number) {
+    const label = amount > 0 ? `Ajouter ${amount} Mint(s)` : `Retirer ${Math.abs(amount)} Mint(s)`;
+    if (!window.confirm(`${label} ? Motif : ${reason}`)) return;
     await fetch("/api/admin/mints/adjust", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -32,6 +34,7 @@ export function AdminUsersClient({ users }: { users: UserRow[] }) {
   }
 
   async function setStatus(targetUserId: string, status: "ACTIVE" | "SUSPENDED") {
+    if (!window.confirm(`${status === "SUSPENDED" ? "Suspendre" : "Réactiver"} cet utilisateur ?`)) return;
     await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },

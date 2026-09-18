@@ -9,6 +9,7 @@ export default function AdminSettingsPage() {
         <p>Chemin studio : {getAdminBasePath()}</p>
         <p>Return URL paiement : {getAppUrl()}/payment/success</p>
         <p>Webhook : {getAppUrl()}/api/webhooks/moneyfusion</p>
+        <p>ADMIN_EMAIL : configuré côté serveur uniquement (jamais affiché).</p>
       </article>
     </div>
   );

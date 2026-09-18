@@ -3,6 +3,8 @@ import Link from "next/link";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { BrandLogo } from "@/components/brand/logo";
 import { SiteFooter } from "@/components/site-footer";
+import { CookieBanner } from "@/components/legal/cookie-banner";
+import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 
 const jakarta = Plus_Jakarta_Sans({
   variable: "--font-jakarta",
@@ -43,6 +45,8 @@ export function PublicChrome({ children }: { children: ReactNode }) {
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
         <SiteFooter />
+        <CookieBanner />
+        <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
       </body>
     </html>
   );

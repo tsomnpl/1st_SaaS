@@ -1,6 +1,8 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { applySecurityHeaders } from "@/lib/security-headers";
+import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 const PUBLIC_EXACT = new Set([
   "/",
@@ -9,6 +11,9 @@ const PUBLIC_EXACT = new Set([
   "/sign-in",
   "/sign-up",
   "/payment/success",
+  "/privacy",
+  "/terms",
+  "/forbidden",
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -49,23 +54,69 @@ function isProtectedPath(pathname: string) {
   ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
 }
 
+function withSecurity(response: NextResponse, req: NextRequest) {
+  applySecurityHeaders(response.headers);
+  if (process.env.NODE_ENV === "production") {
+    const proto = req.headers.get("x-forwarded-proto");
+    const host = req.headers.get("host") ?? "";
+    const local = host.startsWith("localhost") || host.startsWith("127.");
+    if (proto === "http" && !local) {
+      const httpsUrl = req.nextUrl.clone();
+      httpsUrl.protocol = "https:";
+      return NextResponse.redirect(httpsUrl, 308);
+    }
+  }
+  return response;
+}
+
+function applySensitiveRateLimit(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  const rules: Array<{ match: (path: string) => boolean; limit: number; windowMs: number; name: string }> = [
+    { match: (path) => path === "/api/generate", limit: 8, windowMs: 60_000, name: "generate" },
+    { match: (path) => path === "/api/payments/init", limit: 8, windowMs: 60_000, name: "pay-init" },
+    { match: (path) => path.startsWith("/api/admin/"), limit: 40, windowMs: 60_000, name: "admin" },
+    { match: (path) => path.includes("webhook"), limit: 80, windowMs: 60_000, name: "webhook" },
+  ];
+  for (const rule of rules) {
+    if (!rule.match(pathname)) continue;
+    const result = rateLimit({
+      key: clientKey(req, rule.name),
+      limit: rule.limit,
+      windowMs: rule.windowMs,
+    });
+    if (!result.ok) {
+      return NextResponse.json(
+        { ok: false, error: "RATE_LIMITED" },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(result.retryAfterMs / 1000)) } },
+      );
+    }
+  }
+  return null;
+}
+
 async function protect(req: NextRequest, userId: string | null) {
+  const limited = applySensitiveRateLimit(req);
+  if (limited) return withSecurity(limited, req);
+
   const adminRedirect = hideObviousAdmin(req);
-  if (adminRedirect) return adminRedirect;
+  if (adminRedirect) return withSecurity(adminRedirect, req);
 
   const { pathname } = req.nextUrl;
   if (isPublicPath(pathname) || !isProtectedPath(pathname)) {
-    return NextResponse.next();
+    return withSecurity(NextResponse.next(), req);
   }
   if (userId) {
-    return NextResponse.next();
+    return withSecurity(NextResponse.next(), req);
   }
   if (isApiPath(pathname)) {
-    return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+    return withSecurity(
+      NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 }),
+      req,
+    );
   }
   const signIn = new URL("/sign-in", req.url);
   signIn.searchParams.set("redirect_url", `${pathname}${req.nextUrl.search}`);
-  return NextResponse.redirect(signIn);
+  return withSecurity(NextResponse.redirect(signIn), req);
 }
 
 const clerkConfigured = Boolean(

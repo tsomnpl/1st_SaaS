@@ -7,6 +7,8 @@ import { BrandLogo } from "@/components/brand/logo";
 
 type Props = {
   mintBalance?: number | null;
+  showAdmin?: boolean;
+  adminHref?: string;
 };
 
 const publicLinks = [
@@ -15,7 +17,7 @@ const publicLinks = [
   { href: "/pricing", label: "Tarifs" },
 ];
 
-export function SiteHeader({ mintBalance = null }: Props) {
+export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = "" }: Props) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -39,6 +41,11 @@ export function SiteHeader({ mintBalance = null }: Props) {
             <Link href="/profile" className="transition hover:text-[#6D28D9]">
               Profil
             </Link>
+            {showAdmin && adminHref ? (
+              <Link href={adminHref} className="transition hover:text-[#6D28D9]">
+                Administration
+              </Link>
+            ) : null}
             {typeof mintBalance === "number" ? (
               <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
                 {mintBalance} Mint{mintBalance > 1 ? "s" : ""}
@@ -101,6 +108,11 @@ export function SiteHeader({ mintBalance = null }: Props) {
               <Link href="/profile" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
                 Profil
               </Link>
+              {showAdmin && adminHref ? (
+                <Link href={adminHref} className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
+                  Administration
+                </Link>
+              ) : null}
             </SignedIn>
             <SignedOut>
               <SignInButton mode="modal">

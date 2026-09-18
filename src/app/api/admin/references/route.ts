@@ -35,9 +35,17 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const payload = referenceSchema.parse(await request.json());
     const created = await prisma.reference.create({ data: payload });
+    await prisma.adminLog.create({
+      data: {
+        adminUserId: admin.id,
+        action: "REFERENCE_ADDED",
+        targetType: "REFERENCE",
+        targetId: created.id,
+      },
+    });
     return NextResponse.json({ ok: true, data: created });
   } catch (error) {
     return NextResponse.json(
@@ -49,11 +57,19 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ ok: false, error: "ID_REQUIRED" }, { status: 400 });
     await prisma.reference.delete({ where: { id } });
+    await prisma.adminLog.create({
+      data: {
+        adminUserId: admin.id,
+        action: "REFERENCE_DELETED",
+        targetType: "REFERENCE",
+        targetId: id,
+      },
+    });
     return NextResponse.json({ ok: true });
   } catch (error) {
     return NextResponse.json(

@@ -61,7 +61,7 @@ export async function POST(request: Request) {
       await tx.adminLog.create({
         data: {
           adminUserId: admin.id,
-          action: status === "SUSPENDED" ? "USER_SUSPEND" : "USER_REACTIVATE",
+          action: status === "SUSPENDED" ? "USER_SUSPENDED" : "USER_REACTIVATED",
           targetType: "USER",
           targetId: body.targetUserId,
           metadata: { reason: body.reason },

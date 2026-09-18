@@ -41,7 +41,7 @@ export async function POST(request: Request) {
       await tx.adminLog.create({
         data: {
           adminUserId: admin.id,
-          action: "MINT_ADJUSTMENT",
+          action: body.amount > 0 ? "ADMIN_ADD_MINT" : "ADMIN_REMOVE_MINT",
           targetType: "USER",
           targetId: body.targetUserId,
           metadata: {

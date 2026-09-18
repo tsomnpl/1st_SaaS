@@ -27,6 +27,8 @@ const envSchema = z.object({
   MONEY_FUSION_WEBHOOK_URL: optionalUrl,
   ADMIN_CLERK_USER_IDS: optionalString,
   ADMIN_PRIVATE_PATH: optionalString,
+  ADMIN_EMAIL: optionalString,
+  NEXT_PUBLIC_ANALYTICS_DOMAIN: optionalString,
 });
 
 export const env = envSchema.parse({
@@ -48,16 +50,11 @@ export const env = envSchema.parse({
   MONEY_FUSION_WEBHOOK_URL: process.env.MONEY_FUSION_WEBHOOK_URL,
   ADMIN_CLERK_USER_IDS: process.env.ADMIN_CLERK_USER_IDS,
   ADMIN_PRIVATE_PATH: process.env.ADMIN_PRIVATE_PATH,
+  ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+  NEXT_PUBLIC_ANALYTICS_DOMAIN: process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN,
 });
 
-export function getAdminClerkIds(): Set<string> {
-  return new Set(
-    (env.ADMIN_CLERK_USER_IDS ?? "")
-      .split(",")
-      .map((v) => v.trim())
-      .filter(Boolean),
-  );
-}
+export { getAdminClerkIds } from "@/lib/admin";
 
 export function getAdminPrivatePath() {
   return env.ADMIN_PRIVATE_PATH?.trim() || "ops-k7m2qx";
