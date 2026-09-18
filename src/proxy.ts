@@ -49,7 +49,6 @@ function isProtectedPath(pathname: string) {
     "/history",
     "/profile",
     "/checkout",
-    "/c/",
     "/api/",
   ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
 }

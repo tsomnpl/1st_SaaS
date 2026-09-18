@@ -1,8 +1,12 @@
+import type { Metadata } from "next";
+
 const SITE = "FlyerMint";
 const SLOGAN = "Créez des visuels qui marquent";
 
-export function pageTitle(name?: string) {
-  return name || `${SITE} — ${SLOGAN}`;
+export function pageTitle(name?: string): Metadata["title"] {
+  return {
+    absolute: name ? `${name} — ${SITE}` : `${SITE} — ${SLOGAN}`,
+  };
 }
 
 export function pageDescription() {

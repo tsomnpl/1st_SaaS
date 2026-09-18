@@ -26,8 +26,14 @@ export default async function AdminLayout({
     notFound();
   }
 
-  const session = await auth();
-  if (!session.userId) {
+  let userId: string | null = null;
+  try {
+    const session = await auth();
+    userId = session.userId;
+  } catch {
+    userId = null;
+  }
+  if (!userId) {
     redirect(`/sign-in?redirect_url=${encodeURIComponent(getAdminBasePath())}`);
   }
 

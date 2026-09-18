@@ -4,6 +4,7 @@ import { pageTitle } from "@/lib/seo";
 export const metadata: Metadata = {
   title: pageTitle("Conditions d’utilisation"),
   description: "Règles d’utilisation de FlyerMint : compte, Mints, générations et paiements.",
+  openGraph: { title: "Conditions d’utilisation — FlyerMint" },
 };
 
 export default function TermsPage() {

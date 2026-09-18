@@ -4,6 +4,7 @@ import { pageTitle } from "@/lib/seo";
 export const metadata: Metadata = {
   title: pageTitle("Confidentialité"),
   description: "Comment FlyerMint traite les données réellement collectées par le service.",
+  openGraph: { title: "Confidentialité — FlyerMint" },
 };
 
 export default function PrivacyPage() {

@@ -1,5 +1,5 @@
-import { NotFoundView } from "@/components/not-found-view";
+import { notFound } from "next/navigation";
 
 export default function UnknownPage() {
-  return <NotFoundView />;
+  notFound();
 }

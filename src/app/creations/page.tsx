@@ -5,6 +5,7 @@ import { pageTitle } from "@/lib/seo";
 export const metadata: Metadata = {
   title: pageTitle("Créations"),
   description: "Exemples d’affiches FlyerMint par domaine.",
+  openGraph: { title: "Créations — FlyerMint" },
 };
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
