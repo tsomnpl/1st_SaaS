@@ -2,6 +2,17 @@ import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
+const imageRef = z
+  .string()
+  .refine(
+    (value) =>
+      value.startsWith("https://") ||
+      value.startsWith("http://") ||
+      value.startsWith("data:image/"),
+    "INVALID_IMAGE",
+  )
+  .optional();
+
 export const createBriefSchema = z.object({
   visualType: z.string().min(2),
   domain: z.enum(DOMAINS),
@@ -27,8 +38,8 @@ export const createBriefSchema = z.object({
   creativeFreedom: z
     .enum(["liberte_totale", "liberte_guidee", "design_tres_precis"])
     .default("liberte_guidee"),
-  mainImageUrl: z.string().url().optional(),
-  logoUrl: z.string().url().optional(),
+  mainImageUrl: imageRef,
+  logoUrl: imageRef,
   adaptiveData: z.record(z.string(), z.string()).default({}),
 });
 
@@ -59,7 +70,7 @@ export type ArtDirection = {
 
 export function buildArtDirection(input: CreateBriefInput): ArtDirection {
   const palette =
-    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#111827", "#20C997", "#FFFFFF"];
+    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#1E293B", "#6D28D9", "#10B981"];
   const inspiration = selectInspirationReferences(input);
 
   return {

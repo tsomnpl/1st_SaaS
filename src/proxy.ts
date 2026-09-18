@@ -1,44 +1,67 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { getAdminPrivatePath } from "@/lib/env";
 
-const isProtectedRoute = createRouteMatcher([
-  "/dashboard(.*)",
-  "/create(.*)",
-  "/history(.*)",
-  "/api/(.*)",
+const PUBLIC_EXACT = new Set([
+  "/",
+  "/pricing",
+  "/creations",
+  "/sign-in",
+  "/sign-up",
+  "/payment/success",
 ]);
 
-const isPublicApiRoute = createRouteMatcher([
-  "/api/webhooks/moneyfusion(.*)",
-  "/api/payments/webhook(.*)",
-]);
+const PUBLIC_PREFIXES = [
+  "/sign-in/",
+  "/sign-up/",
+  "/creations/",
+  "/api/webhooks/moneyfusion",
+  "/api/payments/webhook",
+  "/api/health",
+];
 
-export default clerkMiddleware(async (auth, req) => {
-  const { pathname } = req.nextUrl;
-  const adminPrivatePath = `/${getAdminPrivatePath()}`;
+function isPublicPath(pathname: string) {
+  if (PUBLIC_EXACT.has(pathname)) return true;
+  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+}
 
-  // Hide obvious admin route and force use of private path.
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return NextResponse.redirect(new URL("/", req.url));
-  }
+function isApiPath(pathname: string) {
+  return pathname.startsWith("/api/");
+}
 
-  if (
-    pathname === adminPrivatePath ||
-    pathname.startsWith(`${adminPrivatePath}/`)
-  ) {
-    await auth.protect();
-    return NextResponse.next();
-  }
+export default clerkMiddleware(
+  async (auth, req) => {
+    const { pathname } = req.nextUrl;
 
-  if (isProtectedRoute(req)) {
-    if (isPublicApiRoute(req)) {
+    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+      return NextResponse.redirect(new URL("/", req.url));
+    }
+
+    if (isPublicPath(pathname)) {
       return NextResponse.next();
     }
-    await auth.protect();
-  }
-});
+
+    const { userId } = await auth();
+    if (userId) {
+      return NextResponse.next();
+    }
+
+    if (isApiPath(pathname)) {
+      return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+    }
+
+    const signIn = new URL("/sign-in", req.url);
+    signIn.searchParams.set("redirect_url", `${pathname}${req.nextUrl.search}`);
+    return NextResponse.redirect(signIn);
+  },
+  {
+    signInUrl: "/sign-in",
+    signUpUrl: "/sign-up",
+  },
+);
 
 export const config = {
-  matcher: ["/((?!_next|.*\\..*).*)", "/"],
+  matcher: [
+    "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
+    "/(api|trpc)(.*)",
+  ],
 };

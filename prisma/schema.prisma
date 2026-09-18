@@ -176,3 +176,13 @@ model AdminLog {
   createdAt  DateTime @default(now())
   admin      User     @relation("AdminActorLogs", fields: [adminUserId], references: [id])
 }
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventKey  String   @unique
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([provider, createdAt])
+}

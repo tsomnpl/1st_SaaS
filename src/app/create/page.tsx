@@ -1,19 +1,24 @@
 import { CreateFlyerForm } from "@/components/create-flyer-form";
-import { getOrCreateCurrentUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
+import { requireActiveCurrentUser } from "@/server/users";
+import { userHasEditableExport } from "@/server/generation";
 
 export default async function CreatePage() {
-  const user = await getOrCreateCurrentUser();
+  const user = await requireActiveCurrentUser();
   const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } });
   const balance = account?.balance ?? 0;
+  const canExport = await userHasEditableExport(user.id);
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Creer une affiche</h1>
-      <p className="text-white/80">
-        Solde: <span className="font-semibold text-emerald-300">{balance} Mints</span>.
-      </p>
-      <CreateFlyerForm mintBalance={balance} />
+      <div>
+        <h1 className="text-3xl font-extrabold tracking-tight">Créer une affiche</h1>
+        <p className="mt-2 text-slate-600">
+          Solde : <span className="font-semibold text-[#6D28D9]">{balance} Mint{balance > 1 ? "s" : ""}</span>
+          . 1 Mint = 1 affiche.
+        </p>
+      </div>
+      <CreateFlyerForm mintBalance={balance} canExport={canExport} />
     </div>
   );
 }
