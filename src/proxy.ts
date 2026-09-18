@@ -1,5 +1,6 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
+import type { NextRequest } from "next/server";
 
 const PUBLIC_EXACT = new Set([
   "/",
@@ -28,36 +29,63 @@ function isApiPath(pathname: string) {
   return pathname.startsWith("/api/");
 }
 
-export default clerkMiddleware(
-  async (auth, req) => {
-    const { pathname } = req.nextUrl;
+function hideObviousAdmin(req: NextRequest) {
+  const { pathname } = req.nextUrl;
+  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
+    return NextResponse.redirect(new URL("/", req.url));
+  }
+  return null;
+}
 
-    if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-      return NextResponse.redirect(new URL("/", req.url));
-    }
+function isProtectedPath(pathname: string) {
+  return [
+    "/dashboard",
+    "/create",
+    "/history",
+    "/profile",
+    "/checkout",
+    "/c/",
+    "/api/",
+  ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
+}
 
-    if (isPublicPath(pathname)) {
-      return NextResponse.next();
-    }
+async function protect(req: NextRequest, userId: string | null) {
+  const adminRedirect = hideObviousAdmin(req);
+  if (adminRedirect) return adminRedirect;
 
-    const { userId } = await auth();
-    if (userId) {
-      return NextResponse.next();
-    }
+  const { pathname } = req.nextUrl;
+  if (isPublicPath(pathname) || !isProtectedPath(pathname)) {
+    return NextResponse.next();
+  }
+  if (userId) {
+    return NextResponse.next();
+  }
+  if (isApiPath(pathname)) {
+    return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+  }
+  const signIn = new URL("/sign-in", req.url);
+  signIn.searchParams.set("redirect_url", `${pathname}${req.nextUrl.search}`);
+  return NextResponse.redirect(signIn);
+}
 
-    if (isApiPath(pathname)) {
-      return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
-    }
-
-    const signIn = new URL("/sign-in", req.url);
-    signIn.searchParams.set("redirect_url", `${pathname}${req.nextUrl.search}`);
-    return NextResponse.redirect(signIn);
-  },
-  {
-    signInUrl: "/sign-in",
-    signUpUrl: "/sign-up",
-  },
+const clerkConfigured = Boolean(
+  process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY,
 );
+
+export default clerkConfigured
+  ? clerkMiddleware(
+      async (auth, req) => {
+        const { userId } = await auth();
+        return protect(req, userId);
+      },
+      {
+        signInUrl: "/sign-in",
+        signUpUrl: "/sign-up",
+      },
+    )
+  : function proxy(req: NextRequest) {
+      return protect(req, null);
+    };
 
 export const config = {
   matcher: [
