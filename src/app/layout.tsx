@@ -4,6 +4,7 @@ import { Plus_Jakarta_Sans } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeaderHost } from "@/components/site-header-host";
+import { BrandLogo } from "@/components/brand/logo";
 import "./globals.css";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -21,6 +22,8 @@ export const metadata: Metadata = {
   },
 };
 
+export const dynamic = "force-dynamic";
+
 const clerkAppearance = {
   variables: {
     colorPrimary: "#6D28D9",
@@ -31,22 +34,42 @@ const clerkAppearance = {
   },
 };
 
+function Shell({ children, withAuth }: { children: ReactNode; withAuth: boolean }) {
+  return (
+    <html lang="fr" className={`${jakarta.variable} h-full antialiased`}>
+      <body className="flex min-h-full flex-col text-slate-900">
+        {withAuth ? (
+          <SiteHeaderHost />
+        ) : (
+          <header className="border-b border-slate-200 bg-white px-4 py-3">
+            <div className="mx-auto max-w-6xl">
+              <BrandLogo size="sm" />
+            </div>
+          </header>
+        )}
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+        <SiteFooter />
+      </body>
+    </html>
+  );
+}
+
 export default function RootLayout({ children }: { children: ReactNode }) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    return <Shell withAuth={false}>{children}</Shell>;
+  }
+
   return (
     <ClerkProvider
+      publishableKey={publishableKey}
       appearance={clerkAppearance}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
       signInFallbackRedirectUrl="/dashboard"
       signUpFallbackRedirectUrl="/dashboard"
     >
-      <html lang="fr" className={`${jakarta.variable} h-full antialiased`}>
-        <body className="flex min-h-full flex-col text-slate-900">
-          <SiteHeaderHost />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-          <SiteFooter />
-        </body>
-      </html>
+      <Shell withAuth>{children}</Shell>
     </ClerkProvider>
   );
 }
