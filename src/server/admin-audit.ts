@@ -1,3 +1,4 @@
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 
 export async function writeAdminLog(input: {
@@ -5,7 +6,7 @@ export async function writeAdminLog(input: {
   action: string;
   targetType: string;
   targetId?: string | null;
-  metadata?: Record<string, unknown>;
+  metadata?: Prisma.InputJsonValue;
 }) {
   return prisma.adminLog.create({
     data: {
