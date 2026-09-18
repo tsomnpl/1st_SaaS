@@ -16,6 +16,15 @@ describe("showcase catalogue alignment", () => {
     expect(SHOWCASE_SHEETS[26].id).toBe("sante-tourisme-associations-03");
   });
 
+  it("generates posters via official Rodium images API only", () => {
+    const script = readFileSync("scripts/generate-showcase.mts", "utf8");
+    expect(script).toContain('/images/generations');
+    expect(script).toContain('1024x1536');
+    expect(script).toContain('"x-api-key"');
+    expect(script).not.toContain("/chat/completions");
+    expect(script).not.toContain("1024x1792");
+  });
+
   it("does not keep real brand names in final titles", () => {
     const banned = /zara|nexora|techpoint|hotels\.ng|godfactor|sendora|fulixgold/i;
     for (const sheet of SHOWCASE_SHEETS) {

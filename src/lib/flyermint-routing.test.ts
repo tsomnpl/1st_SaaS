@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { isLikelyImageModel, selectImageModel } from "@/server/rodium";
+import { isLikelyImageModel, selectImageModel, sizeForFormat } from "@/server/rodium";
 import { classifyPaymentStatus } from "@/server/payments";
 import { paidPlans } from "@/lib/plans";
 
@@ -10,6 +10,12 @@ describe("image model routing", () => {
     expect(isLikelyImageModel("openai/whisper-1")).toBe(false);
     expect(isLikelyImageModel("google/gemini-3-pro-image")).toBe(true);
     expect(isLikelyImageModel("openai/gpt-image-2")).toBe(true);
+  });
+
+  it("uses official Rodium image sizes only", () => {
+    expect(sizeForFormat("affiche")).toBe("1024x1536");
+    expect(sizeForFormat("instagram_story")).toBe("1024x1536");
+    expect(sizeForFormat("instagram_post")).toBe("1024x1024");
   });
 
   it("never falls back to a text model", () => {

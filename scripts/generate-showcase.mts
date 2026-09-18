@@ -7,11 +7,7 @@ const OUT_DIR = path.join(ROOT, "public/creations");
 const HERO_DIR = path.join(OUT_DIR, "hero");
 const MANIFEST = path.join(ROOT, "docs/inspirations/showcase-manifest.json");
 const CATALOGUE = path.join(ROOT, "docs/inspirations/catalogue-extrait.json");
-
-const BASE_URL = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
-const API_KEY = process.env.RODIUMAI_API_KEY?.trim() || "";
-const FAST = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-image";
-const PREMIUM = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "google/gemini-3-pro-image";
+const POSTER_SIZE = "1024x1536";
 
 const HERO_IDS = [
   "evenementiel-01",
@@ -27,70 +23,77 @@ const HERO_IDS = [
 
 type CatalogueFile = { fiches: Array<{ id: string }> };
 
+type ImageResponse = {
+  data?: Array<{ url?: string; b64_json?: string }>;
+  usage?: { total_tokens?: number };
+  model?: string;
+};
+
+async function loadLocalEnv() {
+  for (const name of [".env.local", ".env"]) {
+    try {
+      const text = await readFile(path.join(ROOT, name), "utf8");
+      for (const line of text.split("\n")) {
+        const trimmed = line.trim();
+        if (!trimmed || trimmed.startsWith("#") || !trimmed.includes("=")) continue;
+        const eq = trimmed.indexOf("=");
+        const key = trimmed.slice(0, eq).trim();
+        let value = trimmed.slice(eq + 1).trim();
+        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+          value = value.slice(1, -1);
+        }
+        if (key && process.env[key] === undefined) process.env[key] = value;
+      }
+    } catch {
+      // optional local files
+    }
+  }
+}
+
+function rodiumHeaders(apiKey: string) {
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+    "x-api-key": apiKey,
+  };
+}
+
 function estimateRodi(model: string, tokens: number) {
   const perThousand = model.toLowerCase().includes("gpt") ? 3.5 : 4.2;
   return Number(((tokens / 1000) * perThousand).toFixed(3));
 }
 
-async function callRodium(model: string, prompt: string) {
-  const images = await fetch(`${BASE_URL}/images/generations`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({ model, prompt, size: "1024x1792" }),
-  });
-  if (images.ok) {
-    const data = (await images.json()) as {
-      data?: Array<{ url?: string; b64_json?: string }>;
-      usage?: { total_tokens?: number };
-      model?: string;
-    };
-    const first = data.data?.[0];
-    const url = first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : "");
-    if (url) {
+function shortErrorBody(text: string) {
+  return text.replace(/\s+/g, " ").slice(0, 180);
+}
+
+async function callRodium(baseUrl: string, apiKey: string, model: string, prompt: string) {
+  const headers = rodiumHeaders(apiKey);
+  let lastError = "RODIUM_IMAGES_FAILED";
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    const response = await fetch(`${baseUrl}/images/generations`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({
+        model,
+        prompt,
+        n: 1,
+        size: POSTER_SIZE,
+      }),
+    });
+    const raw = await response.text();
+    if (response.ok) {
+      const data = JSON.parse(raw) as ImageResponse;
+      const first = data.data?.[0];
+      const url = first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : "");
+      if (!url) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? model };
     }
+    lastError = `RODIUM_IMAGES_${response.status}_${shortErrorBody(raw)}`;
+    if (response.status < 500 && response.status !== 429) break;
+    await new Promise((resolve) => setTimeout(resolve, 1200));
   }
-
-  const chat = await fetch(`${BASE_URL}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-    },
-    body: JSON.stringify({
-      model,
-      messages: [
-        {
-          role: "system",
-          content: "Generate one professional poster. Return JSON {imageUrl} or {b64_json}. Keep text readable.",
-        },
-        { role: "user", content: prompt },
-      ],
-      temperature: 0.4,
-      response_format: { type: "json_object" },
-    }),
-  });
-  if (!chat.ok) {
-    throw new Error(`RODIUM_${chat.status}_${await chat.text().then((t) => t.slice(0, 180))}`);
-  }
-  const payload = (await chat.json()) as {
-    choices?: Array<{ message?: { content?: string } }>;
-    usage?: { total_tokens?: number };
-    model?: string;
-  };
-  const raw = payload.choices?.[0]?.message?.content ?? "{}";
-  let parsed: Record<string, string> = {};
-  try {
-    parsed = JSON.parse(raw) as Record<string, string>;
-  } catch {
-    parsed = {};
-  }
-  const url = parsed.imageUrl || parsed.url || (parsed.b64_json ? `data:image/png;base64,${parsed.b64_json}` : "");
-  if (!url) throw new Error("RODIUM_NO_IMAGE");
-  return { url, tokens: payload.usage?.total_tokens ?? 0, model: payload.model ?? model };
+  throw new Error(lastError);
 }
 
 async function loadImageBuffer(url: string) {
@@ -116,7 +119,13 @@ async function writeWebp(buffer: Buffer, file: string, width: number) {
 }
 
 async function main() {
-  if (!API_KEY) {
+  await loadLocalEnv();
+  const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
+  const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
+  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-image";
+  const premium = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "google/gemini-3-pro-image";
+
+  if (!apiKey) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
@@ -148,9 +157,9 @@ async function main() {
       continue;
     }
 
-    const model = sheet.premium ? PREMIUM : FAST;
+    const model = sheet.premium ? premium : fast;
     try {
-      const result = await callRodium(model, sheet.prompt);
+      const result = await callRodium(baseUrl, apiKey, model, sheet.prompt);
       const buffer = await loadImageBuffer(result.url);
       const fullPath = path.join(OUT_DIR, `${sheet.id}.webp`);
       const heroPath = path.join(HERO_DIR, `${sheet.id}.webp`);
@@ -192,7 +201,7 @@ async function main() {
         hero_loop: false,
         erreur: error instanceof Error ? error.message.slice(0, 180) : "unknown",
       });
-      console.error("fail", sheet.id, error);
+      console.error("fail", sheet.id, error instanceof Error ? error.message : error);
     }
   }
 
@@ -214,6 +223,6 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error(error instanceof Error ? error.message : error);
   process.exit(1);
 });
