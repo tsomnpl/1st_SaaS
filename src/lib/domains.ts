@@ -23,11 +23,93 @@ export const DOMAINS = [
   "Services divers",
 ] as const;
 
-export const ADAPTIVE_FIELDS: Record<string, string[]> = {
-  Restauration: ["plat", "menu", "livraison", "reservation", "horaires"],
-  Immobilier: ["type de bien", "localisation", "superficie", "chambres"],
-  Automobile: ["marque", "modele", "annee", "kilometrage", "financement"],
-  "Education & Formation": ["formation", "formateur", "duree", "certificat"],
-  Mariage: ["noms", "date", "lieu", "heure", "theme", "dress code"],
-  Evenementiel: ["nom", "date", "heure", "lieu", "invites", "artistes"],
+export const DOMAIN_LABELS: Record<(typeof DOMAINS)[number], string> = {
+  Evenementiel: "Événementiel",
+  Restauration: "Restauration",
+  "Mode & Accessoires": "Mode",
+  "Beaute & Soins": "Beauté",
+  Immobilier: "Immobilier",
+  "Business & Entreprise": "Entreprise",
+  Technologie: "Technologie",
+  "Education & Formation": "Formation",
+  Sport: "Sport",
+  "Finance & Fintech": "Finance",
+  "Sante & Clinique": "Santé",
+  "Tourisme & Voyage": "Tourisme",
+  "E-commerce": "E-commerce",
+  Mariage: "Mariage",
+  Anniversaire: "Anniversaire",
+  "Emploi & Recrutement": "Recrutement",
+  Agriculture: "Agriculture",
+  Automobile: "Automobile",
+  Musique: "Musique",
+  Associations: "Associations",
+  "Religion & Culture": "Culture",
+  "Services divers": "Services",
 };
+
+export const ADAPTIVE_FIELDS: Record<string, { key: string; label: string }[]> = {
+  Restauration: [
+    { key: "plat", label: "Plat ou menu phare" },
+    { key: "horaires", label: "Horaires" },
+    { key: "livraison", label: "Livraison ?" },
+    { key: "reservation", label: "Réservation" },
+  ],
+  Immobilier: [
+    { key: "typeBien", label: "Type de bien" },
+    { key: "superficie", label: "Superficie" },
+    { key: "chambres", label: "Chambres" },
+    { key: "visite", label: "Visite / RDV" },
+  ],
+  Automobile: [
+    { key: "marque", label: "Marque" },
+    { key: "modele", label: "Modèle" },
+    { key: "annee", label: "Année" },
+    { key: "kilometrage", label: "Kilométrage" },
+  ],
+  "Education & Formation": [
+    { key: "formation", label: "Nom de la formation" },
+    { key: "duree", label: "Durée" },
+    { key: "formateur", label: "Formateur" },
+    { key: "certificat", label: "Certificat ?" },
+  ],
+  Mariage: [
+    { key: "noms", label: "Noms des mariés" },
+    { key: "theme", label: "Thème" },
+    { key: "dresscode", label: "Dress code" },
+  ],
+  Evenementiel: [
+    { key: "artistes", label: "Artistes / invitée" },
+    { key: "ouverture", label: "Heure d’ouverture" },
+    { key: "places", label: "Places / jauge" },
+  ],
+  Sport: [
+    { key: "equipe", label: "Équipe / club" },
+    { key: "competition", label: "Compétition" },
+  ],
+  "Emploi & Recrutement": [
+    { key: "poste", label: "Poste" },
+    { key: "contrat", label: "Type de contrat" },
+    { key: "deadline", label: "Date limite" },
+  ],
+};
+
+export const VISUAL_TYPES = [
+  "Affiche promotionnelle",
+  "Affiche événement",
+  "Story / post réseaux",
+  "Menu",
+  "Annonce immobilière",
+  "Offre d’emploi",
+  "Save the date",
+  "Catalogue produit",
+] as const;
+
+export const FORMATS = [
+  { value: "instagram_post", label: "Post Instagram (1:1)" },
+  { value: "instagram_story", label: "Story (9:16)" },
+  { value: "affiche_a4", label: "Affiche A4 (print)" },
+  { value: "affiche_a3", label: "Affiche A3 (print)" },
+  { value: "facebook_post", label: "Post Facebook" },
+  { value: "banniere", label: "Bannière web" },
+] as const;

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateCurrentUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
+import { safeJsonError } from "@/lib/safe-api";
 
 export async function POST() {
   try {
@@ -19,13 +20,6 @@ export async function POST() {
       balance: account?.balance ?? 0,
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: getErrorMessage(error) },
-      { status: 401 },
-    );
+    return safeJsonError(error, 401);
   }
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "UNKNOWN_ERROR";
 }
