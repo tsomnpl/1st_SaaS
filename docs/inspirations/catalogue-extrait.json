@@ -1,0 +1,234 @@
+{
+  "source_pdf": "docs/inspirations/catalogue-analyse-affiches.pdf",
+  "source_commit": "95d75c2",
+  "extraction_method": "pypdf extract_text on the 6-page PDF; wrapped lines joined; unlabeled Visuel/Arrière-plan left as empty string (not invented). The longer DOCX in the same folder contains additional posters and was NOT used as the 27-fiche source.",
+  "count": 27,
+  "par_domaine": {
+    "Événementiel": 4,
+    "Restauration": 4,
+    "Mode & Accessoires": 3,
+    "Beauté & Soins": 3,
+    "Immobilier & Business": 5,
+    "Technologie & Éducation": 3,
+    "Sport & Finance": 2,
+    "Santé/Tourisme/Associations": 3
+  },
+  "fiches": [
+    {
+      "id": "evenementiel-01",
+      "domaine": "Événementiel",
+      "titre_original_catalogue": "Concert \"Aura\" (Fulixgold)",
+      "arriere_plan": "Dégradé dramatique aux tons chauds (ambre, brun, orange foncé) avec effets de fumée/brume.",
+      "textes": "\"BEEDEX PRODUCTION\" en haut ; au centre, \"Aura\" en police dorée effet 3D brillant ; \"BY FULIXGOLD\" et barre audio minimaliste en bas.",
+      "visuel": "Profil d'un jeune homme aux tresses regardant vers le haut."
+    },
+    {
+      "id": "evenementiel-02",
+      "domaine": "Événementiel",
+      "titre_original_catalogue": "Concert \"Jeef Tiga\" (Kolwezi)",
+      "arriere_plan": "Rouge vif texturé avec superpositions graphiques et cadres angulaires.",
+      "textes": "\"JEEF TIGA EN CONCERT\", date et heure encadrées, tarifs (\"PASSE SIMPLE\", \"VIP 10$\") et contacts. Lieu : Salle de fêtes polyvalente Marguerita à Kolwezi.",
+      "visuel": ""
+    },
+    {
+      "id": "evenementiel-03",
+      "domaine": "Événementiel",
+      "titre_original_catalogue": "Concert \"Vibes\" (Coding & Chill)",
+      "arriere_plan": "Décor urbain, ciel bleu lumineux et nuages stylisés.",
+      "textes": "Titre \"Vibes\" rouge incliné avec tag \"</coding>\". Encart ticket blanc (Lieu : Lac Labotte, Date : 14 Juin 2026, Prix : 15000FC).",
+      "visuel": "Artiste avec dreadlocks, casque audio et chaussures stylisées."
+    },
+    {
+      "id": "evenementiel-04",
+      "domaine": "Événementiel",
+      "titre_original_catalogue": "Concert / Événement \"Levizy 501\"",
+      "arriere_plan": "Rouge intense et texturé avec vagues et motifs sombres.",
+      "textes": "\"LEVIZY 501\" en caractères blancs massifs, date (\"SAM 28 SEPT\"), lieu (\"STADE DU 26 MARS\") et pass (\"3.000F\").",
+      "visuel": "Artiste en arrière-plan à droite avec mains levées, miniatures des parrains en bas."
+    },
+    {
+      "id": "restauration-01",
+      "domaine": "Restauration",
+      "titre_original_catalogue": "Restaurant \"Avrum\"",
+      "arriere_plan": "Beige clair uni et épuré.",
+      "textes": "Logo circulaire marron, \"AVRUM Resturant\", encart central \"WE ARE CLOSED FOR RENOVATION\" avec options de livraison en ligne. Localisation à Abuja.",
+      "visuel": ""
+    },
+    {
+      "id": "restauration-02",
+      "domaine": "Restauration",
+      "titre_original_catalogue": "Ghana High Restaurant",
+      "arriere_plan": "Blanc épuré avec bandeau rouge incurvé en haut.",
+      "textes": "Menu détaillé (Riz au gras, Cantonais, Koliko, Djinkoumè, Salade, etc.) avec puces orange et contact WhatsApp.",
+      "visuel": ""
+    },
+    {
+      "id": "restauration-03",
+      "domaine": "Restauration",
+      "titre_original_catalogue": "Borcelle Resto (Promo Spéciale)",
+      "arriere_plan": "Tons sombres et chaleureux.",
+      "textes": "\"SPECIAL PROMO\", plat \"Japanese Chicken Katsu Ramen\", prix réduit \"45K\" et prix barré \"55K\".",
+      "visuel": "Bol de ramen fumant avec œufs marinés et poulet pané."
+    },
+    {
+      "id": "restauration-04",
+      "domaine": "Restauration",
+      "titre_original_catalogue": "Lizim Bar Resto",
+      "arriere_plan": "Sombre texturé de nuances rouge/brun avec éléments végétaux.",
+      "textes": "\"Nos Services\" (réunion, anniversaire), menus par moment de la journée et badge de livraison. Grille de 4 photos de plats traditionnels.",
+      "visuel": ""
+    },
+    {
+      "id": "mode-01",
+      "domaine": "Mode & Accessoires",
+      "titre_original_catalogue": "Rehoboth Prive (Prêt-à-porter)",
+      "arriere_plan": "Minimaliste, tons neutres.",
+      "textes": "\"REHOBOTH PRIVE\" (RP), slogan \"Dealer in all kinds of Premium Women Wear\", appel à l'action et QR code central.",
+      "visuel": ""
+    },
+    {
+      "id": "mode-02",
+      "domaine": "Mode & Accessoires",
+      "titre_original_catalogue": "Zara / Xander & Lizzie Collection",
+      "arriere_plan": "Clair et lumineux.",
+      "textes": "\"ZARA\", \"Xander & Lizzie\", liste des produits (Slippers, Dresses, Bags) et contacts à Dunkwa-Offin, Kumasi.",
+      "visuel": ""
+    },
+    {
+      "id": "mode-03",
+      "domaine": "Mode & Accessoires",
+      "titre_original_catalogue": "Edith Closet",
+      "arriere_plan": "Rose poudré et blanc doux.",
+      "textes": "\"Edith Closet\" - \"Braced in Beauty\", collection (Vêtements, Chaussures, Sacs, Bijoux) et grille de photos produits.",
+      "visuel": ""
+    },
+    {
+      "id": "beaute-01",
+      "domaine": "Beauté & Soins",
+      "titre_original_catalogue": "Aura Luxe Unisex Salon",
+      "arriere_plan": "Tons clairs professionnels.",
+      "textes": "\"GRAND Opening\" le 12 avril 2026, site web (auraluxe.cit) et adresse Nanminda.",
+      "visuel": ""
+    },
+    {
+      "id": "beaute-02",
+      "domaine": "Beauté & Soins",
+      "titre_original_catalogue": "Eve's Spa and Training Center",
+      "arriere_plan": "Tons chauds (doré et brun).",
+      "textes": "5 médaillons circulaires illustrant les soins (Braids, Pédicure, Wigs, Cils, Make-up) avec mention de formation générale.",
+      "visuel": ""
+    },
+    {
+      "id": "beaute-03",
+      "domaine": "Beauté & Soins",
+      "titre_original_catalogue": "Beauty Paradise (Éclat Naturel)",
+      "arriere_plan": "Dégradé bordeaux et blanc.",
+      "textes": "\"REVELEZ VOTRE ECLAT NATUREL\", gamme bio visage & corps, flacons sur podium blanc.",
+      "visuel": ""
+    },
+    {
+      "id": "immobilier-business-01",
+      "domaine": "Immobilier & Business",
+      "titre_original_catalogue": "Sac's Housing and Sales (Immobilier)",
+      "arriere_plan": "Bleu nuit profond avec vague jaune.",
+      "textes": "\"DO YOU NEED APARTMENT TO RENT OR BUY?\", types de biens (Studio, 1+1, 2+1), mention \"FREE CAR AVAILABLE FOR MOVING\" et photos intérieures.",
+      "visuel": ""
+    },
+    {
+      "id": "immobilier-business-02",
+      "domaine": "Immobilier & Business",
+      "titre_original_catalogue": "Modibo Dembélé SARL",
+      "arriere_plan": "",
+      "textes": "\"Nous louons, gérons, vendons et construisons\", avantages (professionnels qualifiés, matériaux de qualité) et contacts au Mali.",
+      "visuel": ""
+    },
+    {
+      "id": "immobilier-business-03",
+      "domaine": "Immobilier & Business",
+      "titre_original_catalogue": "TechPoint (SaaS Application)",
+      "arriere_plan": "High-tech sombre et lumineux.",
+      "textes": "\"Scalable Solutions\", métriques dashboard (Users: 12.5k, Revenue: $28.4k, Uptime: 99.9%).",
+      "visuel": ""
+    },
+    {
+      "id": "immobilier-business-04",
+      "domaine": "Immobilier & Business",
+      "titre_original_catalogue": "Nexora Bank (Banking Reimagined)",
+      "arriere_plan": "Interface app mobile, dégradés bleus et carte bancaire virtuelle.",
+      "textes": "Solde total ($24,560.00 avec +12.5%), boutons d'actions rapides et sécurité 100%.",
+      "visuel": ""
+    },
+    {
+      "id": "immobilier-business-05",
+      "domaine": "Immobilier & Business",
+      "titre_original_catalogue": "Ololo Express (E-commerce B2B)",
+      "arriere_plan": "",
+      "textes": "\"One Listing Can Change Your Business\", maquette de smartphone avec notifications de commandes et produits 3D.",
+      "visuel": ""
+    },
+    {
+      "id": "techno-education-01",
+      "domaine": "Technologie & Éducation",
+      "titre_original_catalogue": "Godfactor Technologies",
+      "arriere_plan": "",
+      "textes": "\"Everything Tech, right in your palm\", liste des produits (téléphones, ordinateurs, Starlink, CCTV) et livraison rapide.",
+      "visuel": ""
+    },
+    {
+      "id": "techno-education-02",
+      "domaine": "Technologie & Éducation",
+      "titre_original_catalogue": "LNA X Claude Institute (Formation SAP)",
+      "arriere_plan": "Blanc et dégradé bleu corporate.",
+      "textes": "\"Formation Professionnelle SAP S/4HANA QM\", certificat utilisateur, module Quality Management, prix \"135.000 FCFA\" et date limite au 20 mai.",
+      "visuel": ""
+    },
+    {
+      "id": "techno-education-03",
+      "domaine": "Technologie & Éducation",
+      "titre_original_catalogue": "Cours à Domicile (Maths & Physique)",
+      "arriere_plan": "Effet cahier d'écolier avec étudiant.",
+      "textes": "\"COURS A DOMICILE de la 6ème à la terminale\", 5 ans d'expérience, taux de réussite de 100% au BEPC et au bac 2025-2026.",
+      "visuel": ""
+    },
+    {
+      "id": "sport-finance-01",
+      "domaine": "Sport & Finance",
+      "titre_original_catalogue": "Marche Sportive (DSPP Community)",
+      "arriere_plan": "Ciel nuageux bleu/orange.",
+      "textes": "\"MARCHE SPORTIVE (EDITION 2)\" - 7 Km. Itinéraire, menu (Mitshopo), dress code, tarif 5$.",
+      "visuel": ""
+    },
+    {
+      "id": "sport-finance-02",
+      "domaine": "Sport & Finance",
+      "titre_original_catalogue": "Sendora (Smart Financial App)",
+      "arriere_plan": "",
+      "textes": "\"Join the Smart Side - Shop With Sendora!\", carte virtuelle, communauté de 75,000+ utilisateurs.",
+      "visuel": ""
+    },
+    {
+      "id": "sante-tourisme-associations-01",
+      "domaine": "Santé/Tourisme/Associations",
+      "titre_original_catalogue": "Fondation Reviens à la Vie (Journée de Santé)",
+      "arriere_plan": "",
+      "textes": "\"Soigners et sauver des vies\" - Soins gratuits le 14 Février. Dépistages (palu, diabète, hypertension, ophtalmo, cancer du sein, hépatite).",
+      "visuel": ""
+    },
+    {
+      "id": "sante-tourisme-associations-02",
+      "domaine": "Santé/Tourisme/Associations",
+      "titre_original_catalogue": "Hotels.ng",
+      "arriere_plan": "Paysage tropical ensoleillé (Lagos, Calabar, Abuja).",
+      "textes": "\"Where you wan dey this weekend? Just Click Book, Go!\".",
+      "visuel": ""
+    },
+    {
+      "id": "sante-tourisme-associations-03",
+      "domaine": "Santé/Tourisme/Associations",
+      "titre_original_catalogue": "Campagne de Solidarité PECS (Kinshasa)",
+      "arriere_plan": "Turquoise uni et rassurante.",
+      "textes": "En faveur des enfants de rue. Centre Bongisa (Ngaliema), contacts M-Pesa / Orange.",
+      "visuel": ""
+    }
+  ]
+}
