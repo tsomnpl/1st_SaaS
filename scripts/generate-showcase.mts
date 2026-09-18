@@ -90,6 +90,9 @@ async function callRodium(baseUrl: string, apiKey: string, model: string, prompt
       return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? model };
     }
     lastError = `RODIUM_IMAGES_${response.status}_${shortErrorBody(raw)}`;
+    if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
+      throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
+    }
     if (response.status < 500 && response.status !== 429) break;
     await new Promise((resolve) => setTimeout(resolve, 1200));
   }
@@ -202,13 +205,41 @@ async function main() {
         erreur: error instanceof Error ? error.message.slice(0, 180) : "unknown",
       });
       console.error("fail", sheet.id, error instanceof Error ? error.message : error);
+      if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE")) {
+        console.error("stop", "wallet empty, remaining sheets left as echec");
+        const remaining = SHOWCASE_SHEETS.slice(SHOWCASE_SHEETS.indexOf(sheet) + 1);
+        for (const leftover of remaining) {
+          fiches.push({
+            id: leftover.id,
+            domaine: leftover.domaine,
+            titre_original_catalogue: leftover.titre_original_catalogue,
+            titre_affiche_finale: leftover.titre_affiche_finale,
+            sous_titre_affiche_finale: leftover.sous_titre_affiche_finale,
+            prompt_image_final: leftover.prompt,
+            modele_texte_utilise: "",
+            modele_image_utilise: leftover.premium ? premium : fast,
+            cout_rodi: 0,
+            fichier_image: "",
+            fichier_image_hero: "",
+            poids_ko: 0,
+            statut: "echec",
+            hero_loop: false,
+            erreur: "RODIUM_INSUFFICIENT_BALANCE",
+          });
+        }
+        break;
+      }
     }
   }
 
-  const successIds = fiches.filter((row) => row.statut === "genere").map((row) => row.id);
+  const successIds = fiches.filter((row) => row.statut === "genere").map((row) => String(row.id));
   const loop = HERO_IDS.filter((id) => successIds.includes(id));
+  for (const id of successIds) {
+    if (loop.length >= 10) break;
+    if (!loop.includes(id)) loop.push(id);
+  }
   for (const row of fiches) {
-    row.hero_loop = loop.includes(row.id);
+    row.hero_loop = loop.includes(String(row.id));
   }
 
   const manifest = {

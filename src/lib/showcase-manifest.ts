@@ -22,5 +22,7 @@ export type ShowcaseManifestFile = {
   generated_at?: string;
   count: number;
   rodi_total: number;
+  note?: string;
+  hero_loop_count?: number;
   fiches: ShowcaseManifestEntry[];
 };

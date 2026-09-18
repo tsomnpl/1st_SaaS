@@ -1,9 +1,8 @@
 {
   "source": "docs/inspirations/catalogue-extrait.json",
-  "generated_at": "2026-09-18T23:15:07.495Z",
+  "generated_at": "2026-09-18T23:54:57.317Z",
   "count": 27,
-  "rodi_total": 0,
-  "note": "Generation blocked: RODIUMAI_API_KEY missing in this agent environment (keys are on Vercel only).",
+  "rodi_total": 56.184,
   "fiches": [
     {
       "id": "evenementiel-01",
@@ -13,13 +12,13 @@
       "sous_titre_affiche_finale": "Nuit live",
       "prompt_image_final": "Vertical concert poster 3:4. Dramatic amber-brown-orange smoke gradient. Profile of a young man with braids looking upward, cinematic lighting. Small FLYERMINT badge top-left. Huge gold 3D title AURA, subtitle BY SOLEN. Tiny ATELIER NUIT at top. Minimal audio bar at bottom. High contrast, readable text, no real brand logos.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3-pro-image",
+      "cout_rodi": 6.212,
+      "fichier_image": "/creations/evenementiel-01.webp",
+      "fichier_image_hero": "/creations/hero/evenementiel-01.webp",
+      "poids_ko": 143.6,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "evenementiel-02",
@@ -29,13 +28,13 @@
       "sous_titre_affiche_finale": "Concert",
       "prompt_image_final": "Vertical event poster 3:4. Vivid textured red with angular graphic frames. Bold white title TIGA LIVE. Date and time in framed boxes. Passes: SIMPLE and VIP. Venue Salle de fêtes Marguerita. Small FLYERMINT badge. High contrast, no real celebrity likeness, no real brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 4.969,
+      "fichier_image": "/creations/evenementiel-02.webp",
+      "fichier_image_hero": "/creations/hero/evenementiel-02.webp",
+      "poids_ko": 223.2,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "evenementiel-03",
@@ -45,13 +44,13 @@
       "sous_titre_affiche_finale": "Coding & chill",
       "prompt_image_final": "Vertical concert poster 3:4. Bright urban sky and stylized clouds. Artist with dreadlocks and headphones, stylish sneakers. Red tilted title VIBES, small tag </coding>. White ticket card: Lac Labotte, 14 Juin 2026, 15 000 FCFA. FLYERMINT badge. No real brands.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3-pro-image",
+      "cout_rodi": 6.926,
+      "fichier_image": "/creations/evenementiel-03.webp",
+      "fichier_image_hero": "/creations/hero/evenementiel-03.webp",
+      "poids_ko": 148.5,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "evenementiel-04",
@@ -61,13 +60,13 @@
       "sous_titre_affiche_finale": "Stade du 26 mars",
       "prompt_image_final": "Vertical concert poster 3:4. Intense textured red with dark waves. Crowd energy, raised hands in the background. Massive white title LIVE 501. Date SAM 28 SEPT, venue STADE DU 26 MARS, pass 3 000 F. FLYERMINT badge. No real artist names or brands.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 5.006,
+      "fichier_image": "/creations/evenementiel-04.webp",
+      "fichier_image_hero": "/creations/hero/evenementiel-04.webp",
+      "poids_ko": 282.3,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "restauration-01",
@@ -77,13 +76,13 @@
       "sous_titre_affiche_finale": "Livraison pendant travaux",
       "prompt_image_final": "Vertical restaurant poster 3:4. Clean beige background. Circular brown emblem. Title AVRIL TABLE. Central card WE DELIVER DURING RENOVATION. Soft food still-life, no photos of real chains. FLYERMINT badge. Elegant, readable, no real restaurant brands.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 4.948,
+      "fichier_image": "/creations/restauration-01.webp",
+      "fichier_image_hero": "/creations/hero/restauration-01.webp",
+      "poids_ko": 98.2,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "restauration-02",
@@ -93,13 +92,13 @@
       "sous_titre_affiche_finale": "Menu du jour",
       "prompt_image_final": "Vertical menu poster 3:4. White clean layout with a curved red header. Title HIGH TABLE. Short menu list: Riz au gras, Cantonais, Salade. Orange bullets, WhatsApp contact. FLYERMINT badge. Not a real restaurant brand, high readability.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 4.939,
+      "fichier_image": "/creations/restauration-02.webp",
+      "fichier_image_hero": "/creations/hero/restauration-02.webp",
+      "poids_ko": 71.5,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "restauration-03",
@@ -109,13 +108,13 @@
       "sous_titre_affiche_finale": "Promo spéciale",
       "prompt_image_final": "Vertical food poster 3:4. Dark warm tones. Hero photo of steaming chicken katsu ramen with marinated eggs. Title RAMEN KATSU, badge SPECIAL PROMO, price 45K, old price 55K crossed. FLYERMINT badge. Appetizing, high contrast, no real restaurant chain.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3-pro-image",
+      "cout_rodi": 6.497,
+      "fichier_image": "/creations/restauration-03.webp",
+      "fichier_image_hero": "/creations/hero/restauration-03.webp",
+      "poids_ko": 169.9,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "restauration-04",
@@ -125,13 +124,13 @@
       "sous_titre_affiche_finale": "Bar & resto",
       "prompt_image_final": "Vertical restaurant poster 3:4. Dark red-brown texture with leafy details. Title LIZIM. Services: réunion, anniversaire. Daytime menus. Small food tiles, delivery badge. FLYERMINT badge. No real brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 4.906,
+      "fichier_image": "/creations/restauration-04.webp",
+      "fichier_image_hero": "/creations/hero/restauration-04.webp",
+      "poids_ko": 245.3,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "mode-01",
@@ -141,13 +140,13 @@
       "sous_titre_affiche_finale": "Prêt-à-porter femme",
       "prompt_image_final": "Vertical fashion poster 3:4. Minimal neutral tones. Monogram PA. Title PRIVÉ ATELIER. Line: premium women wear. Elegant garment still-life, QR-style square as graphic only. FLYERMINT badge. No real fashion houses.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3-pro-image",
+      "cout_rodi": 6.88,
+      "fichier_image": "/creations/mode-01.webp",
+      "fichier_image_hero": "/creations/hero/mode-01.webp",
+      "poids_ko": 55.6,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "mode-02",
@@ -157,13 +156,13 @@
       "sous_titre_affiche_finale": "Nouvelle collection",
       "prompt_image_final": "Vertical fashion poster 3:4. Bright airy studio. Title LIANE & LISE. Product words: sandales, robes, sacs. Soft daylight, editorial crop. FLYERMINT badge. No real fashion brand names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
-      "cout_rodi": 0,
-      "fichier_image": "",
-      "fichier_image_hero": "",
-      "poids_ko": 0,
-      "statut": "echec",
-      "hero_loop": false
+      "modele_image_utilise": "gemini-3.1-flash-image",
+      "cout_rodi": 4.901,
+      "fichier_image": "/creations/mode-02.webp",
+      "fichier_image_hero": "/creations/hero/mode-02.webp",
+      "poids_ko": 91.5,
+      "statut": "genere",
+      "hero_loop": true
     },
     {
       "id": "mode-03",
@@ -173,13 +172,14 @@
       "sous_titre_affiche_finale": "Braced in beauty",
       "prompt_image_final": "Vertical fashion poster 3:4. Powder pink and soft white. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as a tasteful grid. FLYERMINT badge. No real boutique name.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "beaute-01",
@@ -189,13 +189,14 @@
       "sous_titre_affiche_finale": "Grand opening",
       "prompt_image_final": "Vertical beauty poster 3:4. Clean professional light tones. Title AURA LUXE. Badge GRAND OPENING, date 12 avril 2026. Salon interior hint, scissors and glow. FLYERMINT badge. No real salon brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "beaute-02",
@@ -205,13 +206,14 @@
       "sous_titre_affiche_finale": "Soins & formation",
       "prompt_image_final": "Vertical spa poster 3:4. Warm gold and brown. Title SPA ÉVEIL. Five circular medallions: tresses, pédicure, perruques, cils, make-up. Training mention. FLYERMINT badge. No real spa brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "beaute-03",
@@ -221,13 +223,14 @@
       "sous_titre_affiche_finale": "Gamme bio",
       "prompt_image_final": "Vertical beauty poster 3:4. Bordeaux to white gradient. Title REVELEZ VOTRE ECLAT NATUREL. Organic bottles on a white podium. Soft luxury light. FLYERMINT badge. No real cosmetic brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3-pro-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "immobilier-business-01",
@@ -237,13 +240,14 @@
       "sous_titre_affiche_finale": "Louer ou acheter",
       "prompt_image_final": "Vertical real-estate poster 3:4. Deep night blue with a yellow wave. Title DO YOU NEED AN APARTMENT? Brand AGENCE RIVE. Types: Studio, 1+1, 2+1. Interior photos, moving help line. FLYERMINT badge. No real agency name.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "immobilier-business-02",
@@ -253,13 +257,14 @@
       "sous_titre_affiche_finale": "Louer · vendre · construire",
       "prompt_image_final": "Vertical architecture poster 3:4. Clean corporate beige and night blue. Title MAISON HORIZON. Line: nous louons, gérons, vendons et construisons. Building silhouette, quality materials. FLYERMINT badge. No real company name.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "immobilier-business-03",
@@ -269,13 +274,14 @@
       "sous_titre_affiche_finale": "Solutions évolutives",
       "prompt_image_final": "Vertical SaaS poster 3:4. Dark luminous tech gradient. Title APPELA, line Scalable Solutions. Dashboard metrics: Users 12.5k, Revenue, Uptime 99.9%. Glass cards. FLYERMINT badge. No real SaaS brand names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3-pro-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "immobilier-business-04",
@@ -285,13 +291,14 @@
       "sous_titre_affiche_finale": "Banking reimagined",
       "prompt_image_final": "Vertical fintech poster 3:4. Soft blue app interface, abstract card — not a Visa/Mastercard replica. Title BANQUE RIVE. Balance $24,560 +12.5%. Quick actions. FLYERMINT badge. No real bank names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3-pro-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "immobilier-business-05",
@@ -301,13 +308,14 @@
       "sous_titre_affiche_finale": "Une annonce, un business",
       "prompt_image_final": "Vertical e-commerce poster 3:4. Title EXPRESS LISTING. Line One listing can change your business. Phone mockup with order notifications, 3D product cubes. FLYERMINT badge. No real marketplace brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "techno-education-01",
@@ -317,13 +325,14 @@
       "sous_titre_affiche_finale": "Tout le tech, dans la main",
       "prompt_image_final": "Vertical tech retail poster 3:4. Dark slate and mint accent. Title FACTO TECH. Line Everything tech, right in your palm. Phones, laptops, antennas — generic devices. Fast delivery. FLYERMINT badge. No real electronics brand names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "techno-education-02",
@@ -333,13 +342,14 @@
       "sous_titre_affiche_finale": "Formation S/4HANA QM",
       "prompt_image_final": "Vertical education poster 3:4. White and corporate blue gradient. Title INSTITUT SAP PRO. Course SAP S/4HANA QM, certificat utilisateur, 135 000 FCFA, deadline 20 mai. FLYERMINT badge. No real institute names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "techno-education-03",
@@ -349,13 +359,14 @@
       "sous_titre_affiche_finale": "Maths & physique",
       "prompt_image_final": "Vertical tutoring poster 3:4. Notebook paper texture, student silhouette. Title COURS A DOMICILE de la 6ème à la terminale. 5 years experience, BEPC and Bac. FLYERMINT badge. Friendly, readable, no real school brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "sport-finance-01",
@@ -365,13 +376,14 @@
       "sous_titre_affiche_finale": "Édition 2 · 7 km",
       "prompt_image_final": "Vertical sports poster 3:4. Blue-orange cloudy sky. Title MARCHE SPORTIVE EDITION 2, 7 Km. Route, community picnic, dress code, 5$. Runners in motion, high contrast. FLYERMINT badge. No real club brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "sport-finance-02",
@@ -381,13 +393,14 @@
       "sous_titre_affiche_finale": "Shop the smart side",
       "prompt_image_final": "Vertical fintech poster 3:4. Fresh mint and night blue. Title CLAIRE PAY. Line Join the smart side. Abstract virtual card, community 75,000+. FLYERMINT badge. No real bank or app names.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3-pro-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "sante-tourisme-associations-01",
@@ -397,13 +410,14 @@
       "sous_titre_affiche_finale": "Journée de santé gratuite",
       "prompt_image_final": "Vertical health poster 3:4. Hopeful mint and white. Title FONDATION RETOUR A LA VIE. Free care on 14 February. Screenings: palu, diabète, hypertension. FLYERMINT badge. No real hospital brand.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "sante-tourisme-associations-02",
@@ -413,13 +427,14 @@
       "sous_titre_affiche_finale": "Just click, book, go",
       "prompt_image_final": "Vertical travel poster 3:4. Sunny tropical landscape. Title RELAIS WEEKEND. Line Where you wan dey this weekend? Just click, book, go. Soft hotel terrace, not a real hotel chain. FLYERMINT badge.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3-pro-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     },
     {
       "id": "sante-tourisme-associations-03",
@@ -429,13 +444,16 @@
       "sous_titre_affiche_finale": "Enfants de rue · Kinshasa",
       "prompt_image_final": "Vertical solidarity poster 3:4. Reassuring turquoise. Title SOLIDARITE ENFANCE. For street children, Centre Bongisa, Ngaliema. Calm documentary photography style, respectful, no logos of real NGOs. FLYERMINT badge.",
       "modele_texte_utilise": "",
-      "modele_image_utilise": "",
+      "modele_image_utilise": "google/gemini-3.1-flash-image",
       "cout_rodi": 0,
       "fichier_image": "",
       "fichier_image_hero": "",
       "poids_ko": 0,
       "statut": "echec",
-      "hero_loop": false
+      "hero_loop": false,
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
     }
-  ]
+  ],
+  "note": "10/27 generated then Rodium wallet hit insufficient_balance (8.7 RODI left, ~24 RODI/image). Remaining 17 skipped until wallet recharge.",
+  "hero_loop_count": 10
 }
