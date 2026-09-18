@@ -10,6 +10,7 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest run",
+    "showcase:generate": "node --experimental-strip-types --no-warnings scripts/generate-showcase.mts",
     "db:seed": "node prisma/seed.mjs",
     "postinstall": "prisma generate"
   },

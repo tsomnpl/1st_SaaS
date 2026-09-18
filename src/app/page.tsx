@@ -3,6 +3,8 @@ import { STEPS } from "@/lib/brand";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
+import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
+import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
 
 const SHOWCASE = [
   { title: "NIGHT WAVE", subtitle: "Concert live", meta: "Sam. 21h · Plateau", tone: "night" as const, cta: "Prends ta place" },
@@ -21,7 +23,10 @@ const DOMAIN_TONES = [
   "gold", "clean",
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  const { generated } = await getGeneratedShowcase();
+  const heroPosters = generated.filter((entry) => entry.hero_loop).map((entry) => toPoster(entry, true));
+
   return (
     <div className="space-y-24 pb-8">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white px-5 py-10 shadow-[0_30px_80px_rgba(15,23,42,0.08)] md:px-10 md:py-14">
@@ -58,40 +63,28 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="relative mx-auto h-[440px] w-full max-w-[440px]">
-            <VisualPoster
-              title="FESTIVAL LIVE"
-              subtitle="Une nuit, une scène"
-              meta="Samedi 21h · Zone 4"
-              cta="Prends ta place"
-              tone="night"
-              className="absolute left-8 top-0 z-20 w-[58%] rotate-[-7deg] animate-float"
-            />
-            <VisualPoster
-              title="BEAUTY WEEK"
-              subtitle="-30% soins"
-              meta="Cette semaine seulement"
-              cta="Réserver"
-              tone="soft"
-              className="absolute right-0 top-10 z-10 w-[46%] rotate-[9deg] animate-float-delayed"
-            />
-            <VisualPoster
-              title="OPEN CLASS"
-              subtitle="Places limitées"
-              meta="Formation intensive"
-              cta="S’inscrire"
-              tone="fresh"
-              className="absolute bottom-2 left-0 z-30 w-[44%] rotate-[-4deg]"
-            />
-            <div className="glass absolute bottom-8 right-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
-              Direction artistique
-              <p className="text-sm font-semibold text-[#6D28D9]">Hiérarchie · CTA · Safe zone</p>
+          {heroPosters.length >= 3 ? (
+            <HeroPosterLoop posters={heroPosters} />
+          ) : (
+            <div className="relative mx-auto h-[440px] w-full max-w-[440px]">
+              <VisualPoster
+                title="FESTIVAL LIVE"
+                subtitle="Une nuit, une scène"
+                meta="Samedi 21h · Zone 4"
+                cta="Prends ta place"
+                tone="night"
+                className="absolute left-8 top-0 z-20 w-[58%] rotate-[-7deg] animate-float"
+              />
+              <VisualPoster
+                title="BEAUTY WEEK"
+                subtitle="-30% soins"
+                meta="Cette semaine seulement"
+                cta="Réserver"
+                tone="soft"
+                className="absolute right-0 top-10 z-10 w-[46%] rotate-[9deg] animate-float-delayed"
+              />
             </div>
-            <div className="glass absolute right-4 top-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
-              Mints
-              <p className="text-lg font-bold text-[#10B981]">1 affiche offerte</p>
-            </div>
-          </div>
+          )}
         </div>
       </section>
 

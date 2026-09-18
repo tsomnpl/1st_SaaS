@@ -83,3 +83,26 @@ body {
 .animate-float-delayed {
   animation: floaty 7.2s ease-in-out infinite 0.9s;
 }
+
+@keyframes hero-loop {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.hero-loop-track {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  animation: hero-loop 36s linear infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-loop-track {
+    animation: none;
+  }
+}

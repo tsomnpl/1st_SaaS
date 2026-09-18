@@ -17,6 +17,7 @@ export type VisualPosterProps = {
   meta?: string;
   cta?: string;
   tone?: PosterTone;
+  imageSrc?: string;
   className?: string;
 };
 
@@ -40,20 +41,31 @@ export function VisualPoster({
   meta,
   cta = "Réserver",
   tone = "night",
+  imageSrc,
   className = "",
 }: VisualPosterProps) {
   return (
     <article
       className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.5rem] bg-gradient-to-br p-5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.18)] ${tones[tone]} ${className}`}
     >
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt={`${title}${subtitle ? ` — ${subtitle}` : ""}`}
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="lazy"
+          decoding="async"
+        />
+      ) : null}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20" />
       <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
       <div className="pointer-events-none absolute bottom-8 left-[-20%] h-24 w-40 rounded-full bg-black/10 blur-2xl" />
-      <p className="text-[10px] uppercase tracking-[0.22em] text-white/70">{kicker}</p>
-      <h3 className="mt-4 max-w-[11ch] text-[1.65rem] font-extrabold leading-[0.95] tracking-tight">
+      <p className="relative z-10 text-[10px] uppercase tracking-[0.22em] text-white/70">{kicker}</p>
+      <h3 className="relative mt-4 max-w-[11ch] text-[1.65rem] font-extrabold leading-[0.95] tracking-tight">
         {title}
       </h3>
-      {subtitle ? <p className="mt-3 max-w-[18ch] text-sm text-white/85">{subtitle}</p> : null}
-      <div className="mt-auto space-y-3">
+      {subtitle ? <p className="relative mt-3 max-w-[18ch] text-sm text-white/85">{subtitle}</p> : null}
+      <div className="relative mt-auto space-y-3">
         {meta ? (
           <p className="max-w-[20ch] text-xs font-medium text-white/75">{meta}</p>
         ) : null}

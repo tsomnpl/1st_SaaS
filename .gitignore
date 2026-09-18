@@ -43,3 +43,8 @@ next-env.d.ts
 # inspiration binaries (principles live in src/lib/inspiration.ts)
 docs/inspirations/*.pdf
 docs/inspirations/*.docx
+
+# raw showcase renders — keep only compressed webp if committed
+public/creations/raw/
+public/creations/*.png
+public/creations/*.jpg
