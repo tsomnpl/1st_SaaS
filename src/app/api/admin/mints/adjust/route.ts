@@ -3,13 +3,14 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { safeJsonError } from "@/lib/safe-api";
 import { grantCredits, removeCredits } from "@/server/credits";
 
 const adjustSchema = z.object({
-  targetUserId: z.string().min(3),
-  amount: z.number().int().refine((n) => n !== 0),
-  reason: z.string().min(2),
-  reference: z.string().optional(),
+  targetUserId: z.string().min(3).max(80),
+  amount: z.number().int().min(-500).max(500).refine((n) => n !== 0),
+  reason: z.string().min(2).max(240),
+  reference: z.string().max(80).optional(),
 });
 
 export async function POST(request: Request) {
@@ -60,9 +61,6 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ ok: true, balance: result });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
-      { status: 400 },
-    );
+    return safeJsonError(error);
   }
 }

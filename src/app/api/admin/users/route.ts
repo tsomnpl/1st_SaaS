@@ -3,6 +3,7 @@ import { z } from "zod";
 import { UserStatus } from "@prisma/client";
 import { requireAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { safeJsonError } from "@/lib/safe-api";
 
 export async function GET(request: Request) {
   try {
@@ -37,8 +38,8 @@ export async function GET(request: Request) {
         balance: u.creditAccount?.balance ?? 0,
       })),
     });
-  } catch {
-    return NextResponse.json({ ok: false, error: "FORBIDDEN" }, { status: 403 });
+  } catch (error) {
+    return safeJsonError(error, 403);
   }
 }
 
@@ -70,9 +71,6 @@ export async function POST(request: Request) {
     });
     return NextResponse.json({ ok: true });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
-      { status: 400 },
-    );
+    return safeJsonError(error);
   }
 }

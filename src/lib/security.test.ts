@@ -6,9 +6,9 @@ import { createBriefSchema } from "./flyermint";
 import { z } from "zod";
 
 const mintAdjustSchema = z.object({
-  targetUserId: z.string().min(3),
-  amount: z.number().int().refine((n) => n !== 0),
-  reason: z.string().min(2),
+  targetUserId: z.string().min(3).max(80),
+  amount: z.number().int().min(-500).max(500).refine((n) => n !== 0),
+  reason: z.string().min(2).max(240),
 });
 
 function walk(dir: string, acc: string[] = []) {
@@ -34,6 +34,9 @@ describe("security helpers", () => {
     expect(() =>
       mintAdjustSchema.parse({ targetUserId: "usr_1", amount: 5, reason: "bonus" }),
     ).not.toThrow();
+    expect(() =>
+      mintAdjustSchema.parse({ targetUserId: "usr_1", amount: 999999, reason: "hack" }),
+    ).toThrow();
   });
 
   it("rejects unsafe image payloads", () => {
@@ -48,6 +51,20 @@ describe("security helpers", () => {
         mainImageUrl: "javascript:alert(1)",
       }),
     ).toThrow();
+  });
+
+  it("rejects privilege-escalation payloads on user status", () => {
+    const statusSchema = z.object({
+      targetUserId: z.string().min(3),
+      status: z.enum(["ACTIVE", "SUSPENDED"]),
+      reason: z.string().min(2),
+    });
+    expect(() =>
+      statusSchema.parse({ targetUserId: "usr_1", status: "ADMIN", reason: "hack" }),
+    ).toThrow();
+    expect(() =>
+      statusSchema.parse({ targetUserId: "usr_1", role: "ADMIN", status: "ACTIVE", reason: "ok" }),
+    ).not.toThrow();
   });
 
   it("does not commit live-looking secrets", () => {

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { ensureOfficialPlans } from "@/server/plans";
+import { AdminPlansClient } from "@/components/admin/admin-plans-client";
 
 export default async function AdminPlansPage() {
   await ensureOfficialPlans();
@@ -7,16 +8,19 @@ export default async function AdminPlansPage() {
   return (
     <div className="space-y-4">
       <h1 className="text-3xl font-extrabold">Plans</h1>
-      {plans.map((plan) => (
-        <article key={plan.id} className="card p-4 text-sm">
-          <p className="font-semibold">{plan.name}</p>
-          <p className="text-slate-500">
-            {plan.priceFcfa.toLocaleString("fr-FR")} FCFA · {plan.mintAmount} Mints ·{" "}
-            {plan.durationDays ? `${plan.durationDays} jours` : "sans expiration"}
-            {plan.editableExport ? " · export éditable" : ""}
-          </p>
-        </article>
-      ))}
+      <p className="text-sm text-slate-500">Toute modification importante demande une confirmation.</p>
+      <AdminPlansClient
+        plans={plans.map((plan) => ({
+          id: plan.id,
+          code: plan.code,
+          name: plan.name,
+          priceFcfa: plan.priceFcfa,
+          mintAmount: plan.mintAmount,
+          durationDays: plan.durationDays,
+          editableExport: plan.editableExport,
+          active: plan.active,
+        }))}
+      />
     </div>
   );
 }

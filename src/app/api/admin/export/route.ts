@@ -43,6 +43,21 @@ export async function GET(request: Request) {
         reference: t.reference,
         createdAt: t.createdAt.toISOString(),
       }));
+    } else if (type === "analytics") {
+      const [userCount, paymentCount, generationCount, mintSum] = await Promise.all([
+        prisma.user.count(),
+        prisma.payment.count({ where: { status: "COMPLETED" } }),
+        prisma.generation.count(),
+        prisma.creditAccount.aggregate({ _sum: { balance: true } }),
+      ]);
+      rows = [
+        {
+          users: userCount,
+          paymentsCompleted: paymentCount,
+          generations: generationCount,
+          remainingMints: mintSum._sum.balance ?? 0,
+        },
+      ];
     } else {
       const users = await prisma.user.findMany({ include: { creditAccount: true }, take: 2000 });
       rows = users.map((u) => ({

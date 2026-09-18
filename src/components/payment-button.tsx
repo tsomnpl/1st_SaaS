@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { formatFcfa } from "@/lib/plans";
+import { publicErrorMessage } from "@/lib/errors";
 
 type Props = {
   planCode: string;
@@ -15,7 +16,8 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
   const [error, setError] = useState<string | null>(null);
   const [numeroSend, setNumeroSend] = useState("");
   const [nomclient, setNomclient] = useState("");
-  const canStart = Boolean(numeroSend.trim() && nomclient.trim());
+  const phoneOk = /^[0-9+\s().-]{8,20}$/.test(numeroSend.trim());
+  const canStart = phoneOk && nomclient.trim().length >= 2;
 
   async function startPayment() {
     setLoading(true);
@@ -36,7 +38,7 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
       }
       window.location.href = data.checkoutUrl;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur paiement");
+      setError(publicErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -65,7 +67,12 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
           value={numeroSend}
           onChange={(e) => setNumeroSend(e.target.value)}
           className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+          inputMode="tel"
+          autoComplete="tel"
         />
+        {!phoneOk && numeroSend.trim() ? (
+          <span className="mt-1 block text-xs text-amber-700">Utilise un numéro valide (8 à 20 caractères).</span>
+        ) : null}
       </label>
       <button type="button" onClick={startPayment} disabled={loading || !canStart} className="btn-primary w-full">
         {loading ? "Redirection…" : "Payer avec Money Fusion"}

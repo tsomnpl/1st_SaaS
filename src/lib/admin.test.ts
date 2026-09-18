@@ -23,4 +23,8 @@ describe("admin identity", () => {
     expect(isConfiguredAdmin({ email: "other@example.com", clerkUserId: "user_x" })).toBe(false);
     expect(isConfiguredAdmin({ email: null, clerkUserId: null })).toBe(false);
   });
+
+  it("never treats a self-declared role as admin", () => {
+    expect(isConfiguredAdmin({ email: "attacker@example.com", clerkUserId: "user_attacker" })).toBe(false);
+  });
 });

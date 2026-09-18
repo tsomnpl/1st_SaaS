@@ -16,7 +16,7 @@ export function AuthChrome({ children }: { children: ReactNode }) {
     <html lang="fr" className={`${jakarta.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col text-slate-900">
         <SiteHeaderHost />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 [&:has([data-admin-shell])]:max-w-[1500px]">{children}</main>
         <SiteFooter />
         <CookieBanner />
         <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />

@@ -5,9 +5,9 @@ import { initMoneyFusionPayment } from "@/server/payments";
 import { z } from "zod";
 
 const initSchema = z.object({
-  planCode: z.string().min(2),
-  numeroSend: z.string().min(3),
-  nomclient: z.string().min(2),
+  planCode: z.string().min(2).max(40),
+  numeroSend: z.string().regex(/^[0-9+\s().-]{8,20}$/, "INVALID_PHONE"),
+  nomclient: z.string().min(2).max(80),
 });
 
 export async function POST(request: Request) {

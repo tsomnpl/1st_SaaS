@@ -20,7 +20,7 @@ export async function ensureOfficialPlans() {
       prisma.plan.upsert({
         where: { code: plan.code },
         create: toPlanRecord(plan),
-        update: toPlanRecord(plan),
+        update: {},
       }),
     ),
   );

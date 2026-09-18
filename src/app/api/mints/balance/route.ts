@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateCurrentUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
+import { safeJsonError } from "@/lib/safe-api";
 
 export async function GET() {
   try {
@@ -14,9 +15,6 @@ export async function GET() {
       label: `${account?.balance ?? 0} Mints = ${account?.balance ?? 0} affiches restantes`,
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
-      { status: 401 },
-    );
+    return safeJsonError(error, 401);
   }
 }

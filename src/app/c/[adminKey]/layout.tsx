@@ -4,6 +4,7 @@ import { auth } from "@clerk/nextjs/server";
 import { AdminShell } from "@/components/admin/admin-shell";
 import { getAdminBasePath, getAdminPrivatePath } from "@/lib/env";
 import { requireAdminUser } from "@/lib/auth";
+import { logAdminSession } from "@/server/admin-audit";
 import { pageTitle } from "@/lib/seo";
 
 export const metadata = {
@@ -31,10 +32,17 @@ export default async function AdminLayout({
   }
 
   try {
-    await requireAdminUser();
+    const admin = await requireAdminUser();
+    await logAdminSession(admin.id);
+    return (
+      <AdminShell
+        basePath={getAdminBasePath()}
+        adminLabel={admin.name ?? admin.email ?? "Administrateur"}
+      >
+        {children}
+      </AdminShell>
+    );
   } catch {
     forbidden();
   }
-
-  return <AdminShell basePath={getAdminBasePath()}>{children}</AdminShell>;
 }

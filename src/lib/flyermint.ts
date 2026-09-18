@@ -13,34 +13,45 @@ function isSafeImageRef(value: string) {
 
 const imageRef = z.string().refine(isSafeImageRef, "INVALID_IMAGE").optional();
 
+const optionalPhone = z
+  .string()
+  .optional()
+  .refine((value) => !value || /^[0-9+\s().-]{6,20}$/.test(value), "INVALID_PHONE");
+const optionalEmail = z
+  .string()
+  .optional()
+  .refine((value) => !value || z.string().email().safeParse(value).success, "INVALID_EMAIL");
+const optionalText = (max: number) => z.string().max(max).optional();
+
 export const createBriefSchema = z.object({
-  visualType: z.string().min(2),
+  visualType: z.string().min(2).max(80),
   domain: z.enum(DOMAINS),
-  objective: z.string().min(2),
-  targetAudience: z.string().min(2),
-  title: z.string().min(2),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  price: z.string().optional(),
-  oldPrice: z.string().optional(),
-  newPrice: z.string().optional(),
-  date: z.string().optional(),
-  time: z.string().optional(),
-  location: z.string().optional(),
-  contactPhone: z.string().optional(),
-  whatsapp: z.string().optional(),
-  email: z.string().optional(),
-  cta: z.string().optional(),
-  style: z.string().optional(),
-  colors: z.array(z.string()).default([]),
-  mood: z.string().optional(),
-  format: z.string().min(2),
+  objective: z.string().min(2).max(240),
+  targetAudience: z.string().min(2).max(240),
+  title: z.string().min(2).max(120),
+  subtitle: optionalText(160),
+  description: optionalText(2000),
+  price: optionalText(40),
+  oldPrice: optionalText(40),
+  newPrice: optionalText(40),
+  date: optionalText(40),
+  time: optionalText(40),
+  location: optionalText(160),
+  contactPhone: optionalPhone,
+  whatsapp: optionalPhone,
+  email: optionalEmail,
+  cta: optionalText(80),
+  style: optionalText(80),
+  colors: z.array(z.string().max(40)).max(8).default([]),
+  mood: optionalText(80),
+  format: z.string().min(2).max(40),
   creativeFreedom: z
     .enum(["liberte_totale", "liberte_guidee", "design_tres_precis"])
     .default("liberte_guidee"),
   mainImageUrl: imageRef,
   logoUrl: imageRef,
-  adaptiveData: z.record(z.string(), z.string()).default({}),
+  regenerateFromId: z.string().min(3).max(80).optional(),
+  adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
 });
 
 export type CreateBriefInput = z.infer<typeof createBriefSchema>;

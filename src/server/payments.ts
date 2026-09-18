@@ -1,5 +1,6 @@
 import { CreditTransactionType, PaymentStatus, Prisma } from "@prisma/client";
 import { env, getAppUrl } from "@/lib/env";
+import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { ensureOfficialPlans } from "@/server/plans";
@@ -132,13 +133,14 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
   const classified = classifyPaymentStatus(remoteStatus);
   const eventKey = `moneyfusion:${token}:${classified}`;
+  const safePayload = sanitizeRecord(payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue;
 
   try {
     await prisma.webhookEvent.create({
       data: {
         provider: "MONEY_FUSION",
         eventKey,
-        payload: (payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue,
+        payload: safePayload,
       },
     });
   } catch (error) {
@@ -168,7 +170,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
       data: {
         status: classified === PaymentStatus.PENDING ? payment.status : classified,
         rawStatus: remoteStatus,
-        rawResponse: payload ? (payload as Prisma.InputJsonValue) : Prisma.JsonNull,
+        rawResponse: payload ? safePayload : Prisma.JsonNull,
         webhookState: classified,
       },
     });
@@ -185,7 +187,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
       data: {
         status: PaymentStatus.COMPLETED,
         rawStatus: remoteStatus,
-        rawResponse: payload ? (payload as Prisma.InputJsonValue) : Prisma.JsonNull,
+        rawResponse: payload ? safePayload : Prisma.JsonNull,
         webhookState: "COMPLETED",
         creditedAt: new Date(),
       },

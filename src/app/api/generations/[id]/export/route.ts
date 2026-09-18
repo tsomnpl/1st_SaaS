@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { userHasEditableExport } from "@/server/generation";
+import { safeJsonError } from "@/lib/safe-api";
 
 type Params = Promise<{ id: string }>;
 
@@ -47,10 +48,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
       },
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
-      { status: 400 },
-    );
+    return safeJsonError(error);
   }
 }
 

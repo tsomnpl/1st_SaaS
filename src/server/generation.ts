@@ -54,6 +54,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         qualityScore: qualityScores.overall_score,
         qualityDetails: {
           ...qualityScores,
+          durationMs: Date.now() - generation.createdAt.getTime(),
           checks: ["image_present", "prompt_contains_title"],
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,

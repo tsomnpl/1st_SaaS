@@ -14,7 +14,11 @@ const MESSAGES: Record<string, string> = {
   RODIUM_NO_IMAGE_MODEL: "Aucun modèle image n’est disponible actuellement.",
   GENERATION_FAILED: "La génération a échoué. Ton Mint n’a pas été débité.",
   INVALID_IMAGE: "L’image fournie n’est pas valide (JPG, PNG ou WEBP, 2 Mo max).",
+  INVALID_PHONE: "Le numéro de téléphone n’est pas valide.",
+  INVALID_EMAIL: "L’e-mail n’est pas valide.",
   RATE_LIMITED: "Trop de tentatives. Réessaie dans un instant.",
+  EXPORT_LOCKED: "L’export éditable n’est pas inclus dans tes offres.",
+  NOT_FOUND: "Ressource introuvable.",
 };
 
 export function publicErrorMessage(error: unknown) {

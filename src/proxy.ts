@@ -74,8 +74,11 @@ function applySensitiveRateLimit(req: NextRequest) {
   const rules: Array<{ match: (path: string) => boolean; limit: number; windowMs: number; name: string }> = [
     { match: (path) => path === "/api/generate", limit: 8, windowMs: 60_000, name: "generate" },
     { match: (path) => path === "/api/payments/init", limit: 8, windowMs: 60_000, name: "pay-init" },
+    { match: (path) => path.startsWith("/api/admin/export"), limit: 8, windowMs: 60_000, name: "admin-export" },
     { match: (path) => path.startsWith("/api/admin/"), limit: 40, windowMs: 60_000, name: "admin" },
     { match: (path) => path.includes("webhook"), limit: 80, windowMs: 60_000, name: "webhook" },
+    { match: (path) => path === "/api/me/bootstrap", limit: 20, windowMs: 60_000, name: "bootstrap" },
+    { match: (path) => path === "/api/mints/balance", limit: 40, windowMs: 60_000, name: "balance" },
   ];
   for (const rule of rules) {
     if (!rule.match(pathname)) continue;

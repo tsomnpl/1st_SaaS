@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
+import { AdminSearch } from "@/components/admin/admin-search";
 
 const LINKS = [
   ["Dashboard", ""],
@@ -21,41 +22,62 @@ const LINKS = [
 
 export function AdminShell({
   basePath,
+  adminLabel = "Administrateur",
   children,
 }: {
   basePath: string;
+  adminLabel?: string;
   children: ReactNode;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[220px_1fr]">
-      <div className="lg:hidden">
-        <button type="button" className="btn-secondary" onClick={() => setOpen((v) => !v)}>
-          {open ? "Fermer le menu" : "Menu admin"}
-        </button>
+    <div data-admin-shell className="space-y-4">
+      <div className="overflow-hidden rounded-[1.6rem] border border-slate-800 bg-[#1E293B] text-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+        <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">Studio</p>
+              <p className="text-sm font-semibold">Centre de contrôle FlyerMint</p>
+            </div>
+            <button type="button" className="rounded-xl border border-white/15 px-3 py-2 text-sm lg:hidden" onClick={() => setOpen((value) => !value)}>
+              {open ? "Fermer" : "Menu"}
+            </button>
+          </div>
+          <AdminSearch basePath={basePath} />
+          <div className="flex items-center gap-3 text-sm text-slate-300">
+            <span className="inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
+            <span className="truncate">{adminLabel}</span>
+          </div>
+        </div>
       </div>
-      <aside className={`card h-fit p-4 ${open ? "block" : "hidden lg:block"}`}>
-        <p className="px-2 text-xs font-bold uppercase tracking-wide text-slate-400">Studio</p>
-        <nav className="mt-3 flex flex-col gap-1 text-sm">
-          {LINKS.map(([label, suffix]) => {
-            const href = `${basePath}${suffix}`;
-            const active = pathname === href;
-            return (
-              <Link
-                key={href}
-                href={href}
-                onClick={() => setOpen(false)}
-                className={`rounded-lg px-3 py-2 ${active ? "bg-violet-50 font-semibold text-[#6D28D9]" : "text-slate-600 hover:bg-slate-50"}`}
-              >
-                {label}
-              </Link>
-            );
-          })}
-        </nav>
-      </aside>
-      <div className="min-w-0">{children}</div>
+
+      <div className="grid gap-6 lg:grid-cols-[230px_1fr]">
+        <aside className={`admin-sidebar ${open ? "block" : "hidden lg:block"}`}>
+          <nav className="flex flex-col gap-1 text-sm">
+            {LINKS.map(([label, suffix]) => {
+              const href = `${basePath}${suffix}`;
+              const active = pathname === href || (suffix !== "" && pathname.startsWith(href));
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setOpen(false)}
+                  className={`rounded-xl px-3 py-2 transition ${
+                    active
+                      ? "bg-white/10 font-semibold text-white"
+                      : "text-slate-300 hover:bg-white/5 hover:text-white"
+                  }`}
+                >
+                  {label}
+                </Link>
+              );
+            })}
+          </nav>
+        </aside>
+        <div className="min-w-0 space-y-6">{children}</div>
+      </div>
     </div>
   );
 }

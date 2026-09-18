@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 
 type UserRow = {
   id: string;
@@ -9,17 +10,27 @@ type UserRow = {
   status: string;
   role: string;
   balance: number;
+  createdAt?: string;
 };
 
-export function AdminUsersClient({ users }: { users: UserRow[] }) {
+export function AdminUsersClient({
+  users,
+  basePath,
+}: {
+  users: UserRow[];
+  basePath: string;
+}) {
   const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
   const [reason, setReason] = useState("Action studio");
   const filtered = useMemo(
     () =>
-      users.filter((user) =>
-        `${user.email} ${user.name} ${user.id}`.toLowerCase().includes(query.toLowerCase()),
-      ),
-    [users, query],
+      users.filter((user) => {
+        const match = `${user.email} ${user.name} ${user.id}`.toLowerCase().includes(query.toLowerCase());
+        const statusOk = status === "all" || user.status === status;
+        return match && statusOk;
+      }),
+    [users, query, status],
   );
 
   async function adjust(targetUserId: string, amount: number) {
@@ -33,32 +44,39 @@ export function AdminUsersClient({ users }: { users: UserRow[] }) {
     window.location.reload();
   }
 
-  async function setStatus(targetUserId: string, status: "ACTIVE" | "SUSPENDED") {
-    if (!window.confirm(`${status === "SUSPENDED" ? "Suspendre" : "Réactiver"} cet utilisateur ?`)) return;
+  async function setUserStatus(targetUserId: string, next: "ACTIVE" | "SUSPENDED") {
+    if (!window.confirm(`${next === "SUSPENDED" ? "Suspendre" : "Réactiver"} cet utilisateur ?`)) return;
     await fetch("/api/admin/users", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ targetUserId, status, reason }),
+      body: JSON.stringify({ targetUserId, status: next, reason }),
     });
     window.location.reload();
   }
 
   return (
     <div className="space-y-3">
-      <input
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
-        placeholder="Rechercher"
-        className="w-full rounded-xl border border-slate-200 px-3 py-2"
-      />
-      <input
-        value={reason}
-        onChange={(e) => setReason(e.target.value)}
-        placeholder="Raison de l’action"
-        className="w-full rounded-xl border border-slate-200 px-3 py-2"
-      />
+      <div className="grid gap-3 md:grid-cols-3">
+        <input
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          placeholder="Rechercher un e-mail ou un nom"
+          className="rounded-xl border border-slate-200 px-3 py-2"
+        />
+        <select value={status} onChange={(event) => setStatus(event.target.value)} className="rounded-xl border border-slate-200 px-3 py-2">
+          <option value="all">Tous les statuts</option>
+          <option value="ACTIVE">Actifs</option>
+          <option value="SUSPENDED">Suspendus</option>
+        </select>
+        <input
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+          placeholder="Raison de l’action"
+          className="rounded-xl border border-slate-200 px-3 py-2"
+        />
+      </div>
       <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white">
-        <table className="min-w-full text-sm">
+        <table className="min-w-[720px] w-full text-sm">
           <thead className="bg-slate-50 text-left text-slate-500">
             <tr>
               <th className="px-3 py-2">Utilisateur</th>
@@ -72,7 +90,9 @@ export function AdminUsersClient({ users }: { users: UserRow[] }) {
             {filtered.map((user) => (
               <tr key={user.id} className="border-t border-slate-100">
                 <td className="px-3 py-2">
-                  <p className="font-medium">{user.name ?? user.email ?? user.id}</p>
+                  <Link href={`${basePath}/users/${user.id}`} className="font-medium text-[#6D28D9]">
+                    {user.name ?? user.email ?? user.id}
+                  </Link>
                   <p className="text-xs text-slate-400">{user.email}</p>
                 </td>
                 <td className="px-3 py-2">{user.role}</td>
@@ -87,11 +107,11 @@ export function AdminUsersClient({ users }: { users: UserRow[] }) {
                       -1
                     </button>
                     {user.status === "SUSPENDED" ? (
-                      <button type="button" className="btn-secondary px-3 py-1" onClick={() => setStatus(user.id, "ACTIVE")}>
+                      <button type="button" className="btn-secondary px-3 py-1" onClick={() => setUserStatus(user.id, "ACTIVE")}>
                         Réactiver
                       </button>
                     ) : (
-                      <button type="button" className="btn-secondary px-3 py-1" onClick={() => setStatus(user.id, "SUSPENDED")}>
+                      <button type="button" className="btn-secondary px-3 py-1" onClick={() => setUserStatus(user.id, "SUSPENDED")}>
                         Suspendre
                       </button>
                     )}
