@@ -1,8 +1,8 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { getAdminClerkIds } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
-import { ensureCreditAccount, grantWelcomeMintIfNeeded } from "@/server/credits";
+import { ensureCreditAccount, expireCredits, grantWelcomeMintIfNeeded } from "@/server/credits";
 
 export async function getOrCreateCurrentUser() {
   const session = await auth();
@@ -27,6 +27,15 @@ export async function getOrCreateCurrentUser() {
   });
 
   await ensureCreditAccount(user.id);
+  await expireCredits();
   await grantWelcomeMintIfNeeded(user);
+  return user;
+}
+
+export async function requireActiveCurrentUser() {
+  const user = await getOrCreateCurrentUser();
+  if (user.status === UserStatus.SUSPENDED) {
+    throw new Error("ACCOUNT_SUSPENDED");
+  }
   return user;
 }

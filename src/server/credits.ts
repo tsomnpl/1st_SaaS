@@ -74,6 +74,7 @@ export async function consumeOneMint(
   options: CreditOptions = {},
 ) {
   const client = getClient(options.tx);
+  await expireCredits(new Date(), options.tx);
   const account = await ensureCreditAccount(userId, options.tx);
   if (account.balance < 1) throw new Error("INSUFFICIENT_MINTS");
 
@@ -171,9 +172,9 @@ export async function removeCredits(
   return { removed: removable, balanceAfter };
 }
 
-export async function expireCredits(now = new Date()) {
-  return prisma.$transaction(async (tx) => {
-    const expiredBuckets = await tx.creditBucket.findMany({
+export async function expireCredits(now = new Date(), tx?: Prisma.TransactionClient) {
+  const run = async (client: PrismaClient | Prisma.TransactionClient) => {
+    const expiredBuckets = await client.creditBucket.findMany({
       where: {
         expiresAt: { lte: now },
         remainingAmount: { gt: 0 },
@@ -181,12 +182,12 @@ export async function expireCredits(now = new Date()) {
     });
 
     for (const bucket of expiredBuckets) {
-      const account = await ensureCreditAccount(bucket.userId, tx);
+      const account = await ensureCreditAccount(bucket.userId, client === prisma ? undefined : (client as Prisma.TransactionClient));
       const balanceBefore = account.balance;
       const amount = bucket.remainingAmount;
       const balanceAfter = Math.max(0, balanceBefore - amount);
 
-      await tx.creditTransaction.create({
+      await client.creditTransaction.create({
         data: {
           userId: bucket.userId,
           type: CreditTransactionType.EXPIRATION,
@@ -200,19 +201,22 @@ export async function expireCredits(now = new Date()) {
         },
       });
 
-      await tx.creditAccount.update({
+      await client.creditAccount.update({
         where: { userId: bucket.userId },
         data: { balance: balanceAfter },
       });
 
-      await tx.creditBucket.update({
+      await client.creditBucket.update({
         where: { id: bucket.id },
         data: { remainingAmount: 0 },
       });
     }
 
     return expiredBuckets.length;
-  });
+  };
+
+  if (tx) return run(tx);
+  return prisma.$transaction((inner) => run(inner));
 }
 
 export async function grantWelcomeMintIfNeeded(user: User) {

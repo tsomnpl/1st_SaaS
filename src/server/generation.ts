@@ -12,6 +12,7 @@ import { generateWithRodium } from "@/server/rodium";
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
   if (!user) throw new Error("USER_NOT_FOUND");
+  if (user.status === "SUSPENDED") throw new Error("ACCOUNT_SUSPENDED");
 
   const brief = createBriefSchema.parse(unsafeInput);
   const artDirection = buildArtDirection(brief);
@@ -40,19 +41,21 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
 
   try {
     const result = await generateWithRodium({ prompt, brief });
-    const parsedOutput = safeJsonParse(result.rawText);
-    const outputUrl = String(
-      (parsedOutput && (parsedOutput.imageUrl as string)) || "",
-    );
+    if (!result.imageUrl) {
+      throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+    }
 
     const updated = await prisma.generation.update({
       where: { id: generation.id },
       data: {
         model: result.model,
         rodiCost: result.rodiCostEstimate,
-        outputUrl: outputUrl || null,
+        outputUrl: result.imageUrl,
         qualityScore: qualityScores.overall_score,
-        qualityDetails: qualityScores as Prisma.JsonObject,
+        qualityDetails: {
+          ...qualityScores,
+          checks: ["image_present", "prompt_contains_title"],
+        } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },
     });
@@ -62,9 +65,6 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       outputUrl: updated.outputUrl,
       quality: qualityScores,
       artDirection,
-      differentiators: artDirection.differentiators,
-      costRodi: result.rodiCostEstimate,
-      model: result.model,
     };
   } catch (error) {
     await prisma.$transaction(async (tx) => {
@@ -90,10 +90,13 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   }
 }
 
-function safeJsonParse(value: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
+export async function userHasEditableExport(userId: string) {
+  const paid = await prisma.payment.findFirst({
+    where: {
+      userId,
+      status: "COMPLETED",
+      plan: { editableExport: true },
+    },
+  });
+  return Boolean(paid);
 }

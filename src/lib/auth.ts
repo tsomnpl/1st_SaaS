@@ -1,5 +1,5 @@
 import { auth } from "@clerk/nextjs/server";
-import { UserRole } from "@prisma/client";
+import { UserRole, UserStatus } from "@prisma/client";
 import { getAdminClerkIds } from "@/lib/env";
 import { prisma } from "@/lib/prisma";
 
@@ -32,4 +32,10 @@ export async function requireAdminUser() {
     throw new Error("FORBIDDEN");
   }
   return user;
+}
+
+export function assertActiveUser(status: UserStatus) {
+  if (status === UserStatus.SUSPENDED) {
+    throw new Error("ACCOUNT_SUSPENDED");
+  }
 }

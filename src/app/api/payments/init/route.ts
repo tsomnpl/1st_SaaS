@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
-import { getOrCreateCurrentUser } from "@/server/users";
+import { publicErrorMessage } from "@/lib/errors";
+import { requireActiveCurrentUser } from "@/server/users";
 import { initMoneyFusionPayment } from "@/server/payments";
+import { z } from "zod";
 
 const initSchema = z.object({
   planCode: z.string().min(2),
@@ -11,7 +12,7 @@ const initSchema = z.object({
 
 export async function POST(request: Request) {
   try {
-    const user = await getOrCreateCurrentUser();
+    const user = await requireActiveCurrentUser();
     const body = initSchema.parse(await request.json());
     const payment = await initMoneyFusionPayment({
       userId: user.id,
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, ...payment });
   } catch (error) {
     return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
+      { ok: false, error: publicErrorMessage(error) },
       { status: 400 },
     );
   }

@@ -1,13 +1,16 @@
 "use client";
 
 import { useState } from "react";
+import { formatFcfa } from "@/lib/plans";
 
 type Props = {
   planCode: string;
-  label: string;
+  planName: string;
+  priceFcfa: number;
+  mintAmount: number;
 };
 
-export function PaymentButton({ planCode, label }: Props) {
+export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [numeroSend, setNumeroSend] = useState("");
@@ -18,9 +21,6 @@ export function PaymentButton({ planCode, label }: Props) {
     setLoading(true);
     setError(null);
     try {
-      if (!numeroSend.trim() || !nomclient.trim()) {
-        throw new Error("Renseigne ton numero et ton nom avant de payer.");
-      }
       const response = await fetch("/api/payments/init", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -43,28 +43,34 @@ export function PaymentButton({ planCode, label }: Props) {
   }
 
   return (
-    <div className="space-y-2">
-      <input
-        value={nomclient}
-        onChange={(e) => setNomclient(e.target.value)}
-        placeholder="Nom du payeur"
-        className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-sm"
-      />
-      <input
-        value={numeroSend}
-        onChange={(e) => setNumeroSend(e.target.value)}
-        placeholder="Numero de paiement"
-        className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 text-sm"
-      />
-      <button
-        type="button"
-        onClick={startPayment}
-        disabled={loading || !canStart}
-        className="rounded bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-900 disabled:opacity-60"
-      >
-        {loading ? "Redirection..." : label}
+    <div className="card mx-auto max-w-lg space-y-5 p-6">
+      <div>
+        <p className="text-sm text-slate-500">{planName}</p>
+        <p className="mt-1 text-3xl font-extrabold">{formatFcfa(priceFcfa)}</p>
+        <p className="mt-1 text-sm text-slate-600">
+          {mintAmount} Mints = {mintAmount} affiches · 1 Mint = 1 affiche
+        </p>
+      </div>
+      <label className="block text-sm">
+        <span className="font-medium text-slate-700">Nom du payeur</span>
+        <input
+          value={nomclient}
+          onChange={(e) => setNomclient(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+        />
+      </label>
+      <label className="block text-sm">
+        <span className="font-medium text-slate-700">Numéro de paiement</span>
+        <input
+          value={numeroSend}
+          onChange={(e) => setNumeroSend(e.target.value)}
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+        />
+      </label>
+      <button type="button" onClick={startPayment} disabled={loading || !canStart} className="btn-primary w-full">
+        {loading ? "Redirection…" : "Payer avec Money Fusion"}
       </button>
-      {error && <p className="text-xs text-red-300">{error}</p>}
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
     </div>
   );
 }

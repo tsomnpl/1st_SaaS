@@ -1,37 +1,50 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { SiteHeader } from "@/components/site-header";
+import type { ReactNode } from "react";
+import { PublicChrome } from "@/components/chrome/public-chrome";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "FlyerMint — Affiches professionnelles, direction artistique incluse",
+  title: "FlyerMint — Créez des visuels qui marquent.",
   description:
-    "Transforme une idee ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
+    "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const dynamic = "force-dynamic";
+
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "#6D28D9",
+    colorText: "#1E293B",
+    colorBackground: "#FFFFFF",
+    borderRadius: "0.9rem",
+    fontFamily: "Plus Jakarta Sans, sans-serif",
+  },
+};
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    return <PublicChrome>{children}</PublicChrome>;
+  }
+
+  const [{ ClerkProvider }, { AuthChrome }] = await Promise.all([
+    import("@clerk/nextjs"),
+    import("@/components/chrome/auth-chrome"),
+  ]);
+
   return (
-    <ClerkProvider>
-      <html
-        lang="fr"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="flex min-h-full flex-col text-white">
-          <SiteHeader />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-        </body>
-      </html>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      appearance={clerkAppearance}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
+      <AuthChrome>{children}</AuthChrome>
     </ClerkProvider>
   );
 }

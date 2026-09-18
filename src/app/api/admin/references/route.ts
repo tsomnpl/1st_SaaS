@@ -46,3 +46,19 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    await requireAdminUser();
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    if (!id) return NextResponse.json({ ok: false, error: "ID_REQUIRED" }, { status: 400 });
+    await prisma.reference.delete({ where: { id } });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    return NextResponse.json(
+      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
+      { status: 400 },
+    );
+  }
+}
