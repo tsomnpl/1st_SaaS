@@ -18,6 +18,8 @@ const envSchema = z.object({
   MONEY_FUSION_WEBHOOK_URL: z.string().url().optional(),
   ADMIN_CLERK_USER_IDS: z.string().optional(),
   ADMIN_PRIVATE_PATH: z.string().optional(),
+  SUPABASE_URL: z.string().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().optional(),
 });
 
 export const env = envSchema.parse({
@@ -39,6 +41,8 @@ export const env = envSchema.parse({
   MONEY_FUSION_WEBHOOK_URL: process.env.MONEY_FUSION_WEBHOOK_URL,
   ADMIN_CLERK_USER_IDS: process.env.ADMIN_CLERK_USER_IDS,
   ADMIN_PRIVATE_PATH: process.env.ADMIN_PRIVATE_PATH,
+  SUPABASE_URL: process.env.SUPABASE_URL,
+  SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
 });
 
 export function getAdminClerkIds(): Set<string> {

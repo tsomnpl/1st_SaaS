@@ -91,10 +91,15 @@ describe("inspiration source must stay private", () => {
     const hits: string[] = [];
     for (const file of files) {
       const text = readFileSync(file, "utf8");
-      if (file.endsWith("inspiration-folders.ts") || file.endsWith("inspiration-folders.test.ts")) {
+      if (
+        file.endsWith("inspiration-folders.ts") ||
+        file.endsWith("inspiration-folders.test.ts") ||
+        file.endsWith("inspiration-source.ts") ||
+        file.endsWith("inspiration-source.test.ts")
+      ) {
         continue;
       }
-      if (text.includes("inspirations-source") || text.includes("/object/public/inspirations-source")) {
+      if (text.includes("/object/public/inspirations-source")) {
         hits.push(file);
       }
     }

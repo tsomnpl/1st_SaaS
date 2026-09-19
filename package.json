@@ -12,7 +12,8 @@
     "test": "vitest run",
     "db:seed": "node prisma/seed.mjs",
     "inspirations:self-test": "python3 scripts/upload-inspirations.py --self-test",
-    "inspirations:upload": "python3 scripts/upload-inspirations.py"
+    "inspirations:upload": "python3 scripts/upload-inspirations.py",
+    "inspirations:analyze": "python3 scripts/analyze-inspirations.py"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

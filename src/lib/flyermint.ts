@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
 import { selectInspirationReferences } from "@/lib/inspiration";
+import {
+  formatInspirationForPrompt,
+  type InspirationAnalysis,
+} from "@/lib/inspiration-source";
 
 export const createBriefSchema = z.object({
   visualType: z.string().min(2),
@@ -57,10 +61,14 @@ export type ArtDirection = {
   differentiators: string[];
 };
 
-export function buildArtDirection(input: CreateBriefInput): ArtDirection {
+export function buildArtDirection(
+  input: CreateBriefInput,
+  library: InspirationAnalysis[] = [],
+): ArtDirection {
   const palette =
     input.colors.length > 0 ? input.colors.slice(0, 3) : ["#111827", "#20C997", "#FFFFFF"];
   const inspiration = selectInspirationReferences(input);
+  const libraryIds = library.map((item) => `insp-${item.id}`);
 
   return {
     concept: `${input.style ?? "moderne"} orientee conversion pour ${input.domain}`,
@@ -90,8 +98,9 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "contraste fort texte/fond",
       "2-3 couleurs principales maximum",
       ...inspiration.principles,
+      ...formatInspirationForPrompt(library),
     ],
-    reference_ids: inspiration.selected.map((ref) => ref.id),
+    reference_ids: [...inspiration.selected.map((ref) => ref.id), ...libraryIds],
     avoid: [
       "texte colle aux bords",
       "effets excessifs qui nuisent a la lisibilite",
@@ -142,7 +151,8 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
       ? "Use the user image as the primary subject. Do not replace the subject."
       : "Create a coherent primary subject matching the brief.",
     "Do not invent business details.",
-    "Do not copy any reference poster, layout, artwork, or composition from inspiration files.",
+    "Do not copy any reference poster, layout, artwork, logo, brand name, or identifiable text.",
+    "Inspiration images are internal only and must never appear in the output.",
     "Use design laws only: hierarchy, contrast, alignment, proximity, repetition, balance, white space, readable CTA.",
     "If the user provided a photo, logo, or product image, it MUST remain the main subject.",
     "Prioritize readability over visual effects.",

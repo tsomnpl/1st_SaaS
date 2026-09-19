@@ -13,4 +13,5 @@ Bibliothèque locale (Pinterest / Behance / portfolios) — **pas des créations
 - Upload : `scripts/upload-inspirations.py` (voir `UPLOAD-LOCAL.md`)
 - Stockage : bucket Supabase privé `inspirations-source`
 - Table : `inspiration_source`
+- Descriptions IA : `scripts/analyze-inspirations.py` (JSON privé `_analysis/`, jamais public)
 - Interdit : afficher, republier, ou servir ces images sur le site.
