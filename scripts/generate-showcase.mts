@@ -19,6 +19,7 @@ const FORCE_REGEN_ALL = process.env.FORCE_REGEN === "all";
 
 const HERO_IDS = [
   "evenementiel-01",
+  "evenementiel-02",
   "restauration-03",
   "mode-03",
   "beaute-03",
@@ -107,7 +108,6 @@ async function callRodium(params: {
     prompt: params.prompt,
     n: 1,
     size: params.size,
-    quality: "high",
   };
   const gemini = params.model.toLowerCase().includes("gemini");
   if (gemini && params.referenceDataUrl) {
@@ -115,7 +115,7 @@ async function callRodium(params: {
   }
 
   let lastError = "RODIUM_IMAGES_FAILED";
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 4; attempt += 1) {
     const response = await fetch(`${params.baseUrl}/images/generations`, {
       method: "POST",
       headers,
@@ -133,16 +133,12 @@ async function callRodium(params: {
     if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
       throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
     }
-    if (response.status === 400 && body.quality) {
-      delete body.quality;
-      continue;
-    }
     if (response.status === 400 && params.size !== FALLBACK_SIZE) {
       body.size = FALLBACK_SIZE;
       continue;
     }
     if (response.status < 500 && response.status !== 429) break;
-    await new Promise((resolve) => setTimeout(resolve, 1200));
+    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
   }
   throw new Error(lastError);
 }
@@ -204,24 +200,49 @@ function isGptImageModel(model: unknown) {
   return String(model ?? "").toLowerCase().includes("gpt-image");
 }
 
-function shouldSkipPrevious(previous: Record<string, unknown> | undefined) {
+function shouldSkipPrevious(previous: Record<string, unknown> | undefined, sheetId: string) {
   if (!previous || previous.statut !== "genere" || !previous.fichier_image) return false;
   if (FORCE_REGEN_ALL) return false;
   if (isGptImageModel(previous.modele_image_utilise)) return true;
+  if (!HERO_IDS.includes(sheetId)) return true;
   return !FORCE_REGEN;
+}
+
+function catalogueOrder(fiches: Array<Record<string, unknown>>) {
+  const byId = new Map(fiches.map((row) => [String(row.id), row]));
+  const ordered = SHOWCASE_SHEETS.map((sheet) => byId.get(sheet.id)).filter(
+    (row): row is Record<string, unknown> => Boolean(row),
+  );
+  for (const row of fiches) {
+    if (!byId.has(String(row.id))) continue;
+    if (!ordered.includes(row)) ordered.push(row);
+  }
+  return ordered;
 }
 
 async function persistOutputs(
   fiches: Array<Record<string, unknown>>,
   extra: { note?: string } = {},
 ) {
-  const successIds = fiches.filter((row) => row.statut === "genere").map((row) => String(row.id));
+  let previous: Array<Record<string, unknown>> = [];
+  try {
+    const existing = JSON.parse(await readFile(MANIFEST, "utf8")) as { fiches?: Array<Record<string, unknown>> };
+    previous = existing.fiches ?? [];
+  } catch {
+    previous = [];
+  }
+  const byId = new Map<string, Record<string, unknown>>();
+  for (const row of previous) byId.set(String(row.id), row);
+  for (const row of fiches) byId.set(String(row.id), row);
+  const merged = catalogueOrder([...byId.values()]);
+
+  const successIds = merged.filter((row) => row.statut === "genere").map((row) => String(row.id));
   const loop = HERO_IDS.filter((id) => successIds.includes(id));
   for (const id of successIds) {
     if (loop.length >= 10) break;
     if (!loop.includes(id)) loop.push(id);
   }
-  for (const row of fiches) {
+  for (const row of merged) {
     row.hero_loop = loop.includes(String(row.id));
   }
 
@@ -229,7 +250,7 @@ async function persistOutputs(
     rule: "Style templates only. Never store original catalogue copy (titles, prices, real brands) as reusable content. Never serve references.pdf extracts.",
     count: SHOWCASE_SHEETS.length,
     items: SHOWCASE_SHEETS.map((sheet) => {
-      const row = fiches.find((item) => item.id === sheet.id);
+      const row = merged.find((item) => item.id === sheet.id);
       return {
         id: sheet.id,
         domaine: sheet.domaine,
@@ -243,14 +264,14 @@ async function persistOutputs(
   const manifest = {
     source: "docs/inspirations/catalogue-extrait.json",
     generated_at: new Date().toISOString(),
-    count: fiches.length,
-    rodi_total: Number(fiches.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
+    count: merged.length,
+    rodi_total: Number(merged.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
     master_size_requested: MASTER_SIZE,
     hero_loop_count: loop.length,
     note:
       extra.note ??
-      "Client-facing posters use OpenAI GPT Image (readable text). Gemini image-to-image stays for user photo edits only. Actual pixels recorded per fiche.",
-    fiches,
+      "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Actual pixels recorded per fiche.",
+    fiches: merged,
   };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
   return { successIds, loop, rodi_total: manifest.rodi_total };
@@ -260,8 +281,9 @@ async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
   const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
-  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1";
-  const premium = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-1";
+  const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
+  const geminiFast = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+  const geminiPremium = "google/gemini-3-pro-image";
 
   if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
 
@@ -290,12 +312,12 @@ async function main() {
     const walletResponse = await fetch(`${baseUrl}/wallet`, { headers: rodiumHeaders(apiKey) });
     if (walletResponse.ok) {
       const wallet = (await walletResponse.json()) as { balance_rodi?: string };
-      console.log("wallet", wallet.balance_rodi, "RODI", "model", premium, "size", MASTER_SIZE);
+      console.log("wallet", wallet.balance_rodi, "RODI", "hero_model", gpt, "fill_model", geminiFast, "size", MASTER_SIZE);
     } else {
-      console.log("wallet_status", walletResponse.status, "model", premium, "size", MASTER_SIZE);
+      console.log("wallet_status", walletResponse.status, "hero_model", gpt, "size", MASTER_SIZE);
     }
   } catch {
-    console.log("wallet_unavailable", "model", premium, "size", MASTER_SIZE);
+    console.log("wallet_unavailable", "hero_model", gpt, "size", MASTER_SIZE);
   }
 
   let existing: { fiches?: Array<Record<string, unknown>> } = {};
@@ -305,17 +327,23 @@ async function main() {
     existing = {};
   }
 
+  const queue = [
+    ...SHOWCASE_SHEETS.filter((sheet) => HERO_IDS.includes(sheet.id)),
+    ...SHOWCASE_SHEETS.filter((sheet) => !HERO_IDS.includes(sheet.id)),
+  ];
+
   const fiches = [];
-  for (const sheet of SHOWCASE_SHEETS) {
+  for (const sheet of queue) {
     const mapRow = pageMap.fiches.find((row) => row.id === sheet.id);
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
-    const model = sheet.premium ? premium : fast;
+    const hero = HERO_IDS.includes(sheet.id);
+    const model = hero ? gpt : sheet.premium ? geminiPremium : geminiFast;
     const attachBitmap = model.toLowerCase().includes("gemini") && Boolean(mapRow?.local_ref_path);
     const prompt = buildShowcasePrompt(sheet, attachBitmap);
     const categorisation = referenceCategorisation(sheet);
     const pageRef = mapRow?.page_reference_pdf ?? null;
 
-    if (previous && shouldSkipPrevious(previous)) {
+    if (previous && shouldSkipPrevious(previous, sheet.id)) {
       fiches.push({
         ...previous,
         prompt_image_final: prompt,
@@ -334,12 +362,13 @@ async function main() {
         ],
         reference_categorisation: categorisation,
       });
-      console.log("skip", sheet.id, previous.modele_image_utilise, "page", pageRef);
+      console.log("skip", sheet.id, previous.modele_image_utilise, hero ? "hero" : "fill", "page", pageRef);
       continue;
     }
 
     try {
       const reference = attachBitmap ? await referenceDataUrl(mapRow?.local_ref_path) : "";
+      console.log("gen", sheet.id, model, hero ? "hero" : "fill");
       const result = await callRodium({
         baseUrl,
         apiKey,
@@ -421,10 +450,16 @@ async function main() {
       });
       console.error("fail", sheet.id, error instanceof Error ? error.message : error);
       if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE")) {
-        const remaining = SHOWCASE_SHEETS.slice(SHOWCASE_SHEETS.indexOf(sheet) + 1);
+        const remaining = queue.slice(queue.indexOf(sheet) + 1);
         for (const leftover of remaining) {
-          const leftoverModel = leftover.premium ? premium : fast;
+          const leftoverHero = HERO_IDS.includes(leftover.id);
+          const leftoverModel = leftoverHero ? gpt : leftover.premium ? geminiPremium : geminiFast;
           const leftoverMap = pageMap.fiches.find((row) => row.id === leftover.id);
+          const leftoverPrev = existing.fiches?.find((row) => row.id === leftover.id);
+          if (leftoverPrev && shouldSkipPrevious(leftoverPrev, leftover.id)) {
+            fiches.push({ ...leftoverPrev, statut: leftoverPrev.statut });
+            continue;
+          }
           fiches.push({
             id: leftover.id,
             domaine: leftover.domaine,

@@ -32,9 +32,9 @@ describe("image model routing", () => {
         adaptiveData: {},
       } as unknown as CreateBriefInput,
       "concert premium",
-      ["openai/gpt-5", "openai/gpt-image-1", "google/gemini-3.1-flash-image"],
+      ["openai/gpt-5", "openai/gpt-image-2", "google/gemini-3.1-flash-image"],
     );
-    expect(model).toBe("openai/gpt-image-1");
+    expect(model).toBe("openai/gpt-image-2");
   });
 });
 

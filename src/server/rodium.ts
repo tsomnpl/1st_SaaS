@@ -65,10 +65,10 @@ export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, a
       return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
     }
     if (textHeavyFields >= 6) {
-      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-1";
+      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-2";
     }
     if (premiumKeywords.some((k) => promptText.includes(k))) {
-      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-1";
+      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
     }
     return env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1-mini";
   })();
