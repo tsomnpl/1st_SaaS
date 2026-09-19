@@ -1,4 +1,4 @@
-import { GLOBAL_DESIGN_PROMPT, STYLE_REFERENCE_PROMPT, DESIGN_RULE_LABELS } from "@/lib/design-rules";
+import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT, DESIGN_RULE_LABELS } from "@/lib/design-rules";
 import { SHOWCASE_SHEETS, type ShowcaseSheet } from "@/lib/showcase-sheets";
 
 export type ShowcaseDesign = {
@@ -52,7 +52,7 @@ export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean)
   const design = designFor(sheet.id);
   if (!design) throw new Error(`DESIGN_MISSING_${sheet.id}`);
   return [
-    hasVisualRef ? STYLE_REFERENCE_PROMPT : "No bitmap reference attached; follow the written style notes only.",
+    hasVisualRef ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
     `Vertical poster 3:4, print-sharp, high resolution.`,
     `Domain: ${sheet.domaine}.`,

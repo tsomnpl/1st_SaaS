@@ -12,7 +12,7 @@ const MANIFEST = path.join(ROOT, "docs/inspirations/showcase-manifest.json");
 const CATALOGUE = path.join(ROOT, "docs/inspirations/catalogue-extrait.json");
 const PAGE_MAP = path.join(ROOT, "docs/inspirations/reference-page-map.json");
 const REF_CATALOG = path.join(ROOT, "docs/inspirations/references-catalog.json");
-const MASTER_SIZE = "3840x4800";
+const MASTER_SIZE = "1024x1536";
 const FALLBACK_SIZE = "1024x1536";
 const FORCE_REGEN = process.env.FORCE_REGEN === "1";
 
@@ -199,8 +199,8 @@ async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
   const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
-  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-image";
-  const premium = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "google/gemini-3-pro-image";
+  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1-mini";
+  const premium = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-1";
 
   if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
 
@@ -236,7 +236,9 @@ async function main() {
   for (const sheet of SHOWCASE_SHEETS) {
     const mapRow = pageMap.fiches.find((row) => row.id === sheet.id);
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
-    const prompt = buildShowcasePrompt(sheet, Boolean(mapRow?.local_ref_path));
+    const model = sheet.premium ? premium : fast;
+    const attachBitmap = model.toLowerCase().includes("gemini") && Boolean(mapRow?.local_ref_path);
+    const prompt = buildShowcasePrompt(sheet, attachBitmap);
     const categorisation = referenceCategorisation(sheet);
     const pageRef = mapRow?.page_reference_pdf ?? null;
 
@@ -261,9 +263,8 @@ async function main() {
       continue;
     }
 
-    const model = sheet.premium ? premium : fast;
     try {
-      const reference = await referenceDataUrl(mapRow?.local_ref_path);
+      const reference = attachBitmap ? await referenceDataUrl(mapRow?.local_ref_path) : "";
       const result = await callRodium({
         baseUrl,
         apiKey,
@@ -346,6 +347,7 @@ async function main() {
       if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE")) {
         const remaining = SHOWCASE_SHEETS.slice(SHOWCASE_SHEETS.indexOf(sheet) + 1);
         for (const leftover of remaining) {
+          const leftoverModel = leftover.premium ? premium : fast;
           const leftoverMap = pageMap.fiches.find((row) => row.id === leftover.id);
           fiches.push({
             id: leftover.id,
@@ -353,10 +355,13 @@ async function main() {
             titre_original_catalogue: leftover.titre_original_catalogue,
             titre_affiche_finale: leftover.titre_affiche_finale,
             sous_titre_affiche_finale: leftover.sous_titre_affiche_finale,
-            prompt_image_final: buildShowcasePrompt(leftover, Boolean(leftoverMap?.local_ref_path)),
+            prompt_image_final: buildShowcasePrompt(
+              leftover,
+              leftoverModel.toLowerCase().includes("gemini") && Boolean(leftoverMap?.local_ref_path),
+            ),
             regles_design_appliquees: ["palette limitée 2-3 couleurs", "hiérarchie titre dominante", "contraste fort texte/fond"],
             modele_texte_utilise: "",
-            modele_image_utilise: leftover.premium ? premium : fast,
+            modele_image_utilise: leftoverModel,
             cout_rodi: 0,
             fichier_image_master_4k: "",
             fichier_image_web: "",

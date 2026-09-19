@@ -88,6 +88,7 @@ describe("showcase catalogue alignment", () => {
       expect(prompt).toMatch(/Clear hierarchy/i);
       expect(prompt).toMatch(/Strong contrast/i);
       expect(prompt).toMatch(/Do NOT copy or near-copy/i);
+      expect(buildShowcasePrompt(sheet, false)).toMatch(/Every visible word must be correctly spelled/i);
       expect(prompt).toContain(sheet.titre_affiche_finale);
       expect(prompt).not.toMatch(/zara|nexora|fulixgold|techpoint/i);
     }
@@ -95,7 +96,7 @@ describe("showcase catalogue alignment", () => {
 
   it("requests max poster size and Gemini style refs in the generator", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
-    expect(script).toContain("3840x4800");
+    expect(script).toContain("openai/gpt-image-1");
     expect(script).toContain("lanczos3");
     expect(script).toContain("page_reference_pdf");
     expect(script).toContain("body.image");
