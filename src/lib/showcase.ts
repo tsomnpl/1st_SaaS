@@ -32,7 +32,9 @@ export function toPoster(entry: ShowcaseManifestEntry, hero = false) {
     meta: sheet?.meta,
     cta: sheet?.cta ?? "Découvrir",
     tone: sheet?.tone ?? "night",
-    imageSrc: hero ? entry.fichier_image_hero || entry.fichier_image : entry.fichier_image,
+    imageSrc: hero
+      ? entry.fichier_image_hero || entry.fichier_image_web || entry.fichier_image
+      : entry.fichier_image_web || entry.fichier_image,
     domaine: entry.domaine,
   };
 }

@@ -48,3 +48,7 @@ docs/inspirations/*.docx
 public/creations/raw/
 public/creations/*.png
 public/creations/*.jpg
+
+# private PDF page extracts (style reference only — never serve)
+storage/private/
+storage/masters/

@@ -164,8 +164,9 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
       ? "Use the user image as the primary subject. Do not replace the subject."
       : "Create a coherent primary subject matching the brief.",
     "Do not invent business details.",
-    "Do not copy any reference poster, layout, artwork, or composition from inspiration files.",
-    "Use design laws only: hierarchy, contrast, alignment, proximity, repetition, balance, white space, readable CTA.",
+    "If a style-reference image is provided, inspire composition, palette, layout and type treatment only.",
+    "Never copy or near-copy a reference. Never reproduce logos, real brand names, or identifiable company text from a reference.",
+    "Design laws: max 2-3 main colors; max 2 type families; title/date/price hierarchy; strong contrast; grid alignment; proximity of related facts; generous white space; one hero visual.",
     "If the user provided a photo, logo, or product image, it MUST remain the main subject.",
     "Prioritize readability over visual effects.",
   ]

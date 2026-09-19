@@ -1,0 +1,251 @@
+{
+  "source_pdf": "docs/inspirations/references.pdf",
+  "page_count": 346,
+  "method": "tesseract OCR + manual verification of low-score matches",
+  "rule": "Style reference only. Never copy logos, brand names, or identifiable real-company text. Never serve these images on the site.",
+  "mapped": 25,
+  "fiches": [
+    {
+      "id": "evenementiel-01",
+      "page_reference_pdf": null,
+      "ocr_score": 0,
+      "ocr_preview": "",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site."
+    },
+    {
+      "id": "evenementiel-02",
+      "page_reference_pdf": 6,
+      "ocr_score": 3,
+      "ocr_preview": "lary ÿ in | uy va fa nbg ne yao 4 e 1 | piment si se simple en gs = à out i » x lle vip ] ed. 6 #\" ~z à nt 202 fre d à 10 _ ion ds. 7 i oa ‘eal 4 aw / 8 suis ‘#5 4 a 3 >) / f p a £",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/evenementiel-02-p6.jpg"
+    },
+    {
+      "id": "evenementiel-03",
+      "page_reference_pdf": null,
+      "ocr_score": 0,
+      "ocr_preview": "no reliable page (OCR false positive dropped)",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": null
+    },
+    {
+      "id": "evenementiel-04",
+      "page_reference_pdf": 279,
+      "ocr_score": 4,
+      "ocr_preview": "ét levizy 50: en con cre sam.28 sept a 1 18h à. a oie ae : 4 ~ | parra nt ty, © ae + # se” y 1 à a) € be oe : i 4 w li al aa e< f2 ms x = i | | \"ts : j = ae 4 ps 7 qe + stade du 26",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/evenementiel-04-p279.jpg"
+    },
+    {
+      "id": "restauration-01",
+      "page_reference_pdf": 9,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 9",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/restauration-01-p9.jpg"
+    },
+    {
+      "id": "restauration-02",
+      "page_reference_pdf": 58,
+      "ocr_score": 1,
+      "ocr_preview": "d 900 «2. ù — 2 fr passez. ss = ee , vos | | commandes. (54 maintenant ! j ss -_ y pi menu: a à ® rizaugras dé pe) 217 4 y riz cantonai <5 | . pa a so #2 areas ® djinkoumè = e sala",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/restauration-02-p58.jpg"
+    },
+    {
+      "id": "restauration-03",
+      "page_reference_pdf": 69,
+      "ocr_score": 1,
+      "ocr_preview": "borcelle resto .* pecia le al nt “promo d à 9 4 + pecembe, sde 3 f ge 9 . be 62% aie. se’ ge: “ec ve 7 \\ ea grte* s v2 » ? se japanese oe chicken katsu ramen ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/restauration-03-p69.jpg"
+    },
+    {
+      "id": "restauration-04",
+      "page_reference_pdf": 116,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 116",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/restauration-04-p116.jpg"
+    },
+    {
+      "id": "mode-01",
+      "page_reference_pdf": 1,
+      "ocr_score": 3,
+      "ocr_preview": "we're “™ le à. =~ dé à à | = ~ be) l \" 4 £ d le da i a || an 218 ie ms | là de 4 l'e “ rm | i 5 a | a! ‘ood (al 4 ù = i | t à | dealer in all kinds of ! ; 1 1 f pe premium women we",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/mode-01-p1.jpg"
+    },
+    {
+      "id": "mode-02",
+      "page_reference_pdf": 16,
+      "ocr_score": 1,
+      "ocr_preview": "raw tat ft 4 ! : lime ie yy + = lizzi ae ce lection 4 cae | 4 , 23 “a 4 à ¥ \\ ÿ cle | _ cru ) à à us 7 ' ( a | si ff yona zz a 1) fin a i l' \\ ya | ee dealers in; he é slippers, dr",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/mode-02-p16.jpg"
+    },
+    {
+      "id": "mode-03",
+      "page_reference_pdf": 23,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 23",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/mode-03-p23.jpg"
+    },
+    {
+      "id": "beaute-01",
+      "page_reference_pdf": 7,
+      "ocr_score": 1,
+      "ocr_preview": "aurature ul m ) pi le. cu 2 | , é = ÿ hf 4 unisex salon opposite nayara fuels nanminda ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/beaute-01-p7.jpg"
+    },
+    {
+      "id": "beaute-02",
+      "page_reference_pdf": 87,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 87",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/beaute-02-p87.jpg"
+    },
+    {
+      "id": "beaute-03",
+      "page_reference_pdf": 126,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 126",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/beaute-03-p126.jpg"
+    },
+    {
+      "id": "immobilier-business-01",
+      "page_reference_pdf": 76,
+      "ocr_score": 1,
+      "ocr_preview": "i \\ do you need { an apartment to rent or buy? , | we provide decent and affordable “ à ~~ a | apartments to rent or buy. ) à è sj î i 2 = la . i — re features: i f = 1#1 apartment",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/immobilier-business-01-p76.jpg"
+    },
+    {
+      "id": "immobilier-business-02",
+      "page_reference_pdf": 70,
+      "ocr_score": 4,
+      "ocr_preview": "modibo dembélé sarl : nous etats tt 4 vendons et construisons vos biens immobiliers! a pref lt | es : — se ae à de les avantages pour vous de travailler avec nous ce ds one contac ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/immobilier-business-02-p70.jpg"
+    },
+    {
+      "id": "immobilier-business-03",
+      "page_reference_pdf": 13,
+      "ocr_score": 4,
+      "ocr_preview": "æ techpoint | | à © 3 7 12,540 $28,450 us |: es scalable solutions. limitless growth. = na, ‘ > sa e re = ja e- ; . ? t — es a cost) d d à real-time @ security 000 muret à à | “fl ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/immobilier-business-03-p13.jpg"
+    },
+    {
+      "id": "immobilier-business-04",
+      "page_reference_pdf": 10,
+      "ocr_score": 4,
+      "ocr_preview": "nexora smart banking ove limitless | 1 = a | | f / = a f uj tu r f || $24,560.00 i, nw nexora &» 5412 7512 3415 à 512 3412 3456 aro holder nexora bank brings next-generation visa b",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/immobilier-business-04-p10.jpg"
+    },
+    {
+      "id": "immobilier-business-05",
+      "page_reference_pdf": 77,
+      "ocr_score": 1,
+      "ocr_preview": "({ololo depasse one listing canf: — change your | :: business = r | leur. omer y = à | fret = & ene se mes ne \\ ar) ok qooree~ @ fry it mela ze ee ; « 0302553627 os a @ ololoexpres",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/immobilier-business-05-p77.jpg"
+    },
+    {
+      "id": "techno-education-01",
+      "page_reference_pdf": 22,
+      "ocr_score": 3,
+      "ocr_preview": "f sono quality, rliable, premium. la ive k | 48] = h # everything tech, right in your palm. € stay plugged into innovation. shop phones, 4 ss laptops, earbuds,starlink, cctv camera",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/techno-education-01-p22.jpg"
+    },
+    {
+      "id": "techno-education-02",
+      "page_reference_pdf": 37,
+      "ocr_score": 3,
+      "ocr_preview": "manually verified page 37",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/techno-education-02-p37.jpg"
+    },
+    {
+      "id": "techno-education-03",
+      "page_reference_pdf": 99,
+      "ocr_score": 1,
+      "ocr_preview": "a dol mici le de la 6ème à la terminale matière enseignées ay jj mathématiques | / ‘de la 6eme à la terminale ne \\ if | physique-chimie à \\ | | thes dela4emeala3eme — | y oa! | ave",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/techno-education-03-p99.jpg"
+    },
+    {
+      "id": "sport-finance-01",
+      "page_reference_pdf": 41,
+      "ocr_score": 1,
+      "ocr_preview": "7 : a las . dspp cmte 4 community =. on march edition 2 » jeudi 16 janvier: 07h00 f7) dress code l kilomètre 4 lak 2...) pa 5 ox ee\" sm obs © terrainfoot 38740000 ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/sport-finance-01-p41.jpg"
+    },
+    {
+      "id": "sport-finance-02",
+      "page_reference_pdf": 49,
+      "ocr_score": 2,
+      "ocr_preview": "i (sendora join the 3 smart side shop with 7 | = sendora! = ee < n\\ enjoy the flexibility to shop, : | pay, and manage your = ~ y money, whenever you \\\\j 40 need it sendora's virtu",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/sport-finance-02-p49.jpg"
+    },
+    {
+      "id": "sante-tourisme-associations-01",
+      "page_reference_pdf": 4,
+      "ocr_score": 2,
+      "ocr_preview": "( | la fondation reviens à la vie =. de ww zz ae journée = ; = soigner et j sauve à oad des vies lr soins médicaux l gratuits pour tous = - services offerts samedi © consultation m",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/sante-tourisme-associations-01-p4.jpg"
+    },
+    {
+      "id": "sante-tourisme-associations-02",
+      "page_reference_pdf": 296,
+      "ocr_score": 2,
+      "ocr_preview": ". hotelsng : - : where will youlbe la = boas this weekend? | ss, =e ee ae a mn > i of on ns 12 w¥ gl > se * < & discover amazing weekend ‘a 4 es * getaways on hotels.ng 5 a so el c",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/sante-tourisme-associations-02-p296.jpg"
+    },
+    {
+      "id": "sante-tourisme-associations-03",
+      "page_reference_pdf": 86,
+      "ocr_score": 3,
+      "ocr_preview": "campagne de solidarité en faveur des enfants et jeunes en situation de rue pris en charge par l'asbl pecs un sourire _ = à nous comptons œ 2 er à sur votre générosité! w . | x © à ",
+      "visual_ref_supported": true,
+      "notes": "Gemini image-to-image style reference; never display this page on the site.",
+      "local_ref_path": "storage/private/ref-pages/sante-tourisme-associations-03-p86.jpg"
+    }
+  ]
+}

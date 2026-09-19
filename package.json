@@ -11,6 +11,7 @@
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest run",
     "showcase:generate": "node --experimental-strip-types --no-warnings scripts/generate-showcase.mts",
+    "showcase:map": "python3 scripts/map-reference-pages.py",
     "db:seed": "node prisma/seed.mjs",
     "postinstall": "prisma generate"
   },

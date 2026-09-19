@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
 import { PrismaClient } from "@prisma/client";
 
 const prisma = new PrismaClient();
@@ -11,6 +13,48 @@ const plans = [
   ["PACK_20K", "Pack Pro", 20000, 15, null, true, 5],
   ["PACK_25K", "Pack Atelier", 25000, 20, null, true, 6],
 ];
+
+async function seedShowcaseReferences() {
+  try {
+    const file = path.join(process.cwd(), "docs/inspirations/references-catalog.json");
+    const catalog = JSON.parse(await readFile(file, "utf8")) as {
+      items?: Array<{
+        id: string;
+        domaine: string;
+        style: string;
+        composition: string;
+        palette: string[];
+        ambiance: string;
+        imageUrl?: string;
+      }>;
+    };
+    for (const item of catalog.items ?? []) {
+      await prisma.reference.upsert({
+        where: { id: `showcase-${item.id}` },
+        create: {
+          id: `showcase-${item.id}`,
+          domain: item.domaine,
+          style: item.style,
+          composition: item.composition,
+          colorPalette: item.palette.join(", "),
+          mood: item.ambiance,
+          imageUrl: item.imageUrl,
+          tags: ["showcase", "style-only"],
+        },
+        update: {
+          domain: item.domaine,
+          style: item.style,
+          composition: item.composition,
+          colorPalette: item.palette.join(", "),
+          mood: item.ambiance,
+          imageUrl: item.imageUrl,
+        },
+      });
+    }
+  } catch {
+    // catalog or database optional during local seed
+  }
+}
 
 async function main() {
   for (const [code, name, priceFcfa, mintAmount, durationDays, editableExport, sortOrder] of plans) {
@@ -37,6 +81,7 @@ async function main() {
       },
     });
   }
+  await seedShowcaseReferences();
 }
 
 main()

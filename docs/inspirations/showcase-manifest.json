@@ -18,7 +18,38 @@
       "fichier_image_hero": "/creations/hero/evenementiel-01.webp",
       "poids_ko": 143.6,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": null,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/evenementiel-01.webp",
+      "poids_web_ko": 143.6,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Événementiel",
+        "style": "dégradé dramatique + titre 3D",
+        "composition": "profil héros bas-gauche, titre centré haut, safe zone basse",
+        "palette": [
+          "#7C2D12",
+          "#F59E0B",
+          "#1C1917"
+        ],
+        "ambiance": "festif cinématique"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "evenementiel-02",
@@ -34,7 +65,38 @@
       "fichier_image_hero": "/creations/hero/evenementiel-02.webp",
       "poids_ko": 223.2,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 6,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/evenementiel-02.webp",
+      "poids_web_ko": 223.2,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Événementiel",
+        "style": "graphisme angulaire haute énergie",
+        "composition": "titre massif haut, cadres date/tarif groupés",
+        "palette": [
+          "#B91C1C",
+          "#FFFFFF",
+          "#111827"
+        ],
+        "ambiance": "urgent"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "evenementiel-03",
@@ -50,7 +112,38 @@
       "fichier_image_hero": "/creations/hero/evenementiel-03.webp",
       "poids_ko": 148.5,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": null,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/evenementiel-03.webp",
+      "poids_web_ko": 148.5,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Événementiel",
+        "style": "urbain lumineux + ticket",
+        "composition": "personnage héros, titre incliné, encart ticket bas",
+        "palette": [
+          "#3B82F6",
+          "#EF4444",
+          "#F8FAFC"
+        ],
+        "ambiance": "jeune"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "evenementiel-04",
@@ -66,7 +159,38 @@
       "fichier_image_hero": "/creations/hero/evenementiel-04.webp",
       "poids_ko": 282.3,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 279,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/evenementiel-04.webp",
+      "poids_web_ko": 282.3,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Événementiel",
+        "style": "affiche stade texturée",
+        "composition": "titre blanc géant, infos pass/lieu en bande basse",
+        "palette": [
+          "#991B1B",
+          "#FFFFFF",
+          "#0F172A"
+        ],
+        "ambiance": "crowd"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "restauration-01",
@@ -82,7 +206,38 @@
       "fichier_image_hero": "/creations/hero/restauration-01.webp",
       "poids_ko": 98.2,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 9,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/restauration-01.webp",
+      "poids_web_ko": 98.2,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Restauration",
+        "style": "épuré beige + emblème",
+        "composition": "centre stable, encart message, marges larges",
+        "palette": [
+          "#E7D5C5",
+          "#7C4A2D",
+          "#1E293B"
+        ],
+        "ambiance": "élégant"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "restauration-02",
@@ -98,7 +253,38 @@
       "fichier_image_hero": "/creations/hero/restauration-02.webp",
       "poids_ko": 71.5,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 58,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/restauration-02.webp",
+      "poids_web_ko": 71.5,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Restauration",
+        "style": "menu clair bandeau courbe",
+        "composition": "header coloré, liste groupée par proximité",
+        "palette": [
+          "#FFFFFF",
+          "#DC2626",
+          "#F97316"
+        ],
+        "ambiance": "quotidien"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "restauration-03",
@@ -114,7 +300,38 @@
       "fichier_image_hero": "/creations/hero/restauration-03.webp",
       "poids_ko": 169.9,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 69,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/restauration-03.webp",
+      "poids_web_ko": 169.9,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Restauration",
+        "style": "food héros gros plan",
+        "composition": "plat centré, badge promo, prix dominant",
+        "palette": [
+          "#1C1917",
+          "#F59E0B",
+          "#F8FAFC"
+        ],
+        "ambiance": "gourmand"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "restauration-04",
@@ -130,7 +347,38 @@
       "fichier_image_hero": "/creations/hero/restauration-04.webp",
       "poids_ko": 245.3,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 116,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/restauration-04.webp",
+      "poids_web_ko": 245.3,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Restauration",
+        "style": "texture sombre + services",
+        "composition": "titre haut, services groupés, visuel plat unique",
+        "palette": [
+          "#7F1D1D",
+          "#1C1917",
+          "#FDE68A"
+        ],
+        "ambiance": "convivial"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "mode-01",
@@ -146,7 +394,38 @@
       "fichier_image_hero": "/creations/hero/mode-01.webp",
       "poids_ko": 55.6,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 1,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/mode-01.webp",
+      "poids_web_ko": 55.6,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Mode & Accessoires",
+        "style": "éditorial minimal",
+        "composition": "beaucoup d'air, monogramme, un still-life",
+        "palette": [
+          "#E7E5E4",
+          "#1C1917",
+          "#D6D3D1"
+        ],
+        "ambiance": "premium"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "mode-02",
@@ -162,7 +441,38 @@
       "fichier_image_hero": "/creations/hero/mode-02.webp",
       "poids_ko": 91.5,
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "page_reference_pdf": 16,
+      "visual_ref_used": false,
+      "web_width": 896,
+      "web_height": 1200,
+      "fichier_image_web": "/creations/mode-02.webp",
+      "poids_web_ko": 91.5,
+      "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
+      "fichier_image_master_4k": "",
+      "master_width": 896,
+      "master_height": 1200,
+      "reference_categorisation": {
+        "domaine": "Mode & Accessoires",
+        "style": "studio lumineux",
+        "composition": "look unique, titre haut, produits en ligne courte",
+        "palette": [
+          "#F8FAFC",
+          "#1E293B",
+          "#D4B483"
+        ],
+        "ambiance": "airé"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "mode-03",
@@ -179,7 +489,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 23,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Mode & Accessoires",
+        "style": "doux poudré",
+        "composition": "titre + une grille légère, pas d'encombrement",
+        "palette": [
+          "#F9E4E8",
+          "#FFFFFF",
+          "#9D174D"
+        ],
+        "ambiance": "délicat"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "beaute-01",
@@ -196,7 +529,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 7,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Beauté & Soins",
+        "style": "salon professionnel clair",
+        "composition": "titre + badge date groupés, intérieur en héros",
+        "palette": [
+          "#F8FAFC",
+          "#6D28D9",
+          "#1E293B"
+        ],
+        "ambiance": "soin"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "beaute-02",
@@ -213,7 +569,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 87,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Beauté & Soins",
+        "style": "médaillons services",
+        "composition": "titre haut, 5 cercles alignés, formation en bas",
+        "palette": [
+          "#B45309",
+          "#1C1917",
+          "#FDE68A"
+        ],
+        "ambiance": "chaleureux"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "beaute-03",
@@ -230,7 +609,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 126,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Beauté & Soins",
+        "style": "luxe bio podium",
+        "composition": "titre fort, flacons héros, beaucoup d'air",
+        "palette": [
+          "#9F1239",
+          "#FFFFFF",
+          "#1C1917"
+        ],
+        "ambiance": "éclat"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "immobilier-business-01",
@@ -247,7 +649,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 76,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Immobilier & Business",
+        "style": "confiance + vague accent",
+        "composition": "question-titre, types de biens en pastilles alignées",
+        "palette": [
+          "#0F172A",
+          "#F59E0B",
+          "#E0F2FE"
+        ],
+        "ambiance": "serieux"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "immobilier-business-02",
@@ -264,7 +689,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 70,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Immobilier & Business",
+        "style": "corporate architecture",
+        "composition": "titre + 3 piliers, silhouette bâtiment",
+        "palette": [
+          "#1E293B",
+          "#D4B483",
+          "#F8FAFC"
+        ],
+        "ambiance": "pro"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "immobilier-business-03",
@@ -281,7 +729,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 13,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Immobilier & Business",
+        "style": "dashboard dark tech",
+        "composition": "titre, 3 métriques max, verre UI",
+        "palette": [
+          "#020617",
+          "#22D3EE",
+          "#F8FAFC"
+        ],
+        "ambiance": "innovant"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "immobilier-business-04",
@@ -298,7 +769,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 10,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Immobilier & Business",
+        "style": "fintech interface",
+        "composition": "carte abstraite héros, solde lisible, actions groupées",
+        "palette": [
+          "#1E3A8A",
+          "#FFFFFF",
+          "#3B82F6"
+        ],
+        "ambiance": "fiable"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "immobilier-business-05",
@@ -315,7 +809,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 77,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Immobilier & Business",
+        "style": "produit 3D + phone",
+        "composition": "promesse titre, un mockup, CTA bas",
+        "palette": [
+          "#064E3B",
+          "#10B981",
+          "#F8FAFC"
+        ],
+        "ambiance": "opportunité"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "techno-education-01",
@@ -332,7 +849,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 22,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Technologie & Éducation",
+        "style": "retail tech sombre",
+        "composition": "titre, un objet héros, liste courte",
+        "palette": [
+          "#1E293B",
+          "#10B981",
+          "#F8FAFC"
+        ],
+        "ambiance": "net"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "techno-education-02",
@@ -349,7 +889,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 37,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Technologie & Éducation",
+        "style": "corporate formation",
+        "composition": "titre cours, preuve certificat, prix/date groupés",
+        "palette": [
+          "#FFFFFF",
+          "#1D4ED8",
+          "#0F172A"
+        ],
+        "ambiance": "ambition"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "techno-education-03",
@@ -366,7 +929,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 99,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Technologie & Éducation",
+        "style": "cahier scolaire",
+        "composition": "titre promesse, preuve réussite, CTA inscription",
+        "palette": [
+          "#F8FAFC",
+          "#1D4ED8",
+          "#F59E0B"
+        ],
+        "ambiance": "motivant"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "sport-finance-01",
@@ -383,7 +969,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 41,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Sport & Finance",
+        "style": "ciel action",
+        "composition": "titre édition, infos trajet groupées, coureur héros",
+        "palette": [
+          "#F97316",
+          "#1E3A8A",
+          "#FFFFFF"
+        ],
+        "ambiance": "dynamique"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "sport-finance-02",
@@ -400,7 +1009,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 49,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Sport & Finance",
+        "style": "fintech mint",
+        "composition": "promesse, carte abstraite, preuve communauté",
+        "palette": [
+          "#0F172A",
+          "#10B981",
+          "#F8FAFC"
+        ],
+        "ambiance": "smart"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "sante-tourisme-associations-01",
@@ -417,7 +1049,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 4,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Santé/Tourisme/Associations",
+        "style": "santé rassurante",
+        "composition": "titre cause, services groupés, date visible",
+        "palette": [
+          "#ECFDF5",
+          "#059669",
+          "#1E293B"
+        ],
+        "ambiance": "espoir"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "sante-tourisme-associations-02",
@@ -434,7 +1089,30 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 296,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Santé/Tourisme/Associations",
+        "style": "évasion tropicale",
+        "composition": "paysage héros full-bleed, titre + CTA bande",
+        "palette": [
+          "#F59E0B",
+          "#0E7490",
+          "#FEF3C7"
+        ],
+        "ambiance": "envie"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     },
     {
       "id": "sante-tourisme-associations-03",
@@ -451,9 +1129,33 @@
       "poids_ko": 0,
       "statut": "echec",
       "hero_loop": false,
-      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}"
+      "erreur": "RODIUM_IMAGES_402_{\"error\":{\"message\":\"Insufficient balance: requested 24 RODI, available 8.7\",\"type\":\"insufficient_quota\",\"param\":null,\"code\":\"insufficient_balance\"}}",
+      "page_reference_pdf": 86,
+      "visual_ref_used": false,
+      "reference_categorisation": {
+        "domaine": "Santé/Tourisme/Associations",
+        "style": "solidarité turquoise",
+        "composition": "message centré, un visuel humain respectueux, CTA don",
+        "palette": [
+          "#14B8A6",
+          "#F8FAFC",
+          "#0F172A"
+        ],
+        "ambiance": "solidaire"
+      },
+      "regles_design_appliquees": [
+        "palette limitée 2-3 couleurs",
+        "2 familles typographiques max",
+        "hiérarchie titre dominante",
+        "contraste fort texte/fond",
+        "alignement sur grille",
+        "proximité des infos liées",
+        "espace blanc / safe zone",
+        "un seul héros visuel"
+      ]
     }
   ],
-  "note": "10/27 generated then Rodium wallet hit insufficient_balance (8.7 RODI left, ~24 RODI/image). Remaining 17 skipped until wallet recharge.",
-  "hero_loop_count": 10
+  "note": "25/27 PDF style pages mapped. 10 existing posters were generated without visual ref and not in 4K. Regen blocked by Rodium wallet (5.8 RODI).",
+  "hero_loop_count": 10,
+  "master_size_requested": "3840x4800"
 }
