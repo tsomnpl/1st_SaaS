@@ -1,6 +1,9 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { env, getAllowedImageModels } from "@/lib/env";
 
+// FlyerMint-only Rodium client. JobRadar must use `@/server/jobradar/ai-service`,
+// which is blocked until JOBRADAR_RODIUMAI_ENABLED=true.
+
 type RodiumMessage = { role: "system" | "user"; content: string };
 
 type RodiumResponse = {
