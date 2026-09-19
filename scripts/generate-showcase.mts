@@ -15,6 +15,7 @@ const REF_CATALOG = path.join(ROOT, "docs/inspirations/references-catalog.json")
 const MASTER_SIZE = "1024x1536";
 const FALLBACK_SIZE = "1024x1536";
 const FORCE_REGEN = process.env.FORCE_REGEN === "1";
+const FORCE_REGEN_ALL = process.env.FORCE_REGEN === "all";
 
 const HERO_IDS = [
   "evenementiel-01",
@@ -132,6 +133,10 @@ async function callRodium(params: {
     if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
       throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
     }
+    if (response.status === 400 && body.quality) {
+      delete body.quality;
+      continue;
+    }
     if (response.status === 400 && params.size !== FALLBACK_SIZE) {
       body.size = FALLBACK_SIZE;
       continue;
@@ -195,11 +200,67 @@ async function writeMasterAndWeb(buffer: Buffer, id: string) {
   };
 }
 
+function isGptImageModel(model: unknown) {
+  return String(model ?? "").toLowerCase().includes("gpt-image");
+}
+
+function shouldSkipPrevious(previous: Record<string, unknown> | undefined) {
+  if (!previous || previous.statut !== "genere" || !previous.fichier_image) return false;
+  if (FORCE_REGEN_ALL) return false;
+  if (isGptImageModel(previous.modele_image_utilise)) return true;
+  return !FORCE_REGEN;
+}
+
+async function persistOutputs(
+  fiches: Array<Record<string, unknown>>,
+  extra: { note?: string } = {},
+) {
+  const successIds = fiches.filter((row) => row.statut === "genere").map((row) => String(row.id));
+  const loop = HERO_IDS.filter((id) => successIds.includes(id));
+  for (const id of successIds) {
+    if (loop.length >= 10) break;
+    if (!loop.includes(id)) loop.push(id);
+  }
+  for (const row of fiches) {
+    row.hero_loop = loop.includes(String(row.id));
+  }
+
+  const catalog = {
+    rule: "Style templates only. Never store original catalogue copy (titles, prices, real brands) as reusable content. Never serve references.pdf extracts.",
+    count: SHOWCASE_SHEETS.length,
+    items: SHOWCASE_SHEETS.map((sheet) => {
+      const row = fiches.find((item) => item.id === sheet.id);
+      return {
+        id: sheet.id,
+        domaine: sheet.domaine,
+        ...referenceCategorisation(sheet),
+        imageUrl: row?.fichier_image_web || row?.fichier_image || "",
+      };
+    }),
+  };
+  await writeFile(REF_CATALOG, `${JSON.stringify(catalog, null, 2)}\n`);
+
+  const manifest = {
+    source: "docs/inspirations/catalogue-extrait.json",
+    generated_at: new Date().toISOString(),
+    count: fiches.length,
+    rodi_total: Number(fiches.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
+    master_size_requested: MASTER_SIZE,
+    hero_loop_count: loop.length,
+    note:
+      extra.note ??
+      "Client-facing posters use OpenAI GPT Image (readable text). Gemini image-to-image stays for user photo edits only. Actual pixels recorded per fiche.",
+    fiches,
+  };
+  await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
+  return { successIds, loop, rodi_total: manifest.rodi_total };
+}
+
 async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
   const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
-  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1-mini";
+  const fast = process.env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1";
   const premium = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-1";
 
   if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
@@ -225,6 +286,18 @@ async function main() {
   await mkdir(MASTER_DIR, { recursive: true });
   await mkdir(WEB_DIR, { recursive: true });
 
+  try {
+    const walletResponse = await fetch(`${baseUrl}/wallet`, { headers: rodiumHeaders(apiKey) });
+    if (walletResponse.ok) {
+      const wallet = (await walletResponse.json()) as { balance_rodi?: string };
+      console.log("wallet", wallet.balance_rodi, "RODI", "model", premium, "size", MASTER_SIZE);
+    } else {
+      console.log("wallet_status", walletResponse.status, "model", premium, "size", MASTER_SIZE);
+    }
+  } catch {
+    console.log("wallet_unavailable", "model", premium, "size", MASTER_SIZE);
+  }
+
   let existing: { fiches?: Array<Record<string, unknown>> } = {};
   try {
     existing = JSON.parse(await readFile(MANIFEST, "utf8")) as typeof existing;
@@ -242,24 +315,26 @@ async function main() {
     const categorisation = referenceCategorisation(sheet);
     const pageRef = mapRow?.page_reference_pdf ?? null;
 
-    if (!FORCE_REGEN && previous?.statut === "genere" && previous.fichier_image) {
+    if (previous && shouldSkipPrevious(previous)) {
       fiches.push({
         ...previous,
         prompt_image_final: prompt,
         page_reference_pdf: pageRef,
-        regles_design_appliquees: categorisation.style
-          ? [
-              "palette limitée 2-3 couleurs",
-              "hiérarchie titre",
-              "contraste fort",
-              "alignement sur grille",
-              "espace blanc / safe zone",
-              "un seul héros visuel",
-            ]
-          : [],
+        modele_image_utilise: previous.modele_image_utilise,
+        visual_ref_used: false,
+        regles_design_appliquees: [
+          "palette limitée 2-3 couleurs",
+          "2 familles typographiques max",
+          "hiérarchie titre dominante",
+          "contraste fort texte/fond",
+          "alignement sur grille",
+          "proximité des infos liées",
+          "espace blanc / safe zone",
+          "un seul héros visuel",
+        ],
         reference_categorisation: categorisation,
       });
-      console.log("skip", sheet.id, "page", pageRef);
+      console.log("skip", sheet.id, previous.modele_image_utilise, "page", pageRef);
       continue;
     }
 
@@ -314,6 +389,7 @@ async function main() {
       };
       fiches.push(entry);
       console.log("ok", sheet.id, dims.masterWidth, "x", dims.masterHeight, entry.poids_web_ko, "Ko", result.model);
+      await persistOutputs(fiches);
     } catch (error) {
       fiches.push({
         id: sheet.id,
@@ -379,44 +455,12 @@ async function main() {
         }
         break;
       }
+      await persistOutputs(fiches);
     }
   }
 
-  const successIds = fiches.filter((row) => row.statut === "genere").map((row) => String(row.id));
-  const loop = HERO_IDS.filter((id) => successIds.includes(id));
-  for (const id of successIds) {
-    if (loop.length >= 10) break;
-    if (!loop.includes(id)) loop.push(id);
-  }
-  for (const row of fiches) {
-    row.hero_loop = loop.includes(String(row.id));
-  }
-
-  const catalog = {
-    rule: "Style templates only. Never store original catalogue copy (titles, prices, real brands) as reusable content. Never serve references.pdf extracts.",
-    count: fiches.filter((row) => row.statut === "genere").length,
-    items: fiches
-      .filter((row) => row.statut === "genere")
-      .map((row) => ({
-        id: row.id,
-        domaine: row.domaine,
-        ...(row.reference_categorisation as object),
-        imageUrl: row.fichier_image_web || row.fichier_image,
-      })),
-  };
-  await writeFile(REF_CATALOG, `${JSON.stringify(catalog, null, 2)}\n`);
-
-  const manifest = {
-    source: "docs/inspirations/catalogue-extrait.json",
-    generated_at: new Date().toISOString(),
-    count: fiches.length,
-    rodi_total: Number(fiches.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
-    master_size_requested: MASTER_SIZE,
-    note: "Gemini image-to-image uses private PDF page extracts as STYLE only. 4K requested; actual pixels recorded per fiche. Wallet may block generation.",
-    fiches,
-  };
-  await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
-  console.log("manifest", MANIFEST, "success", successIds.length, "rodi", manifest.rodi_total);
+  const summary = await persistOutputs(fiches);
+  console.log("manifest", MANIFEST, "success", summary.successIds.length, "hero", summary.loop.length, "rodi", summary.rodi_total);
 }
 
 main().catch((error) => {

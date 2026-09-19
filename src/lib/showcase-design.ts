@@ -1,5 +1,5 @@
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT, DESIGN_RULE_LABELS } from "@/lib/design-rules";
-import { SHOWCASE_SHEETS, type ShowcaseSheet } from "@/lib/showcase-sheets";
+import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT, DESIGN_RULE_LABELS } from "./design-rules.ts";
+import { SHOWCASE_SHEETS, type ShowcaseSheet } from "./showcase-sheets.ts";
 
 export type ShowcaseDesign = {
   id: string;

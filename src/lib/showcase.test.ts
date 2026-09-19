@@ -94,13 +94,15 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("requests max poster size and Gemini style refs in the generator", () => {
+  it("requests max poster size and GPT Image for client-facing posters", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
-    expect(script).toContain("openai/gpt-image-1");
+    expect(script).toContain('|| "openai/gpt-image-1"');
     expect(script).toContain("lanczos3");
     expect(script).toContain("page_reference_pdf");
     expect(script).toContain("body.image");
     expect(script).toContain("storage/masters");
+    expect(script).toContain("isGptImageModel");
     expect(script).not.toContain("/chat/completions");
+    expect(script).not.toContain('|| "google/gemini');
   });
 });
