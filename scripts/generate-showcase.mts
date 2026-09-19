@@ -283,7 +283,7 @@ async function main() {
   const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
   const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
   const geminiFast = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
-  const geminiPremium = "google/gemini-3-pro-image";
+  const geminiPremium = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
 
   if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
 
@@ -449,46 +449,64 @@ async function main() {
         erreur: error instanceof Error ? error.message.slice(0, 180) : "unknown",
       });
       console.error("fail", sheet.id, error instanceof Error ? error.message : error);
-      if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE")) {
-        const remaining = queue.slice(queue.indexOf(sheet) + 1);
-        for (const leftover of remaining) {
-          const leftoverHero = HERO_IDS.includes(leftover.id);
-          const leftoverModel = leftoverHero ? gpt : leftover.premium ? geminiPremium : geminiFast;
-          const leftoverMap = pageMap.fiches.find((row) => row.id === leftover.id);
-          const leftoverPrev = existing.fiches?.find((row) => row.id === leftover.id);
-          if (leftoverPrev && shouldSkipPrevious(leftoverPrev, leftover.id)) {
-            fiches.push({ ...leftoverPrev, statut: leftoverPrev.statut });
-            continue;
-          }
-          fiches.push({
-            id: leftover.id,
-            domaine: leftover.domaine,
-            titre_original_catalogue: leftover.titre_original_catalogue,
-            titre_affiche_finale: leftover.titre_affiche_finale,
-            sous_titre_affiche_finale: leftover.sous_titre_affiche_finale,
-            prompt_image_final: buildShowcasePrompt(
-              leftover,
-              leftoverModel.toLowerCase().includes("gemini") && Boolean(leftoverMap?.local_ref_path),
-            ),
-            regles_design_appliquees: ["palette limitée 2-3 couleurs", "hiérarchie titre dominante", "contraste fort texte/fond"],
-            modele_texte_utilise: "",
-            modele_image_utilise: leftoverModel,
-            cout_rodi: 0,
-            fichier_image_master_4k: "",
-            fichier_image_web: "",
-            fichier_image: "",
-            fichier_image_hero: "",
-            poids_web_ko: 0,
-            poids_ko: 0,
-            page_reference_pdf: leftoverMap?.page_reference_pdf ?? null,
-            visual_ref_used: false,
-            reference_categorisation: referenceCategorisation(leftover),
-            statut: "echec",
-            hero_loop: false,
-            erreur: "RODIUM_INSUFFICIENT_BALANCE",
+      const insufficient = error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE");
+      if (insufficient && hero && !model.toLowerCase().includes("gemini")) {
+        try {
+          console.log("fallback", sheet.id, geminiFast);
+          const fallback = await callRodium({
+            baseUrl,
+            apiKey,
+            model: geminiFast,
+            prompt: buildShowcasePrompt(sheet, Boolean(mapRow?.local_ref_path)),
+            referenceDataUrl: mapRow?.local_ref_path ? await referenceDataUrl(mapRow.local_ref_path) : "",
+            size: MASTER_SIZE,
           });
+          const buffer = await loadImageBuffer(fallback.url);
+          const dims = await writeMasterAndWeb(buffer, sheet.id);
+          fiches.pop();
+          fiches.push({
+            id: sheet.id,
+            domaine: sheet.domaine,
+            titre_original_catalogue: sheet.titre_original_catalogue,
+            titre_affiche_finale: sheet.titre_affiche_finale,
+            sous_titre_affiche_finale: sheet.sous_titre_affiche_finale,
+            prompt_image_final: buildShowcasePrompt(sheet, Boolean(mapRow?.local_ref_path)),
+            regles_design_appliquees: [
+              "palette limitée 2-3 couleurs",
+              "2 familles typographiques max",
+              "hiérarchie titre dominante",
+              "contraste fort texte/fond",
+              "alignement sur grille",
+              "proximité des infos liées",
+              "espace blanc / safe zone",
+              "un seul héros visuel",
+            ],
+            modele_texte_utilise: "",
+            modele_image_utilise: fallback.model,
+            cout_rodi: estimateRodi(fallback.model, fallback.tokens),
+            fichier_image_master_4k: `storage/masters/${sheet.id}-4k.webp`,
+            master_width: dims.masterWidth,
+            master_height: dims.masterHeight,
+            fichier_image_web: `/creations/${sheet.id}.webp`,
+            fichier_image: `/creations/${sheet.id}.webp`,
+            fichier_image_hero: `/creations/hero/${sheet.id}.webp`,
+            poids_web_ko: Number((dims.webBytes / 1024).toFixed(1)),
+            poids_ko: Number((dims.webBytes / 1024).toFixed(1)),
+            web_width: dims.webWidth,
+            web_height: dims.webHeight,
+            resize: "sharp lanczos3 width<=1600 webp q85",
+            page_reference_pdf: pageRef,
+            visual_ref_used: Boolean(mapRow?.local_ref_path),
+            reference_categorisation: categorisation,
+            statut: "genere",
+            hero_loop: false,
+          });
+          console.log("ok", sheet.id, "fallback", fallback.model);
+          await persistOutputs(fiches);
+          continue;
+        } catch (fallbackError) {
+          console.error("fallback_fail", sheet.id, fallbackError instanceof Error ? fallbackError.message : fallbackError);
         }
-        break;
       }
       await persistOutputs(fiches);
     }

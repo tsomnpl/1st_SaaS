@@ -142,7 +142,8 @@
         "#FFFFFF",
         "#9D174D"
       ],
-      "ambiance": "délicat"
+      "ambiance": "délicat",
+      "imageUrl": "/creations/mode-03.webp"
     },
     {
       "id": "beaute-01",
@@ -154,7 +155,8 @@
         "#6D28D9",
         "#1E293B"
       ],
-      "ambiance": "soin"
+      "ambiance": "soin",
+      "imageUrl": ""
     },
     {
       "id": "beaute-02",
@@ -166,7 +168,8 @@
         "#1C1917",
         "#FDE68A"
       ],
-      "ambiance": "chaleureux"
+      "ambiance": "chaleureux",
+      "imageUrl": ""
     },
     {
       "id": "beaute-03",
@@ -178,7 +181,8 @@
         "#FFFFFF",
         "#1C1917"
       ],
-      "ambiance": "éclat"
+      "ambiance": "éclat",
+      "imageUrl": "/creations/beaute-03.webp"
     },
     {
       "id": "immobilier-business-01",
@@ -190,7 +194,8 @@
         "#F59E0B",
         "#E0F2FE"
       ],
-      "ambiance": "serieux"
+      "ambiance": "serieux",
+      "imageUrl": "/creations/immobilier-business-01.webp"
     },
     {
       "id": "immobilier-business-02",
@@ -202,7 +207,8 @@
         "#D4B483",
         "#F8FAFC"
       ],
-      "ambiance": "pro"
+      "ambiance": "pro",
+      "imageUrl": ""
     },
     {
       "id": "immobilier-business-03",
@@ -214,7 +220,8 @@
         "#22D3EE",
         "#F8FAFC"
       ],
-      "ambiance": "innovant"
+      "ambiance": "innovant",
+      "imageUrl": "/creations/immobilier-business-03.webp"
     },
     {
       "id": "immobilier-business-04",
@@ -226,7 +233,8 @@
         "#FFFFFF",
         "#3B82F6"
       ],
-      "ambiance": "fiable"
+      "ambiance": "fiable",
+      "imageUrl": ""
     },
     {
       "id": "immobilier-business-05",
@@ -238,7 +246,8 @@
         "#10B981",
         "#F8FAFC"
       ],
-      "ambiance": "opportunité"
+      "ambiance": "opportunité",
+      "imageUrl": ""
     },
     {
       "id": "techno-education-01",
@@ -250,7 +259,8 @@
         "#10B981",
         "#F8FAFC"
       ],
-      "ambiance": "net"
+      "ambiance": "net",
+      "imageUrl": ""
     },
     {
       "id": "techno-education-02",
@@ -262,7 +272,8 @@
         "#1D4ED8",
         "#0F172A"
       ],
-      "ambiance": "ambition"
+      "ambiance": "ambition",
+      "imageUrl": ""
     },
     {
       "id": "techno-education-03",
@@ -274,7 +285,8 @@
         "#1D4ED8",
         "#F59E0B"
       ],
-      "ambiance": "motivant"
+      "ambiance": "motivant",
+      "imageUrl": "/creations/techno-education-03.webp"
     },
     {
       "id": "sport-finance-01",
@@ -286,7 +298,8 @@
         "#1E3A8A",
         "#FFFFFF"
       ],
-      "ambiance": "dynamique"
+      "ambiance": "dynamique",
+      "imageUrl": "/creations/sport-finance-01.webp"
     },
     {
       "id": "sport-finance-02",
@@ -298,7 +311,8 @@
         "#10B981",
         "#F8FAFC"
       ],
-      "ambiance": "smart"
+      "ambiance": "smart",
+      "imageUrl": ""
     },
     {
       "id": "sante-tourisme-associations-01",
@@ -310,7 +324,8 @@
         "#059669",
         "#1E293B"
       ],
-      "ambiance": "espoir"
+      "ambiance": "espoir",
+      "imageUrl": ""
     },
     {
       "id": "sante-tourisme-associations-02",
@@ -322,7 +337,8 @@
         "#0E7490",
         "#FEF3C7"
       ],
-      "ambiance": "envie"
+      "ambiance": "envie",
+      "imageUrl": ""
     },
     {
       "id": "sante-tourisme-associations-03",
@@ -334,7 +350,8 @@
         "#F8FAFC",
         "#0F172A"
       ],
-      "ambiance": "solidaire"
+      "ambiance": "solidaire",
+      "imageUrl": ""
     }
   ]
 }
