@@ -1,4 +1,4 @@
-import { slugForDomain } from "@/lib/inspiration-folders";
+import { INSPIRATION_DOMAIN_MAP, slugForDomain } from "@/lib/inspiration-folders";
 
 export type InspirationAnalysis = {
   id: string;
@@ -66,23 +66,47 @@ export function analysesFromIndex(slug: string, payload: unknown): InspirationAn
   return out;
 }
 
-export async function loadDomainInspirationAnalyses(domain: string, count = 3) {
+async function loadDomainIndex(slug: string) {
   const config = supabaseConfig();
-  const slug = slugForDomain(domain);
-  if (!config || !slug) return [];
-
+  if (!config) return [];
   const path = `_analysis/by-domain/${slug}.json`;
-  const response = await fetch(
-    `${config.url}/storage/v1/object/${BUCKET}/${path}`,
-    {
-      headers: {
-        apikey: config.key,
-        Authorization: `Bearer ${config.key}`,
-      },
-      cache: "no-store",
+  const response = await fetch(`${config.url}/storage/v1/object/${BUCKET}/${path}`, {
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
     },
-  );
+    cache: "no-store",
+  });
   if (!response.ok) return [];
   const payload = (await response.json()) as unknown;
-  return pickInspirationAnalyses(analysesFromIndex(slug, payload), count);
+  return analysesFromIndex(slug, payload);
+}
+
+export async function loadDomainInspirationAnalyses(domain: string, count = 3) {
+  const slug = slugForDomain(domain);
+  if (!slug) return [];
+  return pickInspirationAnalyses(await loadDomainIndex(slug), count);
+}
+
+export async function loadInspirationCoverage() {
+  const rows = await Promise.all(
+    INSPIRATION_DOMAIN_MAP.map(async (row) => {
+      const items = await loadDomainIndex(row.slug);
+      return { slug: row.slug, domaine: row.domaine, described: items.length };
+    }),
+  );
+  return {
+    described: rows.reduce((sum, row) => sum + row.described, 0),
+    domains: rows,
+  };
+}
+
+export function publicArtDirection(artDirection: {
+  differentiators: string[];
+  reference_ids: string[];
+}) {
+  return {
+    differentiators: artDirection.differentiators,
+    library_refs: artDirection.reference_ids.filter((id) => id.startsWith("insp-")).length,
+  };
 }

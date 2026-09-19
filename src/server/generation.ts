@@ -8,7 +8,7 @@ import {
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium } from "@/server/rodium";
-import { loadDomainInspirationAnalyses } from "@/lib/inspiration-source";
+import { loadDomainInspirationAnalyses, publicArtDirection } from "@/lib/inspiration-source";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -63,8 +63,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       generationId: updated.id,
       outputUrl: updated.outputUrl,
       quality: qualityScores,
-      artDirection,
-      differentiators: artDirection.differentiators,
+      ...publicArtDirection(artDirection),
       costRodi: result.rodiCostEstimate,
       model: result.model,
     };

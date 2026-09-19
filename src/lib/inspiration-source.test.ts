@@ -4,6 +4,7 @@ import {
   analysesFromIndex,
   formatInspirationForPrompt,
   pickInspirationAnalyses,
+  publicArtDirection,
 } from "./inspiration-source";
 import { buildArtDirection, buildPrompt, createBriefSchema } from "./flyermint";
 
@@ -66,6 +67,15 @@ describe("inspiration source descriptions", () => {
     expect(prompt).toMatch(/Internal style library|style=appetissant/);
     expect(prompt).not.toMatch(/object\/public\/inspirations-source/);
     expect(JSON.stringify(ad)).not.toMatch(/storage\/v1\/object\/public/);
+  });
+
+  it("exposes only a count of library refs to the client", () => {
+    const pub = publicArtDirection({
+      differentiators: ["CTA visible"],
+      reference_ids: ["playbook-restauration", "insp-aaa", "insp-bbb"],
+    });
+    expect(pub.library_refs).toBe(2);
+    expect(JSON.stringify(pub)).not.toMatch(/object\/public|storage_path|inspirations-source/);
   });
 
   it("keeps the analyzer off the public tree", () => {

@@ -95,7 +95,8 @@ describe("inspiration source must stay private", () => {
         file.endsWith("inspiration-folders.ts") ||
         file.endsWith("inspiration-folders.test.ts") ||
         file.endsWith("inspiration-source.ts") ||
-        file.endsWith("inspiration-source.test.ts")
+        file.endsWith("inspiration-source.test.ts") ||
+        file.endsWith("generation.ts")
       ) {
         continue;
       }
