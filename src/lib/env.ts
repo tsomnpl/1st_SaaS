@@ -14,6 +14,7 @@ const envSchema = z.object({
   RODIUMAI_IMAGE_MODEL_TEXT_HEAVY: z.string().optional(),
   RODIUMAI_IMAGE_MODEL_IMAGE_EDIT: z.string().optional(),
   RODIUMAI_ALLOWED_IMAGE_MODELS: z.string().optional(),
+  JOBRADAR_RODIUMAI_ENABLED: z.string().optional(),
   MONEY_FUSION_API_URL: z.string().url().optional(),
   MONEY_FUSION_WEBHOOK_URL: z.string().url().optional(),
   ADMIN_CLERK_USER_IDS: z.string().optional(),
@@ -35,6 +36,7 @@ export const env = envSchema.parse({
   RODIUMAI_IMAGE_MODEL_TEXT_HEAVY: process.env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY,
   RODIUMAI_IMAGE_MODEL_IMAGE_EDIT: process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT,
   RODIUMAI_ALLOWED_IMAGE_MODELS: process.env.RODIUMAI_ALLOWED_IMAGE_MODELS,
+  JOBRADAR_RODIUMAI_ENABLED: process.env.JOBRADAR_RODIUMAI_ENABLED,
   MONEY_FUSION_API_URL: process.env.MONEY_FUSION_API_URL,
   MONEY_FUSION_WEBHOOK_URL: process.env.MONEY_FUSION_WEBHOOK_URL,
   ADMIN_CLERK_USER_IDS: process.env.ADMIN_CLERK_USER_IDS,
@@ -59,4 +61,9 @@ export function getAllowedImageModels() {
     .split(",")
     .map((v) => v.trim())
     .filter(Boolean);
+}
+
+export function parseBooleanFlag(value: string | undefined): boolean {
+  const normalized = value?.trim().toLowerCase();
+  return normalized === "true" || normalized === "1";
 }
