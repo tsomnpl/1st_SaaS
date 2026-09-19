@@ -25,7 +25,13 @@ Le cloud agent ne voit pas les fichiers de ton PC Windows. Toi seul executes ce 
    - `service_role` (secret) → `SUPABASE_SERVICE_ROLE_KEY`
    - Ne copie **jamais** `service_role` dans un fichier committe, ni dans un chat public.
 
-Dans `.env.local` a la racine du repo (deja gitignore) :
+Dans `.env.local` a la racine du repo (deja gitignore), deux options :
+
+```
+python scripts/set-supabase-env.py
+```
+
+ou edition manuelle :
 
 ```
 SUPABASE_URL=https://xxxx.supabase.co
