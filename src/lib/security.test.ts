@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { publicErrorMessage } from "./errors";
+import { SECURITY_HEADERS } from "./security-headers";
 import { createBriefSchema } from "./flyermint";
 import { z } from "zod";
 
@@ -65,6 +66,16 @@ describe("security helpers", () => {
     expect(() =>
       statusSchema.parse({ targetUserId: "usr_1", role: "ADMIN", status: "ACTIVE", reason: "ok" }),
     ).not.toThrow();
+  });
+
+  it("allows Clerk CAPTCHA (Cloudflare Turnstile) in CSP", () => {
+    const csp = SECURITY_HEADERS["Content-Security-Policy"];
+    expect(csp).toMatch(/script-src[^;]*challenges\.cloudflare\.com/);
+    expect(csp).toMatch(/script-src[^;]*\*\.protect\.clerk\.com/);
+    expect(csp).toMatch(/connect-src[^;]*\*\.protect\.clerk\.com:\*/);
+    expect(csp).toMatch(/frame-src[^;]*challenges\.cloudflare\.com/);
+    expect(csp).toMatch(/frame-src[^;]*\*\.protect\.clerk\.com/);
+    expect(csp).toMatch(/worker-src[^;]*'self' blob:/);
   });
 
   it("does not commit live-looking secrets", () => {
