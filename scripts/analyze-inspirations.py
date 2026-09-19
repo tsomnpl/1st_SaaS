@@ -365,8 +365,7 @@ def run_analysis(limit: int) -> int:
     for index, row in enumerate(pending, start=1):
         available = wallet_available()
         if available < MIN_AVAILABLE_RODI:
-            print(f"STOP wallet disponible={available:.1f} < {MIN_AVAILABLE_RODI}")
-            break
+            print(f"wallet disponible={available:.2f} — tentative quand même (arrêt si Rodium 402)")
         label = f"{row['domaine']}/{row['id'][:8]}"
         try:
             original = download_original(row["storage_path"])
@@ -378,6 +377,10 @@ def run_analysis(limit: int) -> int:
         except Exception as error:
             totals["fail"] += 1
             print(f"[{index}/{len(pending)}] FAIL {label}  {error}")
+            err = str(error)
+            if " 402" in err or "insufficient" in err.lower() or "low_balance" in err.lower():
+                print("STOP: Rodium refuse le paiement (402 / solde).")
+                break
         time.sleep(0.15)
     print("=== resume analyse ===")
     print(totals)
