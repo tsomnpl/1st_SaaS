@@ -43,3 +43,9 @@ next-env.d.ts
 # inspiration binaries (principles live in src/lib/inspiration.ts)
 docs/inspirations/*.pdf
 docs/inspirations/*.docx
+docs/inspirations/*upload-report*.json
+
+# private inspiration dumps / upload reports — never serve
+storage/private/
+storage/masters/
+storage/web/
