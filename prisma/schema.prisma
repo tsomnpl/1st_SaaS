@@ -55,6 +55,7 @@ model User {
   creditTransactions CreditTransaction[]
   payments           Payment[]
   generations        Generation[]
+  brandKit           BrandKit?
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
 }
 
@@ -129,6 +130,16 @@ model CreditTransaction {
   user          User                  @relation(fields: [userId], references: [id])
 
   @@index([userId, createdAt])
+}
+
+model BrandKit {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  colors    String[]
+  logoUrl   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
 }
 
 model Generation {
