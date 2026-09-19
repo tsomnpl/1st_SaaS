@@ -66,6 +66,14 @@ export default async function HistoryPage() {
                         Pack éditable
                       </a>
                     ) : null}
+                    {generation.outputUrl ? (
+                      <Link
+                        href={`/create?from=${generation.id}&format=whatsapp_status`}
+                        className="text-sm font-semibold text-slate-600"
+                      >
+                        Décliner en statut WhatsApp
+                      </Link>
+                    ) : null}
                   </div>
                 </div>
               </article>

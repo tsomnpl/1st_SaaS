@@ -9,6 +9,7 @@ export async function POST() {
     const account = await prisma.creditAccount.findUnique({
       where: { userId: user.id },
     });
+    const kit = await prisma.brandKit.findUnique({ where: { userId: user.id } });
 
     return NextResponse.json({
       ok: true,
@@ -18,6 +19,9 @@ export async function POST() {
         status: user.status,
       },
       balance: account?.balance ?? 0,
+      brandKit: kit
+        ? { colors: kit.colors, hasLogo: Boolean(kit.logoUrl) }
+        : { colors: [], hasLogo: false },
     });
   } catch (error) {
     return safeJsonError(error, 401);

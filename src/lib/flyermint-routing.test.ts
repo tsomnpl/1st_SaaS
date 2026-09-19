@@ -15,6 +15,7 @@ describe("image model routing", () => {
   it("uses official Rodium image sizes only", () => {
     expect(sizeForFormat("affiche")).toBe("1024x1536");
     expect(sizeForFormat("instagram_story")).toBe("1024x1536");
+    expect(sizeForFormat("whatsapp_status")).toBe("1024x1536");
     expect(sizeForFormat("instagram_post")).toBe("1024x1024");
   });
 

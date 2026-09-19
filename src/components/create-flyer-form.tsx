@@ -14,6 +14,7 @@ import { publicErrorMessage } from "@/lib/errors";
 type Result = {
   generationId: string;
   outputUrl?: string | null;
+  repaired?: boolean;
 };
 
 const STEPS = ["Besoin", "Contenu", "Style", "Récap"] as const;
@@ -21,9 +22,17 @@ const STEPS = ["Besoin", "Contenu", "Style", "Récap"] as const;
 export function CreateFlyerForm({
   mintBalance,
   canExport = false,
+  brandColors = [],
+  brandLogoUrl = "",
+  regenerateFromId = "",
+  initialFormat = "",
 }: {
   mintBalance: number;
   canExport?: boolean;
+  brandColors?: string[];
+  brandLogoUrl?: string;
+  regenerateFromId?: string;
+  initialFormat?: string;
 }) {
   const [step, setStep] = useState(0);
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
@@ -31,8 +40,9 @@ export function CreateFlyerForm({
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confirmMint, setConfirmMint] = useState(false);
+  const [rememberBrand, setRememberBrand] = useState(true);
   const [mainImage, setMainImage] = useState("");
-  const [logoImage, setLogoImage] = useState("");
+  const [logoImage, setLogoImage] = useState(brandLogoUrl);
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const canGenerate = mintBalance > 0 && confirmMint;
@@ -90,6 +100,8 @@ export function CreateFlyerForm({
         .filter(Boolean),
       mainImageUrl: mainImage || undefined,
       logoUrl: logoImage || undefined,
+      rememberBrand,
+      regenerateFromId: regenerateFromId || undefined,
       adaptiveData,
     };
 
@@ -176,8 +188,18 @@ export function CreateFlyerForm({
       <div className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Input name="style" label="Style" placeholder="Premium moderne" />
         <Input name="mood" label="Ambiance" placeholder="Énergique, chic, chaleureux…" />
-        <Input name="colors" label="Couleurs (séparées par des virgules)" placeholder="#1E293B, #6D28D9" />
-        <Select name="format" label="Format" options={FORMATS.map((item) => item)} />
+        <Input
+          name="colors"
+          label="Couleurs (séparées par des virgules)"
+          placeholder="#1E293B, #6D28D9"
+          defaultValue={brandColors.join(", ")}
+        />
+        <Select
+          name="format"
+          label="Format"
+          options={FORMATS.map((item) => item)}
+          defaultValue={initialFormat || undefined}
+        />
         <Select
           name="creativeFreedom"
           label="Liberté créative"
@@ -202,7 +224,8 @@ export function CreateFlyerForm({
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Logo (optionnel)</span>
+          <span className="font-medium text-slate-700">Logo (optionnel — mémorisé si tu coches le kit de marque)</span>
+          {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
@@ -224,7 +247,15 @@ export function CreateFlyerForm({
             <strong>1 Mint</strong>.
           </p>
           {mainImage ? <p className="mt-2">Ta photo sera conservée comme sujet principal.</p> : null}
+          {logoImage ? <p className="mt-2">Ton logo sera réappliqué sur l’affiche.</p> : null}
+          {regenerateFromId ? (
+            <p className="mt-2">Même direction artistique, nouveau format — 1 Mint.</p>
+          ) : null}
         </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={rememberBrand} onChange={(event) => setRememberBrand(event.target.checked)} />
+          Mémoriser mon logo et mes couleurs pour les prochaines affiches.
+        </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={confirmMint} onChange={(event) => setConfirmMint(event.target.checked)} />
           Je confirme utiliser 1 Mint pour cette génération.
@@ -262,6 +293,9 @@ export function CreateFlyerForm({
       {result ? (
         <div className="card space-y-3 p-5">
           <p className="font-semibold text-[#10B981]">Ton affiche est prête.</p>
+          {result.repaired ? (
+            <p className="text-sm text-slate-600">La première version a été corrigée (personne / texte / composition).</p>
+          ) : null}
           {result.outputUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -279,6 +313,18 @@ export function CreateFlyerForm({
                   Voir l’historique
                 </Link>
               </div>
+              <p className="text-xs text-slate-500">Même concept, autre format — 1 Mint chacun :</p>
+              <div className="flex flex-wrap gap-2">
+                {FORMATS.map((item) => (
+                  <Link
+                    key={item.value}
+                    href={`/create?from=${result.generationId}&format=${item.value}`}
+                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-violet-300"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </div>
             </>
           ) : (
             <p className="text-sm text-slate-600">La génération est enregistrée, mais l’image n’est pas encore disponible.</p>
@@ -294,11 +340,13 @@ function Input({
   label,
   placeholder,
   required,
+  defaultValue,
 }: {
   name: string;
   label: string;
   placeholder?: string;
   required?: boolean;
+  defaultValue?: string;
 }) {
   return (
     <label className="space-y-1 text-sm">
@@ -307,6 +355,7 @@ function Input({
         name={name}
         required={required}
         placeholder={placeholder}
+        defaultValue={defaultValue}
         className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
       />
     </label>
@@ -317,15 +366,17 @@ function Select({
   name,
   label,
   options,
+  defaultValue,
 }: {
   name: string;
   label: string;
   options: readonly { value: string; label: string }[] | { value: string; label: string }[];
+  defaultValue?: string;
 }) {
   return (
     <label className="space-y-1 text-sm">
       <span className="font-medium text-slate-700">{label}</span>
-      <select name={name} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+      <select name={name} defaultValue={defaultValue} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

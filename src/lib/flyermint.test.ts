@@ -35,6 +35,11 @@ describe("flyermint core", () => {
     const ad = buildArtDirection(brief);
     expect(ad.color_palette.length).toBeGreaterThanOrEqual(2);
     expect(ad.differentiators.length).toBeGreaterThan(0);
+    expect(ad.human.role.length).toBeGreaterThan(3);
+    const prompt = buildPrompt(brief, ad);
+    expect(prompt).toMatch(/HUMAN SUBJECT/);
+    expect(prompt).toMatch(/photoreal person/);
+    expect(prompt).toContain("Masterclass Business");
   });
 
   it("computes quality score in expected range", () => {

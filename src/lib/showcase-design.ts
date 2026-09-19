@@ -63,6 +63,7 @@ export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean)
     `Subtitle: ${sheet.sous_titre_affiche_finale}.`,
     `Meta: ${sheet.meta}. CTA: ${sheet.cta}.`,
     sheet.prompt,
+    "At least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.",
     "Original artwork only. No real brand names, no copied logos, no celebrity likeness.",
   ].join("\n");
 }

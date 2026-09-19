@@ -108,6 +108,7 @@ export const VISUAL_TYPES = [
 export const FORMATS = [
   { value: "instagram_post", label: "Post Instagram (1:1)" },
   { value: "instagram_story", label: "Story (9:16)" },
+  { value: "whatsapp_status", label: "Statut WhatsApp (9:16)" },
   { value: "affiche_a4", label: "Affiche A4 (print)" },
   { value: "affiche_a3", label: "Affiche A3 (print)" },
   { value: "facebook_post", label: "Post Facebook" },
