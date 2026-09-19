@@ -16,6 +16,7 @@ export async function POST(request: Request) {
       ok: true,
       generationId: result.generationId,
       outputUrl: result.outputUrl,
+      repaired: result.repaired,
     });
   } catch (error) {
     return NextResponse.json(

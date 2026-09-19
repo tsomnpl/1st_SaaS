@@ -158,7 +158,7 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const reference = params.brief.mainImageUrl;
+  const reference = params.brief.mainImageUrl || params.brief.logoUrl;
   if (reference?.startsWith("data:image/") && params.model.toLowerCase().includes("gemini")) {
     body.image = reference;
   }
@@ -183,7 +183,14 @@ async function renderImage(params: {
 }
 
 export function sizeForFormat(format: string) {
-  if (format.includes("story") || format.includes("9:16") || format.includes("a3") || format.includes("a4") || format.includes("affiche")) {
+  if (
+    format.includes("story") ||
+    format.includes("whatsapp") ||
+    format.includes("9:16") ||
+    format.includes("a3") ||
+    format.includes("a4") ||
+    format.includes("affiche")
+  ) {
     return "1024x1536";
   }
   return "1024x1024";
@@ -197,4 +204,43 @@ export async function getRodiumWallet() {
   });
   if (!response.ok) return null;
   return (await response.json()) as Record<string, unknown>;
+}
+
+function textFromChat(data: RodiumResponse) {
+  const content = data.choices?.[0]?.message?.content;
+  if (typeof content === "string") return content;
+  if (Array.isArray(content)) {
+    return content.map((part) => part.text ?? "").join("\n");
+  }
+  return "";
+}
+
+export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
+  if (!env.RODIUMAI_API_KEY) return "";
+  const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  try {
+    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: rodiumHeaders(),
+      body: JSON.stringify({
+        model,
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "text", text: input.prompt },
+              { type: "image_url", image_url: { url: input.imageUrl } },
+            ],
+          },
+        ],
+        temperature: 0,
+        max_tokens: 500,
+      }),
+    });
+    if (!response.ok) return "";
+    const data = (await response.json()) as RodiumResponse;
+    return textFromChat(data).trim();
+  } catch {
+    return "";
+  }
 }
