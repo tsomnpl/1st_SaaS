@@ -1,0 +1,357 @@
+{
+  "rule": "Style templates only. Never store original catalogue copy (titles, prices, real brands) as reusable content. Never serve references.pdf extracts.",
+  "count": 27,
+  "items": [
+    {
+      "id": "evenementiel-01",
+      "domaine": "Événementiel",
+      "style": "dégradé dramatique + titre 3D",
+      "composition": "profil héros bas-gauche, titre centré haut, safe zone basse",
+      "palette": [
+        "#7C2D12",
+        "#F59E0B",
+        "#1C1917"
+      ],
+      "ambiance": "festif cinématique",
+      "imageUrl": "/creations/evenementiel-01.webp"
+    },
+    {
+      "id": "evenementiel-02",
+      "domaine": "Événementiel",
+      "style": "graphisme angulaire haute énergie",
+      "composition": "titre massif haut, cadres date/tarif groupés",
+      "palette": [
+        "#B91C1C",
+        "#FFFFFF",
+        "#111827"
+      ],
+      "ambiance": "urgent",
+      "imageUrl": "/creations/evenementiel-02.webp"
+    },
+    {
+      "id": "evenementiel-03",
+      "domaine": "Événementiel",
+      "style": "urbain lumineux + ticket",
+      "composition": "personnage héros, titre incliné, encart ticket bas",
+      "palette": [
+        "#3B82F6",
+        "#EF4444",
+        "#F8FAFC"
+      ],
+      "ambiance": "jeune",
+      "imageUrl": "/creations/evenementiel-03.webp"
+    },
+    {
+      "id": "evenementiel-04",
+      "domaine": "Événementiel",
+      "style": "affiche stade texturée",
+      "composition": "titre blanc géant, infos pass/lieu en bande basse",
+      "palette": [
+        "#991B1B",
+        "#FFFFFF",
+        "#0F172A"
+      ],
+      "ambiance": "crowd",
+      "imageUrl": "/creations/evenementiel-04.webp"
+    },
+    {
+      "id": "restauration-01",
+      "domaine": "Restauration",
+      "style": "épuré beige + emblème",
+      "composition": "centre stable, encart message, marges larges",
+      "palette": [
+        "#E7D5C5",
+        "#7C4A2D",
+        "#1E293B"
+      ],
+      "ambiance": "élégant",
+      "imageUrl": "/creations/restauration-01.webp"
+    },
+    {
+      "id": "restauration-02",
+      "domaine": "Restauration",
+      "style": "menu clair bandeau courbe",
+      "composition": "header coloré, liste groupée par proximité",
+      "palette": [
+        "#FFFFFF",
+        "#DC2626",
+        "#F97316"
+      ],
+      "ambiance": "quotidien",
+      "imageUrl": "/creations/restauration-02.webp"
+    },
+    {
+      "id": "restauration-03",
+      "domaine": "Restauration",
+      "style": "food héros gros plan",
+      "composition": "plat centré, badge promo, prix dominant",
+      "palette": [
+        "#1C1917",
+        "#F59E0B",
+        "#F8FAFC"
+      ],
+      "ambiance": "gourmand",
+      "imageUrl": "/creations/restauration-03.webp"
+    },
+    {
+      "id": "restauration-04",
+      "domaine": "Restauration",
+      "style": "texture sombre + services",
+      "composition": "titre haut, services groupés, visuel plat unique",
+      "palette": [
+        "#7F1D1D",
+        "#1C1917",
+        "#FDE68A"
+      ],
+      "ambiance": "convivial",
+      "imageUrl": "/creations/restauration-04.webp"
+    },
+    {
+      "id": "mode-01",
+      "domaine": "Mode & Accessoires",
+      "style": "éditorial minimal",
+      "composition": "beaucoup d'air, monogramme, un still-life",
+      "palette": [
+        "#E7E5E4",
+        "#1C1917",
+        "#D6D3D1"
+      ],
+      "ambiance": "premium",
+      "imageUrl": "/creations/mode-01.webp"
+    },
+    {
+      "id": "mode-02",
+      "domaine": "Mode & Accessoires",
+      "style": "studio lumineux",
+      "composition": "look unique, titre haut, produits en ligne courte",
+      "palette": [
+        "#F8FAFC",
+        "#1E293B",
+        "#D4B483"
+      ],
+      "ambiance": "airé",
+      "imageUrl": "/creations/mode-02.webp"
+    },
+    {
+      "id": "mode-03",
+      "domaine": "Mode & Accessoires",
+      "style": "doux poudré",
+      "composition": "titre + une grille légère, pas d'encombrement",
+      "palette": [
+        "#F9E4E8",
+        "#FFFFFF",
+        "#9D174D"
+      ],
+      "ambiance": "délicat",
+      "imageUrl": "/creations/mode-03.webp"
+    },
+    {
+      "id": "beaute-01",
+      "domaine": "Beauté & Soins",
+      "style": "salon professionnel clair",
+      "composition": "titre + badge date groupés, intérieur en héros",
+      "palette": [
+        "#F8FAFC",
+        "#6D28D9",
+        "#1E293B"
+      ],
+      "ambiance": "soin",
+      "imageUrl": ""
+    },
+    {
+      "id": "beaute-02",
+      "domaine": "Beauté & Soins",
+      "style": "médaillons services",
+      "composition": "titre haut, 5 cercles alignés, formation en bas",
+      "palette": [
+        "#B45309",
+        "#1C1917",
+        "#FDE68A"
+      ],
+      "ambiance": "chaleureux",
+      "imageUrl": ""
+    },
+    {
+      "id": "beaute-03",
+      "domaine": "Beauté & Soins",
+      "style": "luxe bio podium",
+      "composition": "titre fort, flacons héros, beaucoup d'air",
+      "palette": [
+        "#9F1239",
+        "#FFFFFF",
+        "#1C1917"
+      ],
+      "ambiance": "éclat",
+      "imageUrl": "/creations/beaute-03.webp"
+    },
+    {
+      "id": "immobilier-business-01",
+      "domaine": "Immobilier & Business",
+      "style": "confiance + vague accent",
+      "composition": "question-titre, types de biens en pastilles alignées",
+      "palette": [
+        "#0F172A",
+        "#F59E0B",
+        "#E0F2FE"
+      ],
+      "ambiance": "serieux",
+      "imageUrl": "/creations/immobilier-business-01.webp"
+    },
+    {
+      "id": "immobilier-business-02",
+      "domaine": "Immobilier & Business",
+      "style": "corporate architecture",
+      "composition": "titre + 3 piliers, silhouette bâtiment",
+      "palette": [
+        "#1E293B",
+        "#D4B483",
+        "#F8FAFC"
+      ],
+      "ambiance": "pro",
+      "imageUrl": ""
+    },
+    {
+      "id": "immobilier-business-03",
+      "domaine": "Immobilier & Business",
+      "style": "dashboard dark tech",
+      "composition": "titre, 3 métriques max, verre UI",
+      "palette": [
+        "#020617",
+        "#22D3EE",
+        "#F8FAFC"
+      ],
+      "ambiance": "innovant",
+      "imageUrl": "/creations/immobilier-business-03.webp"
+    },
+    {
+      "id": "immobilier-business-04",
+      "domaine": "Immobilier & Business",
+      "style": "fintech interface",
+      "composition": "carte abstraite héros, solde lisible, actions groupées",
+      "palette": [
+        "#1E3A8A",
+        "#FFFFFF",
+        "#3B82F6"
+      ],
+      "ambiance": "fiable",
+      "imageUrl": ""
+    },
+    {
+      "id": "immobilier-business-05",
+      "domaine": "Immobilier & Business",
+      "style": "produit 3D + phone",
+      "composition": "promesse titre, un mockup, CTA bas",
+      "palette": [
+        "#064E3B",
+        "#10B981",
+        "#F8FAFC"
+      ],
+      "ambiance": "opportunité",
+      "imageUrl": ""
+    },
+    {
+      "id": "techno-education-01",
+      "domaine": "Technologie & Éducation",
+      "style": "retail tech sombre",
+      "composition": "titre, un objet héros, liste courte",
+      "palette": [
+        "#1E293B",
+        "#10B981",
+        "#F8FAFC"
+      ],
+      "ambiance": "net",
+      "imageUrl": ""
+    },
+    {
+      "id": "techno-education-02",
+      "domaine": "Technologie & Éducation",
+      "style": "corporate formation",
+      "composition": "titre cours, preuve certificat, prix/date groupés",
+      "palette": [
+        "#FFFFFF",
+        "#1D4ED8",
+        "#0F172A"
+      ],
+      "ambiance": "ambition",
+      "imageUrl": ""
+    },
+    {
+      "id": "techno-education-03",
+      "domaine": "Technologie & Éducation",
+      "style": "cahier scolaire",
+      "composition": "titre promesse, preuve réussite, CTA inscription",
+      "palette": [
+        "#F8FAFC",
+        "#1D4ED8",
+        "#F59E0B"
+      ],
+      "ambiance": "motivant",
+      "imageUrl": "/creations/techno-education-03.webp"
+    },
+    {
+      "id": "sport-finance-01",
+      "domaine": "Sport & Finance",
+      "style": "ciel action",
+      "composition": "titre édition, infos trajet groupées, coureur héros",
+      "palette": [
+        "#F97316",
+        "#1E3A8A",
+        "#FFFFFF"
+      ],
+      "ambiance": "dynamique",
+      "imageUrl": "/creations/sport-finance-01.webp"
+    },
+    {
+      "id": "sport-finance-02",
+      "domaine": "Sport & Finance",
+      "style": "fintech mint",
+      "composition": "promesse, carte abstraite, preuve communauté",
+      "palette": [
+        "#0F172A",
+        "#10B981",
+        "#F8FAFC"
+      ],
+      "ambiance": "smart",
+      "imageUrl": ""
+    },
+    {
+      "id": "sante-tourisme-associations-01",
+      "domaine": "Santé/Tourisme/Associations",
+      "style": "santé rassurante",
+      "composition": "titre cause, services groupés, date visible",
+      "palette": [
+        "#ECFDF5",
+        "#059669",
+        "#1E293B"
+      ],
+      "ambiance": "espoir",
+      "imageUrl": ""
+    },
+    {
+      "id": "sante-tourisme-associations-02",
+      "domaine": "Santé/Tourisme/Associations",
+      "style": "évasion tropicale",
+      "composition": "paysage héros full-bleed, titre + CTA bande",
+      "palette": [
+        "#F59E0B",
+        "#0E7490",
+        "#FEF3C7"
+      ],
+      "ambiance": "envie",
+      "imageUrl": ""
+    },
+    {
+      "id": "sante-tourisme-associations-03",
+      "domaine": "Santé/Tourisme/Associations",
+      "style": "solidarité turquoise",
+      "composition": "message centré, un visuel humain respectueux, CTA don",
+      "palette": [
+        "#14B8A6",
+        "#F8FAFC",
+        "#0F172A"
+      ],
+      "ambiance": "solidaire",
+      "imageUrl": ""
+    }
+  ]
+}

@@ -1,37 +1,68 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { ClerkProvider } from "@clerk/nextjs";
-import { SiteHeader } from "@/components/site-header";
+import type { ReactNode } from "react";
+import { PublicChrome } from "@/components/chrome/public-chrome";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
-
 export const metadata: Metadata = {
-  title: "FlyerMint — Affiches professionnelles, direction artistique incluse",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://flyermint-t.vercel.app"),
+  title: {
+    default: "FlyerMint — Créez des visuels qui marquent",
+    template: "%s — FlyerMint",
+  },
   description:
-    "Transforme une idee ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
+    "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
+  icons: {
+    icon: "/favicon.svg",
+    apple: "/logo-mark.svg",
+  },
+  openGraph: {
+    title: "FlyerMint — Créez des visuels qui marquent",
+    description: "Des affiches professionnelles sans designer, sans prompt.",
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "FlyerMint — Créez des visuels qui marquent." }],
+    locale: "fr_FR",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "FlyerMint — Créez des visuels qui marquent",
+    description: "Des affiches professionnelles sans designer, sans prompt.",
+    images: ["/og.png"],
+  },
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export const dynamic = "force-dynamic";
+
+const clerkAppearance = {
+  variables: {
+    colorPrimary: "#6D28D9",
+    colorText: "#1E293B",
+    colorBackground: "#FFFFFF",
+    borderRadius: "0.9rem",
+    fontFamily: "Plus Jakarta Sans, sans-serif",
+  },
+};
+
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const publishableKey = process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY;
+  if (!publishableKey) {
+    return <PublicChrome>{children}</PublicChrome>;
+  }
+
+  const [{ ClerkProvider }, { AuthChrome }] = await Promise.all([
+    import("@clerk/nextjs"),
+    import("@/components/chrome/auth-chrome"),
+  ]);
+
   return (
-    <ClerkProvider>
-      <html
-        lang="fr"
-        className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-      >
-        <body className="flex min-h-full flex-col text-white">
-          <SiteHeader />
-          <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8">{children}</main>
-        </body>
-      </html>
+    <ClerkProvider
+      publishableKey={publishableKey}
+      appearance={clerkAppearance}
+      signInUrl="/sign-in"
+      signUpUrl="/sign-up"
+      signInFallbackRedirectUrl="/dashboard"
+      signUpFallbackRedirectUrl="/dashboard"
+    >
+      <AuthChrome>{children}</AuthChrome>
     </ClerkProvider>
   );
 }

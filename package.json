@@ -4,13 +4,16 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "test": "vitest run",
-    "db:seed": "node prisma/seed.mjs"
+    "showcase:generate": "node --experimental-strip-types --no-warnings scripts/generate-showcase.mts",
+    "showcase:map": "python3 scripts/map-reference-pages.py",
+    "db:seed": "node prisma/seed.mjs",
+    "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "node prisma/seed.mjs"

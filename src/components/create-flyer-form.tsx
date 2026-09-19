@@ -1,36 +1,67 @@
 "use client";
 
 import { FormEvent, useMemo, useState } from "react";
-import { ADAPTIVE_FIELDS, DOMAINS } from "@/lib/domains";
+import Link from "next/link";
+import {
+  ADAPTIVE_FIELDS,
+  DOMAINS,
+  DOMAIN_LABELS,
+  FORMATS,
+  VISUAL_TYPES,
+} from "@/lib/domains";
+import { publicErrorMessage } from "@/lib/errors";
 
 type Result = {
   generationId: string;
   outputUrl?: string | null;
-  costRodi?: number;
-  model?: string;
-  differentiators?: string[];
-  quality?: Record<string, number>;
 };
 
-export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
+const STEPS = ["Besoin", "Contenu", "Style", "Récap"] as const;
+
+export function CreateFlyerForm({
+  mintBalance,
+  canExport = false,
+}: {
+  mintBalance: number;
+  canExport?: boolean;
+}) {
+  const [step, setStep] = useState(0);
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const [confirmMint, setConfirmMint] = useState(false);
+  const [mainImage, setMainImage] = useState("");
+  const [logoImage, setLogoImage] = useState("");
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const canGenerate = mintBalance > 0 && confirmMint;
 
+  async function readImage(file: File | undefined) {
+    if (!file) return "";
+    if (!file.type.startsWith("image/")) throw new Error("INVALID_IMAGE");
+    if (file.size > 2_000_000) throw new Error("INVALID_IMAGE");
+    return new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result ?? ""));
+      reader.onerror = () => reject(new Error("INVALID_IMAGE"));
+      reader.readAsDataURL(file);
+    });
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (step < 3) {
+      setStep((value) => value + 1);
+      return;
+    }
     setLoading(true);
     setError(null);
     setResult(null);
 
     const form = new FormData(event.currentTarget);
     const adaptiveData = Object.fromEntries(
-      adaptiveFields.map((field) => [field, String(form.get(`adaptive_${field}`) ?? "")]),
+      adaptiveFields.map((field) => [field.key, String(form.get(`adaptive_${field.key}`) ?? "")]),
     );
 
     const payload = {
@@ -42,9 +73,12 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
       subtitle: String(form.get("subtitle") ?? ""),
       description: String(form.get("description") ?? ""),
       price: String(form.get("price") ?? ""),
+      oldPrice: String(form.get("oldPrice") ?? ""),
       date: String(form.get("date") ?? ""),
+      time: String(form.get("time") ?? ""),
       location: String(form.get("location") ?? ""),
       contactPhone: String(form.get("contactPhone") ?? ""),
+      whatsapp: String(form.get("whatsapp") ?? ""),
       cta: String(form.get("cta") ?? ""),
       style: String(form.get("style") ?? ""),
       mood: String(form.get("mood") ?? ""),
@@ -54,6 +88,8 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
         .split(",")
         .map((v) => v.trim())
         .filter(Boolean),
+      mainImageUrl: mainImage || undefined,
+      logoUrl: logoImage || undefined,
       adaptiveData,
     };
 
@@ -67,7 +103,7 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
       if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
       setResult(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(publicErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -75,86 +111,180 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-5">
+      <div className="flex gap-2">
+        {STEPS.map((label, index) => (
+          <button
+            key={label}
+            type="button"
+            onClick={() => setStep(index)}
+            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+              index === step ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-500"
+            }`}
+          >
+            {index + 1}. {label}
+          </button>
+        ))}
+      </div>
+
       <div className="card p-5">
-        <p className="text-sm text-emerald-300">Cette creation utilisera 1 Mint.</p>
-        <h2 className="mt-1 text-xl font-semibold">Questionnaire intelligent</h2>
+        <p className="text-sm font-medium text-[#6D28D9]">Cette création utilisera 1 Mint.</p>
+        <h2 className="mt-1 text-xl font-bold">Questionnaire intelligent</h2>
+        <p className="mt-1 text-sm text-slate-500">Pas de prompt à écrire. Réponds simplement.</p>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Input name="visualType" label="Type de visuel" placeholder="Affiche promotionnelle" required />
-        <SelectDomain value={domain} onChange={setDomain} />
-        <Input name="objective" label="Objectif" placeholder="Attirer des clients" required />
-        <Input name="targetAudience" label="Cible" placeholder="Etudiants" required />
-        <Input name="title" label="Titre" placeholder="Formation intensive" required />
-        <Input name="subtitle" label="Sous-titre" placeholder="Places limitees" />
-        <Input name="price" label="Prix (exact)" placeholder="25 000 FCFA" />
-        <Input name="date" label="Date" placeholder="15 Octobre" />
-        <Input name="location" label="Lieu" placeholder="Abidjan" />
-        <Input name="contactPhone" label="Telephone" placeholder="+225..." />
-        <Input name="cta" label="CTA" placeholder="Inscris-toi maintenant" />
-        <Input name="style" label="Style" placeholder="Premium moderne" />
-        <Input name="mood" label="Ambiance" placeholder="Professionnel et energique" />
-        <Input name="colors" label="Couleurs (CSV)" placeholder="#111827, #20C997, #FFFFFF" />
-        <Input name="format" label="Format" placeholder="instagram_story" required />
-        <Input name="creativeFreedom" label="Liberte creative" placeholder="liberte_guidee" required />
-      </div>
-
-      {adaptiveFields.length > 0 && (
-        <div className="card p-5">
-          <h3 className="text-lg font-semibold">Questions adaptees au domaine</h3>
-          <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {adaptiveFields.map((field) => (
-              <Input key={field} name={`adaptive_${field}`} label={field} placeholder={field} />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <label className="flex items-center gap-2 text-sm text-white/80">
-        <input
-          type="checkbox"
-          checked={confirmMint}
-          onChange={(event) => setConfirmMint(event.target.checked)}
+      <div className={step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <Select
+          name="visualType"
+          label="Type d’affiche"
+          options={VISUAL_TYPES.map((item) => ({ value: item, label: item }))}
         />
-        Je confirme utiliser 1 Mint pour cette generation.
-      </label>
-      {mintBalance <= 0 ? (
-        <p className="text-sm text-amber-300">
-          Solde insuffisant. Recharge tes Mints depuis la page tarifs pour generer.
-        </p>
-      ) : (
-        <button
-          type="submit"
-          disabled={loading || !canGenerate}
-          className="rounded bg-emerald-500 px-4 py-2 font-semibold text-slate-900 disabled:opacity-60"
-        >
-          {loading ? "Generation en cours..." : "Generer mon affiche - 1 Mint"}
-        </button>
-      )}
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-slate-700">Domaine</span>
+          <select
+            value={domain}
+            onChange={(e) => setDomain(e.target.value as (typeof DOMAINS)[number])}
+            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2"
+          >
+            {DOMAINS.map((item) => (
+              <option key={item} value={item}>
+                {DOMAIN_LABELS[item]}
+              </option>
+            ))}
+          </select>
+        </label>
+        <Input name="objective" label="Objectif" placeholder="Attirer du monde samedi" required />
+        <Input name="targetAudience" label="Cible" placeholder="Jeunes actifs, familles…" required />
+      </div>
 
-      {error && <p className="text-sm text-red-300">{error}</p>}
-      {result && (
+      <div className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <Input name="title" label="Titre" placeholder="Formation intensive" required />
+        <Input name="subtitle" label="Sous-titre" placeholder="Places limitées" />
+        <Input name="description" label="Texte / offre" placeholder="Ce que les gens doivent retenir" />
+        <Input name="price" label="Prix" placeholder="25 000 FCFA" />
+        <Input name="oldPrice" label="Ancien prix" placeholder="optionnel" />
+        <Input name="date" label="Date" placeholder="15 octobre" />
+        <Input name="time" label="Heure" placeholder="19h" />
+        <Input name="location" label="Lieu" placeholder="Abidjan" />
+        <Input name="contactPhone" label="Téléphone" placeholder="+225…" />
+        <Input name="whatsapp" label="WhatsApp" placeholder="+225…" />
+        <Input name="cta" label="Appel à l’action" placeholder="Inscris-toi maintenant" />
+        {adaptiveFields.map((field) => (
+          <Input key={field.key} name={`adaptive_${field.key}`} label={field.label} />
+        ))}
+      </div>
+
+      <div className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <Input name="style" label="Style" placeholder="Premium moderne" />
+        <Input name="mood" label="Ambiance" placeholder="Énergique, chic, chaleureux…" />
+        <Input name="colors" label="Couleurs (séparées par des virgules)" placeholder="#1E293B, #6D28D9" />
+        <Select name="format" label="Format" options={FORMATS.map((item) => item)} />
+        <Select
+          name="creativeFreedom"
+          label="Liberté créative"
+          options={[
+            { value: "liberte_guidee", label: "Guidée (recommandé)" },
+            { value: "liberte_totale", label: "Totale" },
+            { value: "design_tres_precis", label: "Très précise" },
+          ]}
+        />
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-slate-700">Photo / produit (optionnel)</span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={async (event) => {
+              try {
+                setMainImage(await readImage(event.target.files?.[0]));
+              } catch (e) {
+                setError(publicErrorMessage(e));
+              }
+            }}
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium text-slate-700">Logo (optionnel)</span>
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={async (event) => {
+              try {
+                setLogoImage(await readImage(event.target.files?.[0]));
+              } catch (e) {
+                setError(publicErrorMessage(e));
+              }
+            }}
+          />
+        </label>
+      </div>
+
+      <div className={step === 3 ? "space-y-4" : "hidden"}>
+        <div className="card p-5 text-sm text-slate-600">
+          <p>
+            FlyerMint va composer la direction artistique puis générer l’affiche. Cela consomme{" "}
+            <strong>1 Mint</strong>.
+          </p>
+          {mainImage ? <p className="mt-2">Ta photo sera conservée comme sujet principal.</p> : null}
+        </div>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={confirmMint} onChange={(event) => setConfirmMint(event.target.checked)} />
+          Je confirme utiliser 1 Mint pour cette génération.
+        </label>
+      </div>
+
+      {mintBalance <= 0 ? (
+        <p className="text-sm text-amber-700">
+          Solde insuffisant.{" "}
+          <Link href="/pricing" className="font-semibold text-[#6D28D9] underline">
+            Acheter des Mints
+          </Link>
+        </p>
+      ) : null}
+
+      <div className="flex flex-wrap gap-3">
+        {step > 0 ? (
+          <button type="button" className="btn-secondary" onClick={() => setStep((value) => value - 1)}>
+            Retour
+          </button>
+        ) : null}
+        {step < 3 ? (
+          <button type="submit" className="btn-primary">
+            Continuer
+          </button>
+        ) : (
+          <button type="submit" disabled={loading || !canGenerate} className="btn-primary">
+            {loading ? "Génération en cours…" : "Générer mon affiche — 1 Mint"}
+          </button>
+        )}
+      </div>
+
+      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+
+      {result ? (
         <div className="card space-y-3 p-5">
-          <p className="text-[#20C997]">Ton affiche est prete.</p>
+          <p className="font-semibold text-[#10B981]">Ton affiche est prête.</p>
           {result.outputUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.outputUrl} alt="Affiche generee" className="w-full rounded-xl border border-white/10" />
-              <a
-                href={result.outputUrl}
-                download
-                className="inline-flex rounded-full bg-[#20C997] px-4 py-2 text-sm font-semibold text-[#111827]"
-              >
-                Telecharger
-              </a>
+              <img src={result.outputUrl} alt="Affiche générée" className="w-full rounded-xl border border-slate-200" />
+              <div className="flex flex-wrap gap-3">
+                <a href={result.outputUrl} download className="btn-primary">
+                  Télécharger
+                </a>
+                {canExport ? (
+                  <a href={`/api/generations/${result.generationId}/export`} className="btn-secondary">
+                    Pack éditable
+                  </a>
+                ) : null}
+                <Link href="/history" className="btn-secondary">
+                  Voir l’historique
+                </Link>
+              </div>
             </>
           ) : (
-            <p className="text-sm text-white/70">
-              La generation est enregistree. Le visuel n&apos;a pas encore d&apos;image a telecharger.
-            </p>
+            <p className="text-sm text-slate-600">La génération est enregistrée, mais l’image n’est pas encore disponible.</p>
           )}
         </div>
-      )}
+      ) : null}
     </form>
   );
 }
@@ -172,35 +302,33 @@ function Input({
 }) {
   return (
     <label className="space-y-1 text-sm">
-      <span className="text-white/80">{label}</span>
+      <span className="font-medium text-slate-700">{label}</span>
       <input
         name={name}
         required={required}
         placeholder={placeholder}
-        className="w-full rounded border border-white/20 bg-white/5 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
       />
     </label>
   );
 }
 
-function SelectDomain({
-  value,
-  onChange,
+function Select({
+  name,
+  label,
+  options,
 }: {
-  value: (typeof DOMAINS)[number];
-  onChange: (value: (typeof DOMAINS)[number]) => void;
+  name: string;
+  label: string;
+  options: readonly { value: string; label: string }[] | { value: string; label: string }[];
 }) {
   return (
     <label className="space-y-1 text-sm">
-      <span className="text-white/80">Domaine</span>
-      <select
-        value={value}
-        onChange={(e) => onChange(e.target.value as (typeof DOMAINS)[number])}
-        className="w-full rounded border border-white/20 bg-slate-900 px-3 py-2 outline-none ring-emerald-500 focus:ring-2"
-      >
-        {DOMAINS.map((domain) => (
-          <option key={domain} value={domain}>
-            {domain}
+      <span className="font-medium text-slate-700">{label}</span>
+      <select name={name} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+        {options.map((option) => (
+          <option key={option.value} value={option.value}>
+            {option.label}
           </option>
         ))}
       </select>

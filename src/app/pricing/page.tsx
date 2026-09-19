@@ -1,58 +1,40 @@
-import { PaymentButton } from "@/components/payment-button";
-import { prisma } from "@/lib/prisma";
-import { OFFICIAL_PLANS } from "@/lib/plans";
-import { ensureOfficialPlans } from "@/server/plans";
+import type { Metadata } from "next";
+import { pageTitle } from "@/lib/seo";
+import { PricingGrid } from "@/components/pricing/pricing-grid";
 
-type PricingPlan = {
-  code: string;
-  name: string;
-  priceFcfa: number;
-  mintAmount: number;
-  durationDays: number | null;
-  editableExport: boolean;
+export const metadata: Metadata = {
+  title: pageTitle("Tarifs"),
+  description: "Packs de Mints FlyerMint. 1 Mint = 1 affiche. Sans fausse réduction.",
+  openGraph: {
+    title: "Tarifs — FlyerMint",
+    description: "Packs de Mints FlyerMint. 1 Mint = 1 affiche.",
+  },
 };
+import { prisma } from "@/lib/prisma";
+import { OFFICIAL_PLANS, paidPlans } from "@/lib/plans";
+import { ensureOfficialPlans } from "@/server/plans";
 
 export default async function PricingPage() {
   const plans = await loadPlans();
 
   return (
-    <div className="space-y-8">
-      <section className="rounded-[1.8rem] border border-white/10 bg-white/5 p-6 md:p-10">
-        <p className="text-xs uppercase tracking-[0.2em] text-[#20C997]">Offres</p>
-        <h1 className="mt-2 text-4xl font-semibold">Choisis tes Mints</h1>
-        <p className="mt-3 max-w-2xl text-white/75">
-          1 Mint = 1 affiche. L&apos;export ne consomme aucun Mint. Le pack 2 000 FCFA expire au bout de 30 jours ;
-          les autres packs n&apos;expirent pas.
+    <div className="space-y-10 pb-10">
+      <section className="mx-auto max-w-3xl text-center">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Offres</p>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-[#1E293B]">
+          Choisis tes Mints
+        </h1>
+        <p className="mt-3 text-slate-600">
+          1 Mint = 1 affiche. L’export ne consomme aucun Mint. Le pack Starter expire au bout de
+          30 jours ; les autres packs n’expirent pas.
         </p>
       </section>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {plans.map((plan) => (
-          <article key={plan.code} className="flex flex-col rounded-[1.5rem] border border-white/10 bg-white/5 p-6">
-            <h2 className="text-lg font-semibold text-white">{plan.name}</h2>
-            <p className="mt-3 text-3xl font-semibold text-[#20C997]">
-              {plan.priceFcfa.toLocaleString("fr-FR")} FCFA
-            </p>
-            <p className="mt-2 text-sm text-white/80">
-              {plan.mintAmount} Mints = {plan.mintAmount} affiches
-            </p>
-            <p className="text-sm text-white/65">
-              {plan.durationDays ? `Valables ${plan.durationDays} jours` : "Sans expiration"}
-            </p>
-            {plan.editableExport ? (
-              <p className="mt-2 text-sm text-white/70">Export avance inclus</p>
-            ) : null}
-            <div className="mt-5">
-              <PaymentButton planCode={plan.code} label="Acheter" />
-            </div>
-          </article>
-        ))}
-      </div>
+      <PricingGrid plans={plans} />
     </div>
   );
 }
 
-async function loadPlans(): Promise<PricingPlan[]> {
+async function loadPlans() {
   try {
     await ensureOfficialPlans();
     const rows = await prisma.plan.findMany({
@@ -60,18 +42,21 @@ async function loadPlans(): Promise<PricingPlan[]> {
       orderBy: { sortOrder: "asc" },
     });
     if (rows.length > 0) {
-      return rows.map((plan) => ({
-        code: plan.code,
-        name: plan.name,
-        priceFcfa: plan.priceFcfa,
-        mintAmount: plan.mintAmount,
-        durationDays: plan.durationDays,
-        editableExport: plan.editableExport,
-      }));
+      return rows.map((row) => {
+        const seed = OFFICIAL_PLANS.find((plan) => plan.code === row.code);
+        return {
+          ...(seed ?? paidPlans()[0]),
+          code: row.code,
+          name: row.name,
+          priceFcfa: row.priceFcfa,
+          mintAmount: row.mintAmount,
+          durationDays: row.durationDays,
+          editableExport: row.editableExport,
+        };
+      });
     }
   } catch {
-    // Affiche les offres meme si la base est indisponible.
+    // Affiche les offres même si la base est indisponible.
   }
-
-  return OFFICIAL_PLANS.filter((plan) => plan.priceFcfa > 0);
+  return paidPlans();
 }

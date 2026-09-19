@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { confirmPaymentByToken } from "@/server/payments";
+import { safeJsonError } from "@/lib/safe-api";
 
 export async function POST(request: Request) {
   try {
@@ -16,10 +17,7 @@ export async function POST(request: Request) {
       status: payment.status,
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: error instanceof Error ? error.message : "UNKNOWN_ERROR" },
-      { status: 400 },
-    );
+    return safeJsonError(error);
   }
 }
 

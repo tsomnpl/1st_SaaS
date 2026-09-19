@@ -17,20 +17,21 @@ export type VisualPosterProps = {
   meta?: string;
   cta?: string;
   tone?: PosterTone;
+  imageSrc?: string;
   className?: string;
 };
 
 const tones: Record<PosterTone, string> = {
-  night: "from-[#0b1220] via-[#1b2a4a] to-[#20C997]/40",
-  warm: "from-[#2a160c] via-[#7a3b12] to-[#f4b942]",
-  gold: "from-[#14110c] via-[#3b2a12] to-[#d4b483]",
-  clean: "from-[#102033] via-[#1d4e63] to-[#7dd3c7]",
-  sport: "from-[#111827] via-[#1f2937] to-[#ef4444]/50",
-  soft: "from-[#1a1423] via-[#4c1d3d] to-[#f9a8d4]/40",
-  dark: "from-[#0a0a0a] via-[#1f2937] to-[#20C997]/30",
-  fresh: "from-[#06251f] via-[#0f766e] to-[#DFFAF0]/40",
-  rose: "from-[#2a1020] via-[#7f1d4a] to-[#fda4af]/40",
-  earth: "from-[#1c1917] via-[#365314] to-[#a3e635]/30",
+  night: "from-[#0f172a] via-[#312e81] to-[#6D28D9]",
+  warm: "from-[#7c2d12] via-[#c2410c] to-[#F59E0B]",
+  gold: "from-[#1E293B] via-[#334155] to-[#d4b483]",
+  clean: "from-[#0f766e] via-[#3B82F6] to-[#e0f2fe]",
+  sport: "from-[#1E293B] via-[#b91c1c] to-[#F59E0B]",
+  soft: "from-[#4c1d95] via-[#9d174d] to-[#f9a8d4]",
+  dark: "from-[#020617] via-[#1E293B] to-[#10B981]",
+  fresh: "from-[#064e3b] via-[#10B981] to-[#d1fae5]",
+  rose: "from-[#4c0519] via-[#be123c] to-[#fda4af]",
+  earth: "from-[#1c1917] via-[#3f6212] to-[#a3e635]",
 };
 
 export function VisualPoster({
@@ -38,24 +39,48 @@ export function VisualPoster({
   title,
   subtitle,
   meta,
-  cta = "Reserver",
+  cta = "Réserver",
   tone = "night",
+  imageSrc,
   className = "",
 }: VisualPosterProps) {
   return (
     <article
-      className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.4rem] border border-white/15 bg-gradient-to-br p-4 shadow-[0_20px_50px_rgba(0,0,0,0.35)] ${tones[tone]} ${className}`}
+      className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.5rem] bg-gradient-to-br p-5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.18)] ${tones[tone]} ${className}`}
     >
-      <div className="pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full bg-white/10 blur-2xl" />
-      <p className="text-[10px] uppercase tracking-[0.22em] text-white/70">{kicker}</p>
-      <h3 className="mt-3 max-w-[12ch] text-2xl font-semibold leading-none text-white">{title}</h3>
-      {subtitle ? <p className="mt-2 text-sm text-white/80">{subtitle}</p> : null}
-      <div className="mt-auto space-y-3">
-        {meta ? <p className="text-xs text-white/70">{meta}</p> : null}
-        <span className="inline-flex rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-[#111827]">
-          {cta}
+      {imageSrc ? (
+        <img
+          src={imageSrc}
+          alt={`${title}${subtitle ? ` — ${subtitle}` : ""}`}
+          className="absolute inset-0 h-full w-full object-cover"
+          loading="eager"
+          decoding="async"
+        />
+      ) : null}
+      {imageSrc ? (
+        <span className="relative z-10 ml-auto rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#1E293B]">
+          {kicker}
         </span>
-      </div>
+      ) : (
+        <>
+          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20" />
+          <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
+          <div className="pointer-events-none absolute bottom-8 left-[-20%] h-24 w-40 rounded-full bg-black/10 blur-2xl" />
+          <p className="relative z-10 text-[10px] uppercase tracking-[0.22em] text-white/70">{kicker}</p>
+          <h3 className="relative mt-4 max-w-[11ch] text-[1.65rem] font-extrabold leading-[0.95] tracking-tight">
+            {title}
+          </h3>
+          {subtitle ? <p className="relative mt-3 max-w-[18ch] text-sm text-white/85">{subtitle}</p> : null}
+          <div className="relative mt-auto space-y-3">
+            {meta ? (
+              <p className="max-w-[20ch] text-xs font-medium text-white/75">{meta}</p>
+            ) : null}
+            <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#1E293B]">
+              {cta}
+            </span>
+          </div>
+        </>
+      )}
     </article>
   );
 }
