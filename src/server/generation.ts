@@ -8,13 +8,15 @@ import {
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium } from "@/server/rodium";
+import { loadDomainInspirationAnalyses, publicArtDirection } from "@/lib/inspiration-source";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
   if (!user) throw new Error("USER_NOT_FOUND");
 
   const brief = createBriefSchema.parse(unsafeInput);
-  const artDirection = buildArtDirection(brief);
+  const library = await loadDomainInspirationAnalyses(brief.domain, 3);
+  const artDirection = buildArtDirection(brief, library);
   const prompt = buildPrompt(brief, artDirection);
   const qualityScores = scoreQuality(brief, prompt);
 
@@ -61,8 +63,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       generationId: updated.id,
       outputUrl: updated.outputUrl,
       quality: qualityScores,
-      artDirection,
-      differentiators: artDirection.differentiators,
+      ...publicArtDirection(artDirection),
       costRodi: result.rodiCostEstimate,
       model: result.model,
     };

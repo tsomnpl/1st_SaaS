@@ -78,6 +78,10 @@ export function CreateFlyerForm({ mintBalance }: { mintBalance: number }) {
       <div className="card p-5">
         <p className="text-sm text-emerald-300">Cette creation utilisera 1 Mint.</p>
         <h2 className="mt-1 text-xl font-semibold">Questionnaire intelligent</h2>
+        <p className="mt-2 text-sm text-white/65">
+          L&apos;affiche generee est originale, composee pour ton domaine. Aucune image de
+          reference n&apos;est affichee ni reutilisee telle quelle.
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

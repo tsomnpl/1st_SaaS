@@ -1,0 +1,130 @@
+{
+  "bucket": "inspirations-source",
+  "table": "inspiration_source",
+  "publicServingForbidden": true,
+  "domains": [
+    {
+      "domaine": "Agriculture",
+      "slug": "agriculture",
+      "aliases": ["agriculture"]
+    },
+    {
+      "domaine": "Anniversaire",
+      "slug": "anniversaire",
+      "aliases": ["anniversaire"]
+    },
+    {
+      "domaine": "Associations",
+      "slug": "associations",
+      "aliases": ["associations", "association"]
+    },
+    {
+      "domaine": "Automobile",
+      "slug": "automobile",
+      "aliases": ["automobile", "auto"]
+    },
+    {
+      "domaine": "Beaute & Soins",
+      "slug": "beaute",
+      "aliases": ["beaute", "beaut", "beauty", "beaute & soins", "beaute et soins", "beaute-soins"]
+    },
+    {
+      "domaine": "Business & Entreprise",
+      "slug": "business",
+      "aliases": ["business", "entreprise", "business & entreprise", "business et entreprise"]
+    },
+    {
+      "domaine": "E-commerce",
+      "slug": "e-commerce",
+      "aliases": ["e-commerce", "ecommerce", "e commerce"]
+    },
+    {
+      "domaine": "Education & Formation",
+      "slug": "education",
+      "aliases": [
+        "education",
+        "ducation",
+        "formation",
+        "education & formation",
+        "education et formation"
+      ]
+    },
+    {
+      "domaine": "Emploi & Recrutement",
+      "slug": "emploi",
+      "aliases": ["emploi", "recrutement", "emploi & recrutement", "emploi et recrutement"]
+    },
+    {
+      "domaine": "Evenementiel",
+      "slug": "evenementiel",
+      "aliases": ["evenementiel", "vnementiel", "evenement", "evenements"]
+    },
+    {
+      "domaine": "Finance & Fintech",
+      "slug": "finance",
+      "aliases": ["finance", "fintech", "finance & fintech", "finance et fintech"]
+    },
+    {
+      "domaine": "Immobilier",
+      "slug": "immobilier",
+      "aliases": ["immobilier", "immo"]
+    },
+    {
+      "domaine": "Mariage",
+      "slug": "mariage",
+      "aliases": ["mariage"]
+    },
+    {
+      "domaine": "Mode & Accessoires",
+      "slug": "mode",
+      "aliases": ["mode", "accessoires", "mode & accessoires", "mode et accessoires"]
+    },
+    {
+      "domaine": "Musique",
+      "slug": "musique",
+      "aliases": ["musique"]
+    },
+    {
+      "domaine": "Religion & Culture",
+      "slug": "religion-culture",
+      "aliases": [
+        "religion",
+        "culture",
+        "religion culture",
+        "religion-culture",
+        "religion & culture",
+        "religion et culture"
+      ]
+    },
+    {
+      "domaine": "Restauration",
+      "slug": "restauration",
+      "aliases": ["restauration", "resto"]
+    },
+    {
+      "domaine": "Sante & Clinique",
+      "slug": "sante",
+      "aliases": ["sante", "sant", "clinique", "sante & clinique", "sante et clinique"]
+    },
+    {
+      "domaine": "Services divers",
+      "slug": "services",
+      "aliases": ["services", "divers", "services divers"]
+    },
+    {
+      "domaine": "Sport",
+      "slug": "sport",
+      "aliases": ["sport", "sports"]
+    },
+    {
+      "domaine": "Technologie",
+      "slug": "technologie",
+      "aliases": ["technologie", "techno"]
+    },
+    {
+      "domaine": "Tourisme & Voyage",
+      "slug": "tourisme",
+      "aliases": ["tourisme", "voyage", "tourisme & voyage", "tourisme et voyage"]
+    }
+  ]
+}

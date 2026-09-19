@@ -176,3 +176,22 @@ model AdminLog {
   createdAt  DateTime @default(now())
   admin      User     @relation("AdminActorLogs", fields: [adminUserId], references: [id])
 }
+
+/// Bibliothèque interne d'affiches collectées. Jamais servie publiquement.
+/// La source de vérité opérationnelle est le SQL Supabase (scripts/sql/inspiration_source.sql).
+model InspirationSource {
+  id                String    @id @default(uuid())
+  domaine           String
+  folderName        String    @map("folder_name")
+  storagePath       String    @unique @map("storage_path")
+  fileHash          String    @unique @map("file_hash")
+  originalFilename  String    @map("original_filename")
+  mimeType          String?   @map("mime_type")
+  byteSize          BigInt?   @map("byte_size")
+  uploadedAt        DateTime  @default(now()) @map("uploaded_at")
+  analysis          Json?
+  analyzedAt        DateTime? @map("analyzed_at")
+
+  @@index([domaine])
+  @@map("inspiration_source")
+}
