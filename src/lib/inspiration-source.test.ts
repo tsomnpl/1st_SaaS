@@ -74,5 +74,10 @@ describe("inspiration source descriptions", () => {
     expect(script).toContain("google/gemini-2.5-flash-lite");
     expect(script).not.toContain("/object/public/");
     expect(script).toContain("NEVER copy visible words");
+    expect(script).toContain("catalogue-description-guide.json");
+    const guide = JSON.parse(readFileSync("src/lib/catalogue-description-guide.json", "utf8"));
+    expect(guide.source_pdf).toBe("docs/inspirations/catalogue-analyse-affiches.pdf");
+    expect(guide.exemples.length).toBeGreaterThanOrEqual(4);
+    expect(JSON.stringify(guide)).not.toMatch(/zara|fulixgold|nexora|sendora|godfactor|hotels\.ng/i);
   });
 });

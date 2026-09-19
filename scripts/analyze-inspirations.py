@@ -27,14 +27,34 @@ VISION_MODEL = "google/gemini-2.5-flash-lite"
 MIN_AVAILABLE_RODI = 0.35
 ANALYSIS_PREFIX = "_analysis"
 
-VISION_PROMPT = """Analyze this advertising poster. Reply with a compact JSON object only (no markdown) using EXACTLY these keys:
-{"arriere_plan":"...","textes":"...","visuel":"...","palette_dominante":["#RRGGBB","#RRGGBB"],"style_general":"..."}
-Rules:
-- French, one short sentence per string field.
-- textes = placement and typography style only (example: "titre gras en haut, CTA bandeau bas"). NEVER copy visible words, brand names, logos, slogans, phone numbers, or URLs.
+GUIDE_PATH = ROOT / "src" / "lib" / "catalogue-description-guide.json"
+
+
+def catalogue_style_block() -> str:
+    guide = json.loads(GUIDE_PATH.read_text(encoding="utf-8"))
+    examples = []
+    for row in guide.get("exemples", [])[:4]:
+        examples.append(
+            f"- fond: {row['arriere_plan']} | textes: {row['textes']} | visuel: {row['visuel']}"
+        )
+    rules = " ".join(guide.get("regles", []))
+    return (
+        "Même grain que le catalogue d'analyse des affiches (architecture visuelle, "
+        "pas une transcription). "
+        + rules
+        + " Exemples de grain (génériques, sans marque):\n"
+        + "\n".join(examples)
+    )
+
+
+def vision_prompt() -> str:
+    return f"""Analyze this advertising poster. Reply with a compact JSON object only (no markdown) using EXACTLY these keys:
+{{"arriere_plan":"...","textes":"...","visuel":"...","palette_dominante":["#RRGGBB","#RRGGBB"],"style_general":"..."}}
+{catalogue_style_block()}
+- French. arriere_plan / visuel: 1-2 precise sentences. textes: 1 sentence on hierarchy + placement + type treatment only.
+- NEVER copy visible words, brand names, logos, slogans, phone numbers, or URLs.
 - Do not name real companies, products, NGOs, governments, or celebrities.
-- palette_dominante: 2 or 3 hex colors actually dominant.
-- Describe structure and mood only. Not a transcription."""
+- palette_dominante: 2 or 3 hex colors actually dominant."""
 
 
 def load_env_file(path: Path) -> None:
@@ -237,7 +257,7 @@ def analyze_image(jpeg: bytes) -> dict[str, Any]:
                 {
                     "role": "user",
                     "content": [
-                        {"type": "text", "text": VISION_PROMPT},
+                        {"type": "text", "text": vision_prompt()},
                         {"type": "image_url", "image_url": {"url": data_url}},
                     ],
                 }
