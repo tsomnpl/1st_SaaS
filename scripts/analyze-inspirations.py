@@ -365,7 +365,8 @@ def run_analysis(limit: int) -> int:
     for index, row in enumerate(pending, start=1):
         available = wallet_available()
         if available < MIN_AVAILABLE_RODI:
-            print(f"wallet disponible={available:.2f} — tentative quand même (arrêt si Rodium 402)")
+            print(f"STOP wallet disponible={available:.2f} < {MIN_AVAILABLE_RODI} (Rodium a refuse 0.3 RODI si disponible=0.1)")
+            break
         label = f"{row['domaine']}/{row['id'][:8]}"
         try:
             original = download_original(row["storage_path"])
