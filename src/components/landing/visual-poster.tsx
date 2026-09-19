@@ -53,7 +53,7 @@ export function VisualPoster({
           src={imageSrc}
           alt={`${title}${subtitle ? ` — ${subtitle}` : ""}`}
           className="absolute inset-0 h-full w-full object-cover"
-          loading="lazy"
+          loading="eager"
           decoding="async"
         />
       ) : null}
