@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { CreateFlyerForm } from "@/components/create-flyer-form";
 import { pageTitle } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
@@ -17,12 +18,22 @@ export default async function CreatePage({
 }: {
   searchParams: Promise<{ from?: string; format?: string }>;
 }) {
-  const user = await requireActiveCurrentUser();
+  let user;
+  try {
+    user = await requireActiveCurrentUser();
+  } catch (error) {
+    const code = error instanceof Error ? error.message : "";
+    if (code === "UNAUTHORIZED") redirect("/sign-in?redirect_url=/create");
+    if (code === "ACCOUNT_SUSPENDED") redirect("/");
+    throw error;
+  }
   const query = await searchParams;
-  const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } });
+  const [account, canExport, kit] = await Promise.all([
+    prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null),
+    userHasEditableExport(user.id).catch(() => false),
+    getBrandKit(user.id),
+  ]);
   const balance = account?.balance ?? 0;
-  const canExport = await userHasEditableExport(user.id);
-  const kit = await getBrandKit(user.id);
   const allowedFormat = FORMATS.some((item) => item.value === query.format) ? query.format : "";
 
   return (

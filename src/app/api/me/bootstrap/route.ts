@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getOrCreateCurrentUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
+import { getBrandKit } from "@/server/brand-kit";
 import { safeJsonError } from "@/lib/safe-api";
 
 export async function POST() {
@@ -9,7 +10,7 @@ export async function POST() {
     const account = await prisma.creditAccount.findUnique({
       where: { userId: user.id },
     });
-    const kit = await prisma.brandKit.findUnique({ where: { userId: user.id } });
+    const kit = await getBrandKit(user.id);
 
     return NextResponse.json({
       ok: true,

@@ -31,7 +31,9 @@ export async function POST(request: Request) {
     const kit = await saveBrandKit(user.id, body);
     return NextResponse.json({
       ok: true,
-      kit: { colors: kit.colors, hasLogo: Boolean(kit.logoUrl) },
+      kit: kit
+        ? { colors: kit.colors, hasLogo: Boolean(kit.logoUrl) }
+        : { colors: body.colors, hasLogo: Boolean(body.logoUrl) },
     });
   } catch (error) {
     return safeJsonError(error, 400);

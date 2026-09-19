@@ -9,11 +9,12 @@ export const metadata: Metadata = {
 import { UserButton } from "@clerk/nextjs";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
+import { getBrandKit } from "@/server/brand-kit";
 
 export default async function ProfilePage() {
   const user = await requireActiveCurrentUser();
-  const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } });
-  const kit = await prisma.brandKit.findUnique({ where: { userId: user.id } });
+  const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null);
+  const kit = await getBrandKit(user.id);
 
   return (
     <div className="card mx-auto max-w-xl space-y-5 p-6">
