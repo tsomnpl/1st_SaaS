@@ -53,3 +53,6 @@ public/creations/*.jpg
 storage/private/
 storage/masters/
 storage/web/
+
+# local inspiration upload reports (never commit source inventory)
+docs/inspirations/*upload-report*

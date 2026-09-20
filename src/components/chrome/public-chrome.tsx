@@ -14,6 +14,7 @@ const jakarta = Plus_Jakarta_Sans({
 
 const publicLinks = [
   { href: "/creations", label: "Créations" },
+  { href: "/#comment-ca-marche", label: "Comment ça marche" },
   { href: "/pricing", label: "Tarifs" },
 ];
 
