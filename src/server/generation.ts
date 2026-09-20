@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
+import { loadDomainInspirationAnalyses } from "@/lib/inspiration-source";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -32,7 +33,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     }
   }
 
-  const artDirection = buildArtDirection(brief);
+  const library = await loadDomainInspirationAnalyses(brief.domain, 3);
+  const artDirection = buildArtDirection(brief, library);
   let prompt = buildPrompt(brief, artDirection);
   const qualityScores = scoreQuality(brief, prompt);
 

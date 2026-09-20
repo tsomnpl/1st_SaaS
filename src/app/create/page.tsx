@@ -6,7 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { userHasEditableExport } from "@/server/generation";
 import { getBrandKit } from "@/server/brand-kit";
-import { FORMATS } from "@/lib/domains";
+import { DOMAINS, FORMATS } from "@/lib/domains";
 
 export const metadata: Metadata = {
   title: pageTitle("Créer une affiche"),
@@ -16,7 +16,7 @@ export const metadata: Metadata = {
 export default async function CreatePage({
   searchParams,
 }: {
-  searchParams: Promise<{ from?: string; format?: string }>;
+  searchParams: Promise<{ from?: string; format?: string; domain?: string; title?: string }>;
 }) {
   let user;
   try {
@@ -35,6 +35,10 @@ export default async function CreatePage({
   ]);
   const balance = account?.balance ?? 0;
   const allowedFormat = FORMATS.some((item) => item.value === query.format) ? query.format : "";
+  const allowedDomain = DOMAINS.includes(query.domain as (typeof DOMAINS)[number])
+    ? (query.domain as (typeof DOMAINS)[number])
+    : undefined;
+  const prefilledTitle = (query.title ?? "").slice(0, 80);
 
   return (
     <div className="space-y-6">
@@ -52,6 +56,8 @@ export default async function CreatePage({
         brandLogoUrl={kit?.logoUrl ?? ""}
         regenerateFromId={query.from ?? ""}
         initialFormat={allowedFormat ?? ""}
+        initialDomain={allowedDomain}
+        initialTitle={prefilledTitle}
       />
     </div>
   );

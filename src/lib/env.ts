@@ -71,6 +71,20 @@ export function getAllowedImageModels() {
     .filter(Boolean);
 }
 
+export const PRODUCTION_APP_URL = "https://flyermint-t.vercel.app";
+
 export function getAppUrl() {
-  return env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "") || "http://localhost:3000";
+  if (env.NEXT_PUBLIC_APP_URL) return env.NEXT_PUBLIC_APP_URL.replace(/\/$/, "");
+  if (process.env.VERCEL_ENV === "production" || process.env.NODE_ENV === "production") {
+    return PRODUCTION_APP_URL;
+  }
+  return "http://localhost:3000";
+}
+
+export function moneyFusionPublicUrls(appUrl = getAppUrl()) {
+  const base = appUrl.replace(/\/$/, "");
+  return {
+    returnUrl: `${base}/payment/success`,
+    webhookUrl: `${base}/api/webhooks/moneyfusion`,
+  };
 }

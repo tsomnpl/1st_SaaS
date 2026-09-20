@@ -4,18 +4,14 @@ import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
-import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
-
-const SHOWCASE = [
-  { title: "NIGHT WAVE", subtitle: "Concert live", meta: "Sam. 21h · Plateau", tone: "night" as const, cta: "Prends ta place" },
-  { title: "MENU DU SOIR", subtitle: "Burger + boisson", meta: "5 000 FCFA", tone: "warm" as const, cta: "Commander" },
-  { title: "NOUVELLE COLLECTION", subtitle: "Lookbook été", meta: "Édition limitée", tone: "gold" as const, cta: "Découvrir" },
-  { title: "VILLA VUE MER", subtitle: "Cocody", meta: "Visite ce week-end", tone: "clean" as const, cta: "Prendre RDV" },
-  { title: "GLOW STUDIO", subtitle: "Soins visage", meta: "-30% cette semaine", tone: "soft" as const, cta: "Réserver" },
-  { title: "OPEN DAY", subtitle: "Formation pro", meta: "Places limitées", tone: "fresh" as const, cta: "S’inscrire" },
-  { title: "FLASH SALE", subtitle: "Boutique en ligne", meta: "24h seulement", tone: "sport" as const, cta: "Acheter" },
-  { title: "YES I DO", subtitle: "Save the date", meta: "12 décembre", tone: "rose" as const, cta: "RSVP" },
-];
+import { LandingBriefTeaser } from "@/components/landing/brief-teaser";
+import {
+  getGeneratedShowcase,
+  pickAfterPoster,
+  pickLandingShowcase,
+  posterForDomaine,
+  toPoster,
+} from "@/lib/showcase";
 
 const DOMAIN_TONES = [
   "night", "warm", "gold", "soft", "clean", "dark", "fresh", "clean", "sport", "dark",
@@ -26,6 +22,9 @@ const DOMAIN_TONES = [
 export default async function Home() {
   const { generated } = await getGeneratedShowcase();
   const heroPosters = generated.filter((entry) => entry.hero_loop).map((entry) => toPoster(entry, true));
+  const landingShowcase = pickLandingShowcase(generated).map((entry) => toPoster(entry));
+  const after = pickAfterPoster(generated);
+  const afterPoster = after ? toPoster(after) : null;
 
   return (
     <div className="space-y-24 pb-8">
@@ -99,8 +98,8 @@ export default async function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {SHOWCASE.map((poster) => (
-            <VisualPoster key={poster.title} {...poster} />
+          {landingShowcase.map((poster) => (
+            <VisualPoster key={poster.id ?? poster.title} {...poster} />
           ))}
         </div>
       </section>
@@ -116,37 +115,28 @@ export default async function Home() {
                 Promo ce weekend, burger + boisson, 5000 FCFA, appelle ce numero.
               </p>
             </div>
-            <VisualPoster
-              title="MENU DU SOIR"
-              subtitle="Burger + boisson"
-              meta="5 000 FCFA"
-              cta="Appeler"
-              tone="warm"
-              className="min-h-[220px]"
-            />
+            {afterPoster ? (
+              <VisualPoster {...afterPoster} className="min-h-[220px]" />
+            ) : (
+              <VisualPoster
+                title="MENU DU SOIR"
+                subtitle="Burger + boisson"
+                meta="5 000 FCFA"
+                cta="Appeler"
+                tone="warm"
+                className="min-h-[220px]"
+              />
+            )}
           </div>
         </article>
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
           <h3 className="mt-2 text-2xl font-extrabold">Tu réponds. On compose.</h3>
-          <div className="mt-6 space-y-3">
-            {[
-              "Quel est ton domaine ?",
-              "Que veux-tu que les gens fassent ?",
-              "Quel est le message principal ?",
-              "As-tu un style, des couleurs, une photo ?",
-              "Quel format : story, post, affiche ?",
-            ].map((question, index) => (
-              <div
-                key={question}
-                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-              >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-50 text-xs font-bold text-[#6D28D9]">
-                  {index + 1}
-                </span>
-                {question}
-              </div>
-            ))}
+          <p className="mt-2 text-sm text-slate-600">
+            Trois infos suffisent pour ouvrir le brief. Le reste se pose ensuite, domaine par domaine.
+          </p>
+          <div className="mt-6">
+            <LandingBriefTeaser />
           </div>
         </article>
       </section>
@@ -167,19 +157,47 @@ export default async function Home() {
         </div>
       </section>
 
+      <section className="card p-6 md:p-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Direction artistique IA</p>
+        <h2 className="mt-2 text-3xl font-extrabold">Un directeur artistique, pas un bouton magique</h2>
+        <p className="mt-3 max-w-2xl text-slate-600">
+          FlyerMint analyse le domaine, s’appuie sur des principes de design et une bibliothèque privée,
+          place une personne réelle dans la scène, génère, contrôle, puis corrige si besoin.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          {[
+            "Personne obligatoire, avec un rôle dans l’affiche",
+            "Palette 2-3 couleurs, 2 typo max, safe zone",
+            "Contrôle qualité + une réparation incluse",
+          ].map((item) => (
+            <p key={item} className="rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700">
+              {item}
+            </p>
+          ))}
+        </div>
+      </section>
+
       <section className="space-y-6">
         <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {DOMAINS.map((domain, index) => (
-            <VisualPoster
-              key={domain}
-              title={DOMAIN_LABELS[domain]}
-              subtitle="Affiche pro"
-              cta="Créer"
-              tone={DOMAIN_TONES[index] ?? "clean"}
-              className="min-h-[180px]"
-            />
-          ))}
+          {DOMAINS.map((domain, index) => {
+            const match = posterForDomaine(generated, DOMAIN_LABELS[domain]) ?? posterForDomaine(generated, domain);
+            if (match) {
+              return <VisualPoster key={domain} {...toPoster(match)} className="min-h-[180px]" />;
+            }
+            return (
+              <Link
+                key={domain}
+                href={`/create?domain=${encodeURIComponent(domain)}`}
+                className={`flex min-h-[180px] flex-col justify-end rounded-[1.5rem] bg-gradient-to-br p-4 text-white ${
+                  ["from-[#1E293B] to-[#6D28D9]", "from-[#0f766e] to-[#10B981]", "from-[#7c2d12] to-[#F59E0B]"][index % 3]
+                }`}
+              >
+                <span className="text-sm font-bold">{DOMAIN_LABELS[domain]}</span>
+                <span className="text-xs text-white/80">Créer une affiche</span>
+              </Link>
+            );
+          })}
         </div>
       </section>
 
@@ -214,6 +232,18 @@ export default async function Home() {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section id="export-editable" className="card p-6 md:p-10">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#10B981]">Export éditable</p>
+        <h2 className="mt-2 text-3xl font-extrabold">Figma, Canva, Word — seulement sur les packs 20k et 25k</h2>
+        <p className="mt-3 max-w-2xl text-slate-600">
+          L’export éditable est proposé uniquement si le fichier est réellement disponible pour ta génération.
+          Il ne consomme aucun Mint. Les offres 2k à 15k livrent l’affiche finale, pas le fichier source.
+        </p>
+        <Link href="/pricing" className="btn-secondary mt-6 inline-flex">
+          Voir les packs éditables
+        </Link>
       </section>
 
       <section className="rounded-[1.8rem] bg-[#1E293B] px-8 py-12 text-center text-white md:px-12">

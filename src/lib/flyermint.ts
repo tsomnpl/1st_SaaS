@@ -3,6 +3,11 @@ import { DOMAINS } from "@/lib/domains";
 import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
+import { catalogueStyleNotesFor } from "@/lib/catalogue-refs";
+import {
+  formatInspirationForPrompt,
+  type InspirationAnalysis,
+} from "@/lib/inspiration-source";
 
 function isSafeImageRef(value: string) {
   if (value.startsWith("https://")) return true;
@@ -92,12 +97,17 @@ export type ArtDirection = {
   differentiators: string[];
 };
 
-export function buildArtDirection(input: CreateBriefInput): ArtDirection {
+export function buildArtDirection(
+  input: CreateBriefInput,
+  library: InspirationAnalysis[] = [],
+): ArtDirection {
   const palette =
     input.colors.length > 0 ? input.colors.slice(0, 3) : ["#1E293B", "#6D28D9", "#10B981"];
   const inspiration = selectInspirationReferences(input);
   const playbook = inspiration.selected[0];
   const human = humanStagingFor(input.domain);
+  const catalogueNotes = catalogueStyleNotesFor(input.domain);
+  const libraryIds = library.map((item) => `insp-${item.id}`);
 
   return {
     concept: `${input.style ?? playbook?.style ?? "moderne"} — direction artistique ${input.domain}`,
@@ -135,8 +145,10 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "contraste fort texte/fond",
       "2-3 couleurs principales maximum",
       ...inspiration.principles,
+      ...catalogueNotes,
+      ...formatInspirationForPrompt(library),
     ],
-    reference_ids: inspiration.selected.map((ref) => ref.id),
+    reference_ids: [...inspiration.selected.map((ref) => ref.id), ...libraryIds],
     avoid: [
       "zero personne humaine",
       "peau plastique, visage cireux, mains deformees",
@@ -189,7 +201,7 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
     `FORMAT: ${ad.format}.`,
     `TITLE TO RENDER EXACTLY: ${input.title}.`,
     ...facts,
-    `Reference principles (inspire, never copy): ${ad.reference_principles.slice(0, 12).join(" || ")}.`,
+    `Reference principles (inspire, never copy): ${ad.reference_principles.join(" || ")}.`,
     `Avoid: ${ad.avoid.join("; ")}.`,
     "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
     "If it would not be publishable by a real local business, it is a failure.",
