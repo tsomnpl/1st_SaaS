@@ -26,6 +26,8 @@ export function CreateFlyerForm({
   brandLogoUrl = "",
   regenerateFromId = "",
   initialFormat = "",
+  initialDomain,
+  initialTitle = "",
 }: {
   mintBalance: number;
   canExport?: boolean;
@@ -33,9 +35,11 @@ export function CreateFlyerForm({
   brandLogoUrl?: string;
   regenerateFromId?: string;
   initialFormat?: string;
+  initialDomain?: (typeof DOMAINS)[number];
+  initialTitle?: string;
 }) {
   const [step, setStep] = useState(0);
-  const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
+  const [domain, setDomain] = useState<(typeof DOMAINS)[number]>(initialDomain ?? "Evenementiel");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -169,7 +173,7 @@ export function CreateFlyerForm({
       </div>
 
       <div className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="title" label="Titre" placeholder="Formation intensive" required />
+        <Input name="title" label="Titre" placeholder="Formation intensive" required defaultValue={initialTitle} />
         <Input name="subtitle" label="Sous-titre" placeholder="Places limitées" />
         <Input name="description" label="Texte / offre" placeholder="Ce que les gens doivent retenir" />
         <Input name="price" label="Prix" placeholder="25 000 FCFA" />

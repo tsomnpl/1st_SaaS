@@ -1,6 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
+import { pickAfterPoster, pickLandingShowcase, posterForDomaine } from "./showcase";
 import { buildShowcasePrompt, SHOWCASE_DESIGN } from "./showcase-design";
 
 describe("showcase catalogue alignment", () => {
@@ -93,6 +94,17 @@ describe("showcase catalogue alignment", () => {
       expect(prompt).toMatch(/photoreal human/i);
       expect(prompt).not.toMatch(/zara|nexora|fulixgold|techpoint/i);
     }
+  });
+
+  it("picks real generated posters for the landing showcase", () => {
+    const generated = JSON.parse(
+      readFileSync("docs/inspirations/showcase-manifest.json", "utf8"),
+    ).fiches.filter((row: { statut: string }) => row.statut === "genere");
+    const landing = pickLandingShowcase(generated, 8);
+    expect(landing.length).toBeGreaterThanOrEqual(8);
+    expect(landing.every((row) => row.fichier_image)).toBe(true);
+    expect(pickAfterPoster(generated)?.id).toMatch(/restauration/);
+    expect(posterForDomaine(generated, "Événementiel")?.id).toMatch(/evenementiel/);
   });
 
   it("requests max poster size and GPT Image for client-facing posters", () => {
