@@ -11,8 +11,12 @@ const PUBLIC_EXACT = new Set([
   "/sign-in",
   "/sign-up",
   "/payment/success",
+  "/payment/cancelled",
+  "/payment/failed",
   "/privacy",
+  "/cookies",
   "/terms",
+  "/refund",
   "/forbidden",
 ]);
 
@@ -22,6 +26,7 @@ const PUBLIC_PREFIXES = [
   "/creations/",
   "/api/webhooks/moneyfusion",
   "/api/payments/webhook",
+  "/api/payments/verify/",
   "/api/health",
 ];
 
@@ -72,7 +77,7 @@ function applySensitiveRateLimit(req: NextRequest) {
   const { pathname } = req.nextUrl;
   const rules: Array<{ match: (path: string) => boolean; limit: number; windowMs: number; name: string }> = [
     { match: (path) => path === "/api/generate", limit: 8, windowMs: 60_000, name: "generate" },
-    { match: (path) => path === "/api/payments/init", limit: 8, windowMs: 60_000, name: "pay-init" },
+    { match: (path) => path.startsWith("/api/payments/verify/"), limit: 20, windowMs: 60_000, name: "pay-verify" },
     { match: (path) => path.startsWith("/api/admin/export"), limit: 8, windowMs: 60_000, name: "admin-export" },
     { match: (path) => path.startsWith("/api/admin/"), limit: 40, windowMs: 60_000, name: "admin" },
     { match: (path) => path.includes("webhook"), limit: 80, windowMs: 60_000, name: "webhook" },

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { COOKIE_CONSENT_EVENT, COOKIE_CONSENT_KEY } from "@/lib/cookie-consent";
 
 export function AnalyticsLoader({ domain }: { domain?: string }) {
   useEffect(() => {
@@ -14,9 +15,16 @@ export function AnalyticsLoader({ domain }: { domain?: string }) {
       script.src = "https://plausible.io/js/script.js";
       document.body.appendChild(script);
     };
-    if (window.localStorage.getItem("fm-cookie-consent") === "analytics") load();
-    window.addEventListener("fm-analytics-consent", load);
-    return () => window.removeEventListener("fm-analytics-consent", load);
+    const revoke = () => {
+      document.getElementById("fm-analytics")?.remove();
+    };
+    if (window.localStorage.getItem(COOKIE_CONSENT_KEY) === "analytics") load();
+    window.addEventListener(COOKIE_CONSENT_EVENT, load);
+    window.addEventListener("fm-analytics-revoke", revoke);
+    return () => {
+      window.removeEventListener(COOKIE_CONSENT_EVENT, load);
+      window.removeEventListener("fm-analytics-revoke", revoke);
+    };
   }, [domain]);
   return null;
 }

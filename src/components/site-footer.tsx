@@ -1,5 +1,18 @@
 import Link from "next/link";
 import { BrandLogo } from "@/components/brand/logo";
+import { CookieSettingsButton } from "@/components/legal/cookie-settings-button";
+
+const LINKS = [
+  { href: "/creations", label: "Créations" },
+  { href: "/pricing", label: "Tarifs" },
+  { href: "/create", label: "Créer une affiche" },
+  { href: "/sign-in", label: "Connexion" },
+  { href: "/sign-up", label: "Inscription" },
+  { href: "/privacy", label: "Confidentialité" },
+  { href: "/cookies", label: "Cookies" },
+  { href: "/terms", label: "Conditions d’utilisation" },
+  { href: "/refund", label: "Remboursement" },
+] as const;
 
 export function SiteFooter() {
   return (
@@ -11,29 +24,14 @@ export function SiteFooter() {
             Transforme une idée en affiche professionnelle. Sans designer, sans prompt.
           </p>
         </div>
-        <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-          <Link href="/creations" className="hover:text-[#6D28D9]">
-            Créations
-          </Link>
-          <Link href="/pricing" className="hover:text-[#6D28D9]">
-            Tarifs
-          </Link>
-          <Link href="/create" className="hover:text-[#6D28D9]">
-            Créer une affiche
-          </Link>
-          <Link href="/sign-in" className="hover:text-[#6D28D9]">
-            Connexion
-          </Link>
-          <Link href="/sign-up" className="hover:text-[#6D28D9]">
-            Inscription
-          </Link>
-          <Link href="/privacy" className="hover:text-[#6D28D9]">
-            Confidentialité
-          </Link>
-          <Link href="/terms" className="hover:text-[#6D28D9]">
-            CGU
-          </Link>
-        </div>
+        <nav aria-label="Pied de page" className="flex flex-wrap gap-x-6 gap-y-3 text-sm text-slate-600">
+          {LINKS.map((link) => (
+            <Link key={link.href} href={link.href} className="hover:text-[#20C997]">
+              {link.label}
+            </Link>
+          ))}
+          <CookieSettingsButton className="hover:text-[#20C997]" />
+        </nav>
       </div>
     </footer>
   );
