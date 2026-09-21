@@ -23,6 +23,13 @@ export function CookieBanner() {
     return () => window.removeEventListener(COOKIE_SETTINGS_EVENT, reopen);
   }, []);
 
+  useEffect(() => {
+    document.body.style.paddingBottom = visible ? "9rem" : "";
+    return () => {
+      document.body.style.paddingBottom = "";
+    };
+  }, [visible]);
+
   function choose(value: CookieConsentValue) {
     window.localStorage.setItem(COOKIE_CONSENT_KEY, value);
     setVisible(false);
