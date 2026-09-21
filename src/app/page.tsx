@@ -1,31 +1,14 @@
 import Link from "next/link";
 import { STEPS } from "@/lib/brand";
-import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
-import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
-
-const SHOWCASE = [
-  { title: "NIGHT WAVE", subtitle: "Concert live", meta: "Sam. 21h · Plateau", tone: "night" as const, cta: "Prends ta place" },
-  { title: "MENU DU SOIR", subtitle: "Burger + boisson", meta: "5 000 FCFA", tone: "warm" as const, cta: "Commander" },
-  { title: "NOUVELLE COLLECTION", subtitle: "Lookbook été", meta: "Édition limitée", tone: "gold" as const, cta: "Découvrir" },
-  { title: "VILLA VUE MER", subtitle: "Cocody", meta: "Visite ce week-end", tone: "clean" as const, cta: "Prendre RDV" },
-  { title: "GLOW STUDIO", subtitle: "Soins visage", meta: "-30% cette semaine", tone: "soft" as const, cta: "Réserver" },
-  { title: "OPEN DAY", subtitle: "Formation pro", meta: "Places limitées", tone: "fresh" as const, cta: "S’inscrire" },
-  { title: "FLASH SALE", subtitle: "Boutique en ligne", meta: "24h seulement", tone: "sport" as const, cta: "Acheter" },
-  { title: "YES I DO", subtitle: "Save the date", meta: "12 décembre", tone: "rose" as const, cta: "RSVP" },
-];
-
-const DOMAIN_TONES = [
-  "night", "warm", "gold", "soft", "clean", "dark", "fresh", "clean", "sport", "dark",
-  "fresh", "gold", "sport", "rose", "warm", "clean", "earth", "dark", "night", "fresh",
-  "gold", "clean",
-] as const;
+import { getLandingVisualsSafe } from "@/lib/landing-visuals";
 
 export default async function Home() {
-  const { generated } = await getGeneratedShowcase();
-  const heroPosters = generated.filter((entry) => entry.hero_loop).map((entry) => toPoster(entry, true));
+  const visuals = await getLandingVisualsSafe();
+  const galleryError = Boolean(visuals.error);
+  const realCount = visuals.realPosters.length;
 
   return (
     <div className="space-y-24 pb-8">
@@ -45,8 +28,9 @@ export default async function Home() {
               Créez des visuels qui marquent.
             </p>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 md:text-lg">
-              Tu décris ce que tu veux communiquer. FlyerMint pose les bonnes questions,
-              compose le visuel et te rend une affiche professionnelle — sans designer, sans prompt.
+              Tu décris ce que tu veux communiquer. FlyerMint observe des références visuelles,
+              compose dans cette direction artistique et te rend une affiche professionnelle —
+              sans designer, sans prompt.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/create" className="btn-primary px-6 py-3">
@@ -63,27 +47,18 @@ export default async function Home() {
             </div>
           </div>
 
-          {heroPosters.length >= 3 ? (
-            <HeroPosterLoop posters={heroPosters} />
+          {galleryError ? (
+            <VisualPoster title="Créations" state="error" className="mx-auto w-full max-w-[280px]" />
+          ) : visuals.heroPosters.length >= 3 ? (
+            <HeroPosterLoop posters={visuals.heroPosters} />
+          ) : visuals.heroPosters[0] ? (
+            <VisualPoster
+              title={visuals.heroPosters[0].title}
+              imageSrc={visuals.heroPosters[0].imageSrc}
+              className="mx-auto w-full max-w-[280px]"
+            />
           ) : (
-            <div className="relative mx-auto h-[440px] w-full max-w-[440px]">
-              <VisualPoster
-                title="FESTIVAL LIVE"
-                subtitle="Une nuit, une scène"
-                meta="Samedi 21h · Zone 4"
-                cta="Prends ta place"
-                tone="night"
-                className="absolute left-8 top-0 z-20 w-[58%] rotate-[-7deg] animate-float"
-              />
-              <VisualPoster
-                title="BEAUTY WEEK"
-                subtitle="-30% soins"
-                meta="Cette semaine seulement"
-                cta="Réserver"
-                tone="soft"
-                className="absolute right-0 top-10 z-10 w-[46%] rotate-[9deg] animate-float-delayed"
-              />
-            </div>
+            <VisualPoster title="Créations" state="empty" className="mx-auto w-full max-w-[280px]" />
           )}
         </div>
       </section>
@@ -93,16 +68,34 @@ export default async function Home() {
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#20C997]">Showcase</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Des affiches, pas des cartes vides.</h2>
+            <p className="mt-2 max-w-xl text-sm text-slate-500">
+              {galleryError
+                ? "Impossible de charger les créations."
+                : realCount
+                  ? `${realCount} affiches réelles issues des créations FlyerMint. Pas de dégradé à la place d’un visuel.`
+                  : "Aucune création disponible pour le moment."}
+            </p>
           </div>
           <Link href="/creations" className="text-sm font-semibold text-[#20C997] hover:underline">
             Toute la galerie
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {SHOWCASE.map((poster) => (
-            <VisualPoster key={poster.title} {...poster} />
-          ))}
-        </div>
+        {galleryError ? (
+          <VisualPoster title="Showcase" state="error" className="max-w-[240px]" />
+        ) : visuals.showcase.length ? (
+          <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+            {visuals.showcase.map((poster) => (
+              <VisualPoster
+                key={poster.id}
+                title={`${poster.title}${poster.subtitle ? ` — ${poster.subtitle}` : ""}`}
+                imageSrc={poster.imageSrc}
+                overlayLabel={poster.title}
+              />
+            ))}
+          </div>
+        ) : (
+          <VisualPoster title="Showcase" state="empty" className="max-w-[240px]" />
+        )}
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -116,14 +109,16 @@ export default async function Home() {
                 Promo ce weekend, burger + boisson, 5000 FCFA, appelle ce numero.
               </p>
             </div>
-            <VisualPoster
-              title="MENU DU SOIR"
-              subtitle="Burger + boisson"
-              meta="5 000 FCFA"
-              cta="Appeler"
-              tone="warm"
-              className="min-h-[220px]"
-            />
+            {visuals.afterPoster ? (
+              <VisualPoster
+                title={visuals.afterPoster.title}
+                imageSrc={visuals.afterPoster.imageSrc}
+                overlayLabel={visuals.afterPoster.title}
+                className="min-h-[220px]"
+              />
+            ) : (
+              <VisualPoster title="Après" state={galleryError ? "error" : "empty"} className="min-h-[220px]" />
+            )}
           </div>
         </article>
         <article className="card p-6">
@@ -154,7 +149,7 @@ export default async function Home() {
       <section id="comment-ca-marche">
         <h2 className="text-3xl font-extrabold tracking-tight">Comment ça marche</h2>
         <p className="mt-2 max-w-2xl text-slate-600">
-          Un parcours simple : idée → questions → direction artistique → génération → contrôle → affiche.
+          Un parcours simple : idée → questions → référence visuelle → direction artistique → génération → contrôle → affiche.
         </p>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((item) => (
@@ -169,16 +164,22 @@ export default async function Home() {
 
       <section className="space-y-6">
         <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
+        <p className="max-w-2xl text-sm text-slate-500">
+          Une vraie affiche quand elle existe. Sinon, un état vide — jamais un rectangle coloré présenté comme une création.
+        </p>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {DOMAINS.map((domain, index) => (
-            <Link key={domain} href={`/create?domain=${encodeURIComponent(domain)}`} aria-label={`Créer une affiche ${DOMAIN_LABELS[domain]}`}>
-              <VisualPoster
-                title={DOMAIN_LABELS[domain]}
-                subtitle="Affiche pro"
-                cta="Créer"
-                tone={DOMAIN_TONES[index] ?? "clean"}
-                className="min-h-[180px]"
-              />
+          {visuals.domains.map(({ domain, label, poster }) => (
+            <Link key={domain} href={`/create?domain=${encodeURIComponent(domain)}`} aria-label={`Créer une affiche ${label}`}>
+              {poster ? (
+                <VisualPoster title={label} imageSrc={poster.imageSrc} overlayLabel={label} className="min-h-[180px]" />
+              ) : (
+                <VisualPoster
+                  title={label}
+                  state={galleryError ? "error" : "empty"}
+                  emptyMessage="Aucune création disponible pour cette catégorie."
+                  className="min-h-[180px]"
+                />
+              )}
             </Link>
           ))}
         </div>

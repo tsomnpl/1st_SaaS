@@ -12,6 +12,7 @@ const MESSAGES: Record<string, string> = {
   RODIUMAI_API_KEY_MISSING: "La génération n’est pas disponible pour le moment.",
   RODIUM_UNAVAILABLE: "La génération n’est pas disponible pour le moment.",
   RODIUM_NO_IMAGE_MODEL: "Aucun modèle image n’est disponible actuellement.",
+  RODIUM_NO_IMAGE_EDIT_MODEL: "Aucun modèle image-to-image n’est disponible pour utiliser la référence visuelle.",
   GENERATION_FAILED: "La génération a échoué. Ton Mint n’a pas été débité.",
   RODIUM_QUALITY_FAILED: "L’affiche n’était pas publiable. Ton Mint a été recrédité.",
   PAYMENT_VERIFY_FAILED: "Le statut du paiement n’a pas pu être vérifié.",

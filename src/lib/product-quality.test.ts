@@ -73,6 +73,25 @@ describe("quality gate", () => {
     );
     expect(isCriticalQcFailure(report)).toBe(true);
   });
+
+  it("rejects a generic AI poster even if a person is present", () => {
+    const report = parseQcReport(
+      JSON.stringify({
+        pass: false,
+        has_person: true,
+        person_natural: true,
+        readable_text: true,
+        text_matches_brief: true,
+        domain_fit: true,
+        looks_ai_generic: true,
+        format_ok: true,
+        composition_match: false,
+        margins_ok: true,
+        issues: ["generic AI"],
+      }),
+    );
+    expect(isCriticalQcFailure(report)).toBe(true);
+  });
 });
 
 describe("brand palette", () => {

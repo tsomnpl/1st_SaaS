@@ -23,17 +23,17 @@ export const STEPS = [
   {
     n: "03",
     title: "Direction artistique",
-    text: "Hiérarchie, palette, composition et CTA sont construits automatiquement.",
+    text: "Une référence visuelle du domaine est analysée : composition, personne, typo, couleurs, CTA.",
   },
   {
     n: "04",
     title: "Génération",
-    text: "Un modèle image spécialisé compose l’affiche professionnelle.",
+    text: "Un modèle image compatible (image-to-image) compose l’affiche sur cette structure.",
   },
   {
     n: "05",
     title: "Contrôle",
-    text: "Lisibilité, textes, marges et cohérence sont vérifiés.",
+    text: "Personne, ressemblance de structure, textes, marges et cohérence sont vérifiés.",
   },
   {
     n: "06",

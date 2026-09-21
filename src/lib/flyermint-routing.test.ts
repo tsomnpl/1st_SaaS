@@ -37,6 +37,28 @@ describe("image model routing", () => {
     );
     expect(model).toBe("openai/gpt-image-2");
   });
+
+  it("routes a style-reference job to an image-edit model", () => {
+    const brief = {
+      visualType: "Affiche",
+      domain: "Restauration",
+      objective: "Faire commander",
+      targetAudience: "Public",
+      title: "Menu",
+      format: "affiche",
+      creativeFreedom: "liberte_guidee",
+      colors: [],
+      adaptiveData: {},
+    } as unknown as CreateBriefInput;
+    expect(
+      selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2", "google/gemini-3.1-flash-image"], {
+        hasStyleReference: true,
+      }),
+    ).toBe("google/gemini-3.1-flash-image");
+    expect(() =>
+      selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2"], { hasStyleReference: true }),
+    ).toThrow("RODIUM_NO_IMAGE_EDIT_MODEL");
+  });
 });
 
 describe("payments", () => {

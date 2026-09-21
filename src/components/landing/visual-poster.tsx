@@ -1,86 +1,89 @@
-type PosterTone =
-  | "night"
-  | "warm"
-  | "gold"
-  | "clean"
-  | "sport"
-  | "soft"
-  | "dark"
-  | "fresh"
-  | "rose"
-  | "earth";
+"use client";
+
+import { useState } from "react";
+
+export type PosterState = "ready" | "loading" | "empty" | "error";
 
 export type VisualPosterProps = {
-  kicker?: string;
   title: string;
-  subtitle?: string;
-  meta?: string;
-  cta?: string;
-  tone?: PosterTone;
   imageSrc?: string;
+  overlayLabel?: string;
+  state?: PosterState;
+  emptyMessage?: string;
   className?: string;
 };
 
-const tones: Record<PosterTone, string> = {
-  night: "from-[#0f172a] via-[#312e81] to-[#6D28D9]",
-  warm: "from-[#7c2d12] via-[#c2410c] to-[#F59E0B]",
-  gold: "from-[#1E293B] via-[#334155] to-[#d4b483]",
-  clean: "from-[#0f766e] via-[#3B82F6] to-[#e0f2fe]",
-  sport: "from-[#1E293B] via-[#b91c1c] to-[#F59E0B]",
-  soft: "from-[#4c1d95] via-[#9d174d] to-[#f9a8d4]",
-  dark: "from-[#020617] via-[#1E293B] to-[#10B981]",
-  fresh: "from-[#064e3b] via-[#10B981] to-[#d1fae5]",
-  rose: "from-[#4c0519] via-[#be123c] to-[#fda4af]",
-  earth: "from-[#1c1917] via-[#3f6212] to-[#a3e635]",
-};
+const frame =
+  "relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_24px_50px_rgba(15,23,42,0.12)]";
 
 export function VisualPoster({
-  kicker = "FlyerMint",
   title,
-  subtitle,
-  meta,
-  cta = "Réserver",
-  tone = "night",
   imageSrc,
+  overlayLabel,
+  state,
+  emptyMessage = "Aucune création disponible pour cette catégorie.",
   className = "",
 }: VisualPosterProps) {
+  const [failed, setFailed] = useState(false);
+  const resolved: PosterState =
+    state ?? (imageSrc ? (failed ? "error" : "ready") : "empty");
+
+  if (resolved === "loading") {
+    return (
+      <article
+        className={`${frame} animate-pulse border border-slate-200 bg-slate-100 p-5 ${className}`}
+        aria-busy="true"
+        aria-label="Chargement des créations"
+      >
+        <div className="h-3 w-24 rounded bg-slate-200" />
+        <div className="mt-auto space-y-2">
+          <div className="h-3 w-3/4 rounded bg-slate-200" />
+          <p className="text-xs font-medium text-slate-400">Chargement des créations…</p>
+        </div>
+      </article>
+    );
+  }
+
+  if (resolved === "error") {
+    return (
+      <article
+        className={`${frame} border border-dashed border-rose-200 bg-rose-50 p-5 ${className}`}
+        role="status"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-rose-400">FlyerMint</p>
+        <p className="mt-auto text-sm font-semibold text-rose-700">Impossible de charger les créations.</p>
+      </article>
+    );
+  }
+
+  if (resolved === "empty" || !imageSrc) {
+    return (
+      <article
+        className={`${frame} border border-dashed border-slate-200 bg-slate-50 p-5 ${className}`}
+        role="status"
+      >
+        <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-400">FlyerMint</p>
+        <h3 className="relative mt-4 text-base font-bold leading-tight text-slate-700">{title}</h3>
+        <p className="mt-auto text-sm font-medium text-slate-500">{emptyMessage}</p>
+      </article>
+    );
+  }
+
   return (
-    <article
-      className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.5rem] bg-gradient-to-br p-5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.18)] ${tones[tone]} ${className}`}
-    >
-      {imageSrc ? (
-        <img
-          src={imageSrc}
-          alt={`${title}${subtitle ? ` — ${subtitle}` : ""}`}
-          className="absolute inset-0 h-full w-full object-cover"
-          loading="eager"
-          decoding="async"
-        />
+    <article className={`${frame} bg-slate-200 ${className}`}>
+      <img
+        src={imageSrc}
+        alt={title}
+        className="absolute inset-0 h-full w-full object-cover"
+        loading="eager"
+        decoding="async"
+        onError={() => setFailed(true)}
+      />
+      {overlayLabel ? (
+        <div className="absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/75 via-black/25 to-transparent px-4 pb-4 pt-16">
+          <p className="text-sm font-bold tracking-tight text-white">{overlayLabel}</p>
+        </div>
       ) : null}
-      {imageSrc ? (
-        <span className="relative z-10 ml-auto rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#1E293B]">
-          {kicker}
-        </span>
-      ) : (
-        <>
-          <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-black/20" />
-          <div className="pointer-events-none absolute -right-10 -top-12 h-32 w-32 rounded-full bg-white/15 blur-2xl" />
-          <div className="pointer-events-none absolute bottom-8 left-[-20%] h-24 w-40 rounded-full bg-black/10 blur-2xl" />
-          <p className="relative z-10 text-[10px] uppercase tracking-[0.22em] text-white/70">{kicker}</p>
-          <h3 className="relative mt-4 max-w-[11ch] text-[1.65rem] font-extrabold leading-[0.95] tracking-tight">
-            {title}
-          </h3>
-          {subtitle ? <p className="relative mt-3 max-w-[18ch] text-sm text-white/85">{subtitle}</p> : null}
-          <div className="relative mt-auto space-y-3">
-            {meta ? (
-              <p className="max-w-[20ch] text-xs font-medium text-white/75">{meta}</p>
-            ) : null}
-            <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#1E293B]">
-              {cta}
-            </span>
-          </div>
-        </>
-      )}
     </article>
   );
 }

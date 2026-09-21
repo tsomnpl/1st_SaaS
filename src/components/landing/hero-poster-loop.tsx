@@ -4,10 +4,8 @@ export type HeroPoster = {
   id: string;
   title: string;
   subtitle?: string;
-  meta?: string;
-  cta?: string;
-  tone?: "night" | "warm" | "gold" | "clean" | "sport" | "soft" | "dark" | "fresh" | "rose" | "earth";
-  imageSrc?: string;
+  overlayLabel?: string;
+  imageSrc: string;
 };
 
 const TILTS = ["-rotate-6", "rotate-5", "-rotate-3", "rotate-4", "-rotate-5", "rotate-2"];
@@ -22,11 +20,7 @@ export function HeroPosterLoop({ posters }: { posters: HeroPoster[] }) {
         {track.map((poster, index) => (
           <VisualPoster
             key={`${poster.id}-${index}`}
-            title={poster.title}
-            subtitle={poster.subtitle}
-            meta={poster.meta}
-            cta={poster.cta}
-            tone={poster.tone}
+            title={`${poster.title}${poster.subtitle ? ` — ${poster.subtitle}` : ""}`}
             imageSrc={poster.imageSrc}
             className={`w-[58%] max-w-[240px] ${TILTS[index % TILTS.length]} ${index % 2 ? "ml-auto" : "mr-auto"}`}
           />
