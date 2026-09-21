@@ -147,24 +147,30 @@ def fetch_rows() -> list[dict[str, Any]]:
 
 
 def list_done_ids() -> set[str]:
-    payload = json.dumps({"prefix": f"{ANALYSIS_PREFIX}/", "limit": 1000, "offset": 0}).encode()
-    status, _, body = sb_request(
-        "POST",
-        f"/storage/v1/object/list/{BUCKET}",
-        data=payload,
-        headers={"Content-Type": "application/json"},
-    )
-    if status >= 400:
-        return set()
-    items = json.loads(body.decode() or "[]")
     done: set[str] = set()
-    for item in items:
-        name = str(item.get("name") or "")
-        if "by-domain" in name:
-            continue
-        base = name.split("/")[-1]
-        if base.endswith(".json"):
-            done.add(base.removesuffix(".json"))
+    offset = 0
+    page = 1000
+    while True:
+        payload = json.dumps({"prefix": f"{ANALYSIS_PREFIX}/", "limit": page, "offset": offset}).encode()
+        status, _, body = sb_request(
+            "POST",
+            f"/storage/v1/object/list/{BUCKET}",
+            data=payload,
+            headers={"Content-Type": "application/json"},
+        )
+        if status >= 400:
+            break
+        items = json.loads(body.decode() or "[]")
+        for item in items:
+            name = str(item.get("name") or "")
+            if "by-domain" in name:
+                continue
+            base = name.split("/")[-1]
+            if base.endswith(".json"):
+                done.add(base.removesuffix(".json"))
+        if len(items) < page:
+            break
+        offset += page
     return done
 
 
@@ -360,13 +366,12 @@ def run_analysis(limit: int) -> int:
     if limit:
         pending = pending[:limit]
     print(f"lignes={len(rows)} deja={len(done)} reste={len(pending)} modele={VISION_MODEL}")
-    print(f"RODI disponible={wallet_available():.1f}")
+    try:
+        print(f"RODI GET /wallet disponible={wallet_available():.1f} (indicatif ; on s'arrête seulement sur 402)")
+    except Exception as error:
+        print(f"wallet_unavailable {error}")
     totals = {"ok": 0, "fail": 0, "skip": 0}
     for index, row in enumerate(pending, start=1):
-        available = wallet_available()
-        if available < MIN_AVAILABLE_RODI:
-            print(f"STOP wallet disponible={available:.2f} < {MIN_AVAILABLE_RODI} (Rodium a refuse 0.3 RODI si disponible=0.1)")
-            break
         label = f"{row['domaine']}/{row['id'][:8]}"
         try:
             original = download_original(row["storage_path"])
