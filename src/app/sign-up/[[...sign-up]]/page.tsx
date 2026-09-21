@@ -20,7 +20,7 @@ async function SignUpClient() {
   return (
     <div className="flex flex-col items-center gap-6 py-10">
       <BrandLogo withSlogan href="/" />
-      <SignUp />
+      <SignUp fallbackRedirectUrl="/post-auth" />
     </div>
   );
 }

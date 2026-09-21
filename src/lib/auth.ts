@@ -1,6 +1,6 @@
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { UserRole, UserStatus } from "@prisma/client";
-import { isConfiguredAdmin } from "@/lib/admin";
+import { getPrimaryVerifiedEmail, isConfiguredAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
 
 export async function requireAuth() {
@@ -16,7 +16,9 @@ export async function readClerkIdentity(clerkUserId: string) {
   if (!clerkUser || clerkUser.id !== clerkUserId) {
     return { email: null as string | null, name: null as string | null };
   }
+  const verified = getPrimaryVerifiedEmail(clerkUser);
   const email =
+    verified ??
     clerkUser.primaryEmailAddress?.emailAddress ??
     clerkUser.emailAddresses[0]?.emailAddress ??
     null;
@@ -24,9 +26,27 @@ export async function readClerkIdentity(clerkUserId: string) {
   return { email, name };
 }
 
+export async function isAdmin() {
+  try {
+    const session = await auth();
+    if (!session.userId) return false;
+    const clerkUser = await currentUser();
+    if (!clerkUser || clerkUser.id !== session.userId) return false;
+    return isConfiguredAdmin({
+      clerkUserId: clerkUser.id,
+      email: getPrimaryVerifiedEmail(clerkUser),
+    });
+  } catch {
+    return false;
+  }
+}
+
 export async function ensureUserProfile(clerkUserId: string) {
   const identity = await readClerkIdentity(clerkUserId);
-  const admin = isConfiguredAdmin({ clerkUserId, email: identity.email });
+  const clerkUser = await currentUser();
+  const verified =
+    clerkUser && clerkUser.id === clerkUserId ? getPrimaryVerifiedEmail(clerkUser) : null;
+  const admin = isConfiguredAdmin({ clerkUserId, email: verified });
   return prisma.user.upsert({
     where: { clerkUserId },
     update: {
@@ -45,8 +65,7 @@ export async function ensureUserProfile(clerkUserId: string) {
 
 export async function requireAdminUser() {
   const clerkUserId = await requireAuth();
-  const identity = await readClerkIdentity(clerkUserId);
-  if (!isConfiguredAdmin({ clerkUserId, email: identity.email })) {
+  if (!(await isAdmin())) {
     throw new Error("FORBIDDEN");
   }
   const user = await ensureUserProfile(clerkUserId);
@@ -57,10 +76,7 @@ export async function requireAdminUser() {
 }
 
 export async function currentUserIsAdmin() {
-  const session = await auth();
-  if (!session.userId) return false;
-  const identity = await readClerkIdentity(session.userId);
-  return isConfiguredAdmin({ clerkUserId: session.userId, email: identity.email });
+  return isAdmin();
 }
 
 export function assertActiveUser(status: UserStatus) {

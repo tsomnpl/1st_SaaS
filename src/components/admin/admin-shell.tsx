@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AdminSearch } from "@/components/admin/admin-search";
+import { BrandLogo } from "@/components/brand/logo";
 
 const LINKS = [
   ["Dashboard", ""],
@@ -37,9 +38,9 @@ export function AdminShell({
       <div className="overflow-hidden rounded-[1.6rem] border border-slate-800 bg-[#1E293B] text-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
         <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center justify-between gap-3">
-            <div>
+            <div className="min-w-0">
               <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-emerald-300">Studio</p>
-              <p className="text-sm font-semibold">Centre de contrôle FlyerMint</p>
+              <BrandLogo href="/" size="sm" onDark />
             </div>
             <button type="button" className="rounded-xl border border-white/15 px-3 py-2 text-sm lg:hidden" onClick={() => setOpen((value) => !value)}>
               {open ? "Fermer" : "Menu"}

@@ -5,7 +5,7 @@
   "rodi_total": 163.583,
   "master_size_requested": "1024x1536",
   "hero_loop_count": 10,
-  "note": "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Actual pixels recorded per fiche.",
+  "note": "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Actual pixels recorded per fiche. Master files are 1024x1536 (model max portrait), not 4K.",
   "fiches": [
     {
       "id": "evenementiel-01",
@@ -27,7 +27,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.759,
-      "fichier_image_master_4k": "storage/masters/evenementiel-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/evenementiel-01.webp",
@@ -52,7 +51,9 @@
         "ambiance": "festif cinématique"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/evenementiel-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "evenementiel-02",
@@ -76,7 +77,6 @@
       "fichier_image_web": "/creations/evenementiel-02.webp",
       "poids_web_ko": 350.5,
       "resize": "sharp lanczos3 width<=1600 webp q85",
-      "fichier_image_master_4k": "storage/masters/evenementiel-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "reference_categorisation": {
@@ -99,7 +99,9 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": "storage/masters/evenementiel-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "evenementiel-03",
@@ -123,7 +125,6 @@
       "fichier_image_web": "/creations/evenementiel-03.webp",
       "poids_web_ko": 148.5,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -146,7 +147,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "evenementiel-04",
@@ -170,7 +172,6 @@
       "fichier_image_web": "/creations/evenementiel-04.webp",
       "poids_web_ko": 282.3,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -193,7 +194,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "restauration-01",
@@ -217,7 +219,6 @@
       "fichier_image_web": "/creations/restauration-01.webp",
       "poids_web_ko": 98.2,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -240,7 +241,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "restauration-02",
@@ -264,7 +266,6 @@
       "fichier_image_web": "/creations/restauration-02.webp",
       "poids_web_ko": 71.5,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -287,7 +288,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "restauration-03",
@@ -309,7 +311,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.64,
-      "fichier_image_master_4k": "storage/masters/restauration-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/restauration-03.webp",
@@ -334,7 +335,9 @@
         "ambiance": "gourmand"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/restauration-03-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "restauration-04",
@@ -358,7 +361,6 @@
       "fichier_image_web": "/creations/restauration-04.webp",
       "poids_web_ko": 245.3,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -381,7 +383,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "mode-01",
@@ -405,7 +408,6 @@
       "fichier_image_web": "/creations/mode-01.webp",
       "poids_web_ko": 55.6,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -428,7 +430,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "mode-02",
@@ -452,7 +455,6 @@
       "fichier_image_web": "/creations/mode-02.webp",
       "poids_web_ko": 91.5,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
-      "fichier_image_master_4k": "",
       "master_width": 896,
       "master_height": 1200,
       "reference_categorisation": {
@@ -475,7 +477,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "fichier_image_master": ""
     },
     {
       "id": "mode-03",
@@ -497,7 +500,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.276,
-      "fichier_image_master_4k": "storage/masters/mode-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/mode-03.webp",
@@ -522,7 +524,9 @@
         "ambiance": "délicat"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/mode-03-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "beaute-01",
@@ -544,7 +548,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.363,
-      "fichier_image_master_4k": "storage/masters/beaute-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/beaute-01.webp",
@@ -569,7 +572,9 @@
         "ambiance": "soin"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/beaute-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "beaute-02",
@@ -591,7 +596,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.388,
-      "fichier_image_master_4k": "storage/masters/beaute-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/beaute-02.webp",
@@ -616,7 +620,9 @@
         "ambiance": "chaleureux"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/beaute-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "beaute-03",
@@ -638,7 +644,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.549,
-      "fichier_image_master_4k": "storage/masters/beaute-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/beaute-03.webp",
@@ -663,7 +668,9 @@
         "ambiance": "éclat"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/beaute-03-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "immobilier-business-01",
@@ -685,7 +692,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.398,
-      "fichier_image_master_4k": "storage/masters/immobilier-business-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/immobilier-business-01.webp",
@@ -710,7 +716,9 @@
         "ambiance": "serieux"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/immobilier-business-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "immobilier-business-02",
@@ -732,7 +740,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.356,
-      "fichier_image_master_4k": "storage/masters/immobilier-business-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/immobilier-business-02.webp",
@@ -757,7 +764,9 @@
         "ambiance": "pro"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/immobilier-business-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "immobilier-business-03",
@@ -779,7 +788,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.612,
-      "fichier_image_master_4k": "storage/masters/immobilier-business-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/immobilier-business-03.webp",
@@ -804,7 +812,9 @@
         "ambiance": "innovant"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/immobilier-business-03-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "immobilier-business-04",
@@ -826,7 +836,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.373,
-      "fichier_image_master_4k": "storage/masters/immobilier-business-04-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/immobilier-business-04.webp",
@@ -851,7 +860,9 @@
         "ambiance": "fiable"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/immobilier-business-04-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "immobilier-business-05",
@@ -873,7 +884,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.633,
-      "fichier_image_master_4k": "storage/masters/immobilier-business-05-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/immobilier-business-05.webp",
@@ -898,7 +908,9 @@
         "ambiance": "opportunité"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/immobilier-business-05-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "techno-education-01",
@@ -920,7 +932,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.335,
-      "fichier_image_master_4k": "storage/masters/techno-education-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/techno-education-01.webp",
@@ -945,7 +956,9 @@
         "ambiance": "net"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/techno-education-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "techno-education-02",
@@ -967,7 +980,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.401,
-      "fichier_image_master_4k": "storage/masters/techno-education-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/techno-education-02.webp",
@@ -992,7 +1004,9 @@
         "ambiance": "ambition"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/techno-education-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "techno-education-03",
@@ -1014,7 +1028,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.598,
-      "fichier_image_master_4k": "storage/masters/techno-education-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/techno-education-03.webp",
@@ -1039,7 +1052,9 @@
         "ambiance": "motivant"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/techno-education-03-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "sport-finance-01",
@@ -1061,7 +1076,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.3,
-      "fichier_image_master_4k": "storage/masters/sport-finance-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/sport-finance-01.webp",
@@ -1086,7 +1100,9 @@
         "ambiance": "dynamique"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/sport-finance-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "sport-finance-02",
@@ -1108,7 +1124,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.324,
-      "fichier_image_master_4k": "storage/masters/sport-finance-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/sport-finance-02.webp",
@@ -1133,7 +1148,9 @@
         "ambiance": "smart"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/sport-finance-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "sante-tourisme-associations-01",
@@ -1155,7 +1172,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 6.388,
-      "fichier_image_master_4k": "storage/masters/sante-tourisme-associations-01-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/sante-tourisme-associations-01.webp",
@@ -1180,7 +1196,9 @@
         "ambiance": "espoir"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/sante-tourisme-associations-01-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "sante-tourisme-associations-02",
@@ -1202,7 +1220,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.685,
-      "fichier_image_master_4k": "storage/masters/sante-tourisme-associations-02-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/sante-tourisme-associations-02.webp",
@@ -1227,7 +1244,9 @@
         "ambiance": "envie"
       },
       "statut": "genere",
-      "hero_loop": true
+      "hero_loop": true,
+      "fichier_image_master": "storage/masters/sante-tourisme-associations-02-master.webp",
+      "master_size": "1024x1536"
     },
     {
       "id": "sante-tourisme-associations-03",
@@ -1249,7 +1268,6 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
       "cout_rodi": 3.699,
-      "fichier_image_master_4k": "storage/masters/sante-tourisme-associations-03-4k.webp",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/sante-tourisme-associations-03.webp",
@@ -1274,7 +1292,10 @@
         "ambiance": "solidaire"
       },
       "statut": "genere",
-      "hero_loop": false
+      "hero_loop": false,
+      "fichier_image_master": "storage/masters/sante-tourisme-associations-03-master.webp",
+      "master_size": "1024x1536"
     }
-  ]
+  ],
+  "master_size_note": "1024x1536 (max portrait for GPT Image 2 — not 4K)"
 }

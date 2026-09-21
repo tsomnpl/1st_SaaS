@@ -57,11 +57,11 @@ export const env = envSchema.parse({
 export { getAdminClerkIds } from "@/lib/admin";
 
 export function getAdminPrivatePath() {
-  return env.ADMIN_PRIVATE_PATH?.trim() || "ops-k7m2qx";
+  return (process.env.ADMIN_PRIVATE_PATH ?? "").trim();
 }
 
 export function getAdminBasePath() {
-  return `/c/${getAdminPrivatePath()}`;
+  return "/admin";
 }
 
 export function getAllowedImageModels() {

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
   description:
     "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
   icons: {
-    icon: "/favicon.svg",
+    icon: "/logo-mark.svg",
     apple: "/logo-mark.svg",
   },
   openGraph: {
@@ -59,8 +59,8 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
       appearance={clerkAppearance}
       signInUrl="/sign-in"
       signUpUrl="/sign-up"
-      signInFallbackRedirectUrl="/dashboard"
-      signUpFallbackRedirectUrl="/dashboard"
+      signInFallbackRedirectUrl="/post-auth"
+      signUpFallbackRedirectUrl="/post-auth"
     >
       <AuthChrome>{children}</AuthChrome>
     </ClerkProvider>

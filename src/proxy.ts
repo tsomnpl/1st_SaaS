@@ -14,6 +14,7 @@ const PUBLIC_EXACT = new Set([
   "/privacy",
   "/terms",
   "/forbidden",
+  "/post-auth",
 ]);
 
 const PUBLIC_PREFIXES = [
@@ -34,10 +35,15 @@ function isApiPath(pathname: string) {
   return pathname.startsWith("/api/");
 }
 
-function hideObviousAdmin(req: NextRequest) {
+function secretAdminRedirect(req: NextRequest) {
+  const secret = process.env.ADMIN_PRIVATE_PATH?.trim();
+  if (!secret) return null;
+  const prefix = `/c/${secret}`;
   const { pathname } = req.nextUrl;
-  if (pathname === "/admin" || pathname.startsWith("/admin/")) {
-    return NextResponse.redirect(new URL("/", req.url));
+  if (pathname === prefix || pathname.startsWith(`${prefix}/`)) {
+    const url = req.nextUrl.clone();
+    url.pathname = `/admin${pathname.slice(prefix.length)}`;
+    return NextResponse.redirect(url);
   }
   return null;
 }
@@ -49,6 +55,7 @@ function isProtectedPath(pathname: string) {
     "/history",
     "/profile",
     "/checkout",
+    "/admin",
     "/api/",
   ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
 }
@@ -101,8 +108,8 @@ async function protect(req: NextRequest, userId: string | null) {
   const limited = applySensitiveRateLimit(req);
   if (limited) return withSecurity(limited, req);
 
-  const adminRedirect = hideObviousAdmin(req);
-  if (adminRedirect) return withSecurity(adminRedirect, req);
+  const hidden = secretAdminRedirect(req);
+  if (hidden) return withSecurity(hidden, req);
 
   const { pathname } = req.nextUrl;
   if (isPublicPath(pathname) || !isProtectedPath(pathname)) {

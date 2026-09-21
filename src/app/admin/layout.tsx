@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
-import { forbidden, notFound, redirect } from "next/navigation";
+import { forbidden, redirect } from "next/navigation";
 import { auth } from "@clerk/nextjs/server";
 import { AdminShell } from "@/components/admin/admin-shell";
-import { getAdminBasePath, getAdminPrivatePath } from "@/lib/env";
+import { getAdminBasePath } from "@/lib/env";
 import { requireAdminUser } from "@/lib/auth";
 import { logAdminSession } from "@/server/admin-audit";
 import { pageTitle } from "@/lib/seo";
@@ -12,20 +12,7 @@ export const metadata = {
   robots: { index: false, follow: false },
 };
 
-type Params = Promise<{ adminKey: string }>;
-
-export default async function AdminLayout({
-  children,
-  params,
-}: {
-  children: ReactNode;
-  params: Params;
-}) {
-  const { adminKey } = await params;
-  if (adminKey !== getAdminPrivatePath()) {
-    notFound();
-  }
-
+export default async function AdminLayout({ children }: { children: ReactNode }) {
   let userId: string | null = null;
   try {
     const session = await auth();

@@ -101,7 +101,7 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     tone: "warm",
     premium: true,
     prompt:
-      "Vertical food poster 3:4. Dark warm tones. Hero photo of steaming chicken katsu ramen with marinated eggs. Title RAMEN KATSU, badge SPECIAL PROMO, price 45K, old price 55K crossed. FLYERMINT badge. Appetizing, high contrast, no real restaurant chain.",
+      "Vertical food poster 3:4. Dark warm tones. A real photographed cook or diner belongs in the scene and is using the dish (chopsticks, serving or tasting). Hero is steaming chicken katsu ramen with marinated eggs in their hands or on the counter they work. Not a bowl alone. Title RAMEN KATSU, badge SPECIAL PROMO, price 45K, old price 55K crossed. FLYERMINT badge. Appetizing, high contrast, no real restaurant chain.",
   },
   {
     id: "restauration-04",
@@ -153,7 +153,7 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     tone: "rose",
     premium: false,
     prompt:
-      "Vertical fashion poster 3:4. Powder pink and soft white. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as a tasteful grid. FLYERMINT badge. No real boutique name.",
+      "Vertical fashion poster 3:4. Powder pink and soft white. A real photographed model belongs in the scene: she wears a look and holds a bag or jewelry, boutique setting. Not a product grid without a person. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as supporting props around her. FLYERMINT badge. No real boutique name.",
   },
   {
     id: "beaute-01",

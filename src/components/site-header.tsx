@@ -2,7 +2,7 @@
 
 import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand/logo";
 
 type Props = {
@@ -19,9 +19,23 @@ const publicLinks = [
 
 export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = "" }: Props) {
   const [open, setOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/75 backdrop-blur-xl">
+    <header
+      className={`sticky top-0 z-50 border-b transition-colors ${
+        scrolled
+          ? "border-white/50 bg-white/75 backdrop-blur-xl"
+          : "border-transparent bg-transparent"
+      }`}
+    >
       <div className="mx-auto flex w-full max-w-6xl items-center justify-between px-4 py-3">
         <BrandLogo size="sm" />
 
@@ -43,7 +57,7 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
             </Link>
             {showAdmin && adminHref ? (
               <Link href={adminHref} className="transition hover:text-[#6D28D9]">
-                Administration
+                Admin
               </Link>
             ) : null}
             {typeof mintBalance === "number" ? (
@@ -110,7 +124,7 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
               </Link>
               {showAdmin && adminHref ? (
                 <Link href={adminHref} className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
-                  Administration
+                  Admin
                 </Link>
               ) : null}
             </SignedIn>

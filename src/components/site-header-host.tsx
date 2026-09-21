@@ -1,7 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { prisma } from "@/lib/prisma";
 import { currentUserIsAdmin } from "@/lib/auth";
-import { getAdminBasePath } from "@/lib/env";
 import { auth } from "@clerk/nextjs/server";
 
 export async function SiteHeaderHost() {
@@ -24,7 +23,7 @@ export async function SiteHeaderHost() {
     <SiteHeader
       mintBalance={mintBalance}
       showAdmin={showAdmin}
-      adminHref={showAdmin ? getAdminBasePath() : ""}
+      adminHref={showAdmin ? "/admin" : ""}
     />
   );
 }

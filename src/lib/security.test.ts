@@ -78,6 +78,16 @@ describe("security helpers", () => {
     expect(csp).toMatch(/worker-src[^;]*'self' blob:/);
   });
 
+  it("does not leak RODI or guessable admin paths in public source", () => {
+    const creations = readFileSync("src/app/creations/page.tsx", "utf8");
+    expect(creations).not.toMatch(/RODI/);
+    expect(creations).not.toMatch(/rodi_total/);
+    const envSource = readFileSync("src/lib/env.ts", "utf8");
+    expect(envSource).not.toContain("ops-k7m2qx");
+    const proxy = readFileSync("src/proxy.ts", "utf8");
+    expect(proxy).not.toMatch(/pathname === "\/admin"/);
+  });
+
   it("does not commit live-looking secrets", () => {
     const files = walk("/workspace").filter((file) =>
       /\.(ts|tsx|js|json|md|env|example)$/.test(file),

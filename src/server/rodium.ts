@@ -183,6 +183,7 @@ async function renderImage(params: {
 }
 
 export function sizeForFormat(format: string) {
+  // GPT Image 2 max portrait on Rodium is 1024x1536, not 4K.
   if (
     format.includes("story") ||
     format.includes("whatsapp") ||

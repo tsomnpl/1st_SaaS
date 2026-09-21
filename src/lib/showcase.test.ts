@@ -96,6 +96,15 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
+  it("stages a person in restauration-03 and mode-03", () => {
+    const ramen = SHOWCASE_SHEETS.find((sheet) => sheet.id === "restauration-03");
+    const closet = SHOWCASE_SHEETS.find((sheet) => sheet.id === "mode-03");
+    expect(ramen?.prompt).toMatch(/cook or diner|chopsticks|serving or tasting/i);
+    expect(ramen?.prompt).toMatch(/Not a bowl alone/i);
+    expect(closet?.prompt).toMatch(/model belongs in the scene/i);
+    expect(closet?.prompt).toMatch(/Not a product grid without a person/i);
+  });
+
   it("picks real generated posters for the landing showcase", () => {
     const generated = JSON.parse(
       readFileSync("docs/inspirations/showcase-manifest.json", "utf8"),
@@ -115,6 +124,8 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("body.image");
     expect(script).toContain("storage/masters");
     expect(script).toContain("isGptImageModel");
+    expect(script).toContain("-master.webp");
+    expect(script).not.toContain("-4k.webp");
     expect(script).not.toContain("/chat/completions");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
   });

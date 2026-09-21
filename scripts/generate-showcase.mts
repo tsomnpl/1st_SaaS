@@ -14,9 +14,15 @@ const PAGE_MAP = path.join(ROOT, "docs/inspirations/reference-page-map.json");
 const REF_CATALOG = path.join(ROOT, "docs/inspirations/references-catalog.json");
 const MASTER_SIZE = "1024x1536";
 const FALLBACK_SIZE = "1024x1536";
+const MASTER_LABEL = "1024x1536 (max portrait for GPT Image 2 — not 4K)";
 const FORCE_REGEN = process.env.FORCE_REGEN === "1";
 const FORCE_REGEN_ALL = process.env.FORCE_REGEN === "all";
-const ONLY_ID = process.env.ONLY_ID?.trim() || "";
+const ONLY_IDS = new Set(
+  (process.env.ONLY_ID ?? "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
 
 const HERO_IDS = [
   "evenementiel-01",
@@ -157,7 +163,7 @@ async function loadImageBuffer(url: string) {
 async function writeMasterAndWeb(buffer: Buffer, id: string) {
   const sharp = (await import("sharp")).default;
   const meta = await sharp(buffer).metadata();
-  const masterPath = path.join(MASTER_DIR, `${id}-4k.webp`);
+  const masterPath = path.join(MASTER_DIR, `${id}-master.webp`);
   const webPath = path.join(WEB_DIR, `${id}.webp`);
   const publicPath = path.join(OUT_DIR, `${id}.webp`);
   const heroPath = path.join(HERO_DIR, `${id}.webp`);
@@ -203,10 +209,12 @@ function isGptImageModel(model: unknown) {
 
 function shouldSkipPrevious(previous: Record<string, unknown> | undefined, sheetId: string) {
   if (!previous || previous.statut !== "genere" || !previous.fichier_image) return false;
+  if (ONLY_IDS.has(sheetId)) return false;
   if (FORCE_REGEN_ALL) return false;
+  if (FORCE_REGEN) return false;
   if (isGptImageModel(previous.modele_image_utilise)) return true;
   if (!HERO_IDS.includes(sheetId)) return true;
-  return !FORCE_REGEN;
+  return true;
 }
 
 function catalogueOrder(fiches: Array<Record<string, unknown>>) {
@@ -245,6 +253,7 @@ async function persistOutputs(
   }
   for (const row of merged) {
     row.hero_loop = loop.includes(String(row.id));
+    if (row.fichier_image_master) row.master_size = MASTER_SIZE;
   }
 
   const catalog = {
@@ -268,10 +277,11 @@ async function persistOutputs(
     count: merged.length,
     rodi_total: Number(merged.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
     master_size_requested: MASTER_SIZE,
+    master_size_note: MASTER_LABEL,
     hero_loop_count: loop.length,
     note:
       extra.note ??
-      "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Actual pixels recorded per fiche.",
+      "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Master files are 1024x1536 (model max portrait), not 4K.",
     fiches: merged,
   };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -339,7 +349,7 @@ async function main() {
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
     const hero = HERO_IDS.includes(sheet.id);
     const model = gpt;
-    if (ONLY_ID && sheet.id !== ONLY_ID) {
+    if (ONLY_IDS.size && !ONLY_IDS.has(sheet.id)) {
       if (previous) fiches.push(previous);
       continue;
     }
@@ -404,7 +414,8 @@ async function main() {
         modele_texte_utilise: "",
         modele_image_utilise: result.model,
         cout_rodi: estimateRodi(result.model, result.tokens),
-        fichier_image_master_4k: `storage/masters/${sheet.id}-4k.webp`,
+        fichier_image_master: `storage/masters/${sheet.id}-master.webp`,
+        master_size: MASTER_SIZE,
         master_width: dims.masterWidth,
         master_height: dims.masterHeight,
         fichier_image_web: `/creations/${sheet.id}.webp`,
@@ -440,7 +451,7 @@ async function main() {
         modele_texte_utilise: "",
         modele_image_utilise: model,
         cout_rodi: 0,
-        fichier_image_master_4k: "",
+        fichier_image_master: "",
         fichier_image_web: "",
         fichier_image: "",
         fichier_image_hero: "",
@@ -489,7 +500,8 @@ async function main() {
             modele_texte_utilise: "",
             modele_image_utilise: fallback.model,
             cout_rodi: estimateRodi(fallback.model, fallback.tokens),
-            fichier_image_master_4k: `storage/masters/${sheet.id}-4k.webp`,
+            fichier_image_master: `storage/masters/${sheet.id}-master.webp`,
+        master_size: MASTER_SIZE,
             master_width: dims.masterWidth,
             master_height: dims.masterHeight,
             fichier_image_web: `/creations/${sheet.id}.webp`,

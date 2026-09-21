@@ -19,7 +19,8 @@ export type ShowcaseManifestEntry = {
   modele_texte_utilise: string;
   modele_image_utilise: string;
   cout_rodi: number;
-  fichier_image_master_4k?: string;
+  fichier_image_master?: string;
+  master_size?: string;
   master_width?: number;
   master_height?: number;
   fichier_image_web?: string;

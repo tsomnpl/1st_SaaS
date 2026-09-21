@@ -29,7 +29,7 @@ export default function AdminSettingsPage() {
           <li>RodiumAI : {configured.rodium ? "présent" : "manquant"}</li>
           <li>Money Fusion : {configured.moneyFusion ? "présent" : "manquant"}</li>
           <li>ADMIN_EMAIL : {configured.adminEmail ? "renseigné" : "à renseigner"}</li>
-          <li>ADMIN_PRIVATE_PATH : {configured.privatePath ? "renseigné" : "valeur de secours locale"}</li>
+          <li>ADMIN_PRIVATE_PATH : {configured.privatePath ? "renseigné (alias /c/…)" : "non renseigné — /admin uniquement"}</li>
           <li>Analytics : {configured.analytics ? "domaine renseigné" : "désactivé"}</li>
         </ul>
       </article>

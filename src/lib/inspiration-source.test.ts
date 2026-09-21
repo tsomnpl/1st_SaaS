@@ -81,7 +81,8 @@ describe("inspiration source descriptions", () => {
   it("keeps the analyzer off the public tree", () => {
     const script = readFileSync("scripts/analyze-inspirations.py", "utf8");
     expect(script).toContain("_analysis");
-    expect(script).toContain("google/gemini-2.5-flash-lite");
+    expect(script).toContain("google/gemini-3.1-flash-lite");
+    expect(script).not.toContain("google/gemini-2.5-flash-lite");
     expect(script).not.toContain("/object/public/");
     expect(script).toContain("NEVER copy visible words");
     expect(script).toContain("catalogue-description-guide.json");

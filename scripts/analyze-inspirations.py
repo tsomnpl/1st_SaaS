@@ -23,7 +23,7 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 BUCKET = "inspirations-source"
 TABLE = "inspiration_source"
-VISION_MODEL = "google/gemini-2.5-flash-lite"
+VISION_MODEL = "google/gemini-3.1-flash-lite"
 MIN_AVAILABLE_RODI = 0.35
 ANALYSIS_PREFIX = "_analysis"
 
