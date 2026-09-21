@@ -30,6 +30,7 @@ export const STYLE_REFERENCE_PROMPT = [
   "Change the INFORMATION, not the layout. Put the client's name, title, date, time, venue, price, phone and CTA into the same visual logic.",
   "If the client identity requires a different accent color, keep the same structure (dark ground / light type / one accent) and swap only the accent.",
   "Do NOT copy logos, brand names, celebrity likenesses, identifiable real people, or the exact source advertising copy.",
+  "Never reuse a phone number, WhatsApp, email, address, social handle, price, or date visible on the reference — those belong to another business.",
   "Do NOT invent a generic centered-person layout if the reference is split (person right, title left, price large, CTA bottom, logo small top).",
   "Do NOT treat the reference as a loose theme. It is the model to follow.",
 ].join(" ");

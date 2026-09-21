@@ -149,6 +149,7 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "collage de 5 elements sans hierarchie",
       "copie directe d'une reference",
       "faits inventes (date, prix, tel)",
+      "reprise du telephone, email, adresse ou handle de la reference",
       "affiche gradient sans photo",
       "personne genérique réutilisée d'un domaine à l'autre",
     ],
@@ -266,7 +267,8 @@ export function buildPrompt(
       : "",
     `Reference principles: ${ad.reference_principles.slice(0, 16).join(" || ")}.`,
     `Avoid: ${ad.avoid.join("; ")}.`,
-    "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
+    "Do not invent business details. If a phone, email, price or date is not in the client information, do not render one.",
+    "Never copy contact details from the attached reference.",
     "If it would not be publishable by a real local business, it is a failure.",
   ]
     .filter(Boolean)
