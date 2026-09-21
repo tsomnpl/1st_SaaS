@@ -306,9 +306,9 @@ export async function analyzeStyleReference(input: {
     `Domain: ${input.domain}. Reference id: ${input.referenceId}.`,
     "Describe STRUCTURE only. Never transcribe brand names, logos, phone numbers, or identifiable people.",
     "Return JSON only with keys:",
-    "composition, layout, humanPlacement, humanRole, imageTreatment, typographyHierarchy,",
-    "colorPalette (string[] of 2-4 descriptive swatches, not brand names), contrast, spacing,",
-    "ctaPosition, mood, visualDensity, aspectRatio.",
+    "background, composition, layout, humanPlacement, subjectScale, textPosition, titleHierarchy,",
+    "humanRole, imageTreatment, typographyHierarchy, colorPalette (string[] of 2-4 descriptive swatches, not brand names),",
+    "contrast, spacing, whiteSpace, margins, safeZone, ctaPosition, pricePosition, mood, visualDensity, aspectRatio.",
   ].join(" ");
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {

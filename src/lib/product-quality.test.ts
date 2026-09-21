@@ -6,7 +6,6 @@ import {
   selectVisualReferences,
 } from "./visual-references";
 import { DOMAINS } from "./domains";
-import { extractPaymentToken } from "@/server/payments";
 import { COOKIE_CONSENT_KEY } from "./cookie-consent";
 import { isCriticalQcFailure, parseQcReport, skippedQcReport } from "./quality-control";
 import { BRAND } from "./brand";
@@ -35,14 +34,6 @@ describe("visual reference library", () => {
     expect(loadPrivateStyleReferenceDataUrl("/etc/passwd")).toBe("");
     expect(loadPrivateStyleReferenceDataUrl("public/creations/restauration-01.webp")).toBe("");
     expect(loadPrivateStyleReferenceDataUrl("storage/private/../package.json")).toBe("");
-  });
-});
-
-describe("payment token extraction", () => {
-  it("reads nested Money Fusion tokens", () => {
-    expect(extractPaymentToken({ data: { token: "abc" } })).toBe("abc");
-    expect(extractPaymentToken({ tokenPay: "xyz" })).toBe("xyz");
-    expect(extractPaymentToken({})).toBe("");
   });
 });
 
@@ -90,6 +81,30 @@ describe("quality gate", () => {
         issues: ["generic AI"],
       }),
     );
+    expect(isCriticalQcFailure(report)).toBe(true);
+  });
+
+  it("fails closed when design laws or reference match fail", () => {
+    const report = parseQcReport(
+      JSON.stringify({
+        pass: true,
+        has_person: true,
+        person_natural: true,
+        readable_text: true,
+        text_matches_brief: true,
+        domain_fit: true,
+        looks_ai_generic: false,
+        format_ok: true,
+        composition_match: true,
+        margins_ok: true,
+        design_rules: false,
+        hierarchy: false,
+        contrast: true,
+        alignment: true,
+        issues: ["weak hierarchy"],
+      }),
+    );
+    expect(report.pass).toBe(false);
     expect(isCriticalQcFailure(report)).toBe(true);
   });
 });

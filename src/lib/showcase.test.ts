@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
-import { buildShowcasePrompt, SHOWCASE_DESIGN } from "./showcase-design";
+import { buildShowcasePrompt, SHOWCASE_DESIGN, supabaseDomainForSheet } from "./showcase-design";
 
 describe("showcase catalogue alignment", () => {
   it("keeps 27 sheets in catalogue order", () => {
@@ -31,12 +31,14 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("generates posters via official Rodium images API only", () => {
+  it("generates posters via official Rodium images API and analyzes references over chat", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
     expect(script).toContain('/images/generations');
     expect(script).toContain('1024x1536');
     expect(script).toContain('"x-api-key"');
-    expect(script).not.toContain("/chat/completions");
+    expect(script).toContain("inspirations-source");
+    expect(script).toContain("previous.visual_ref_used");
+    expect(script).toContain("not 4K");
     expect(script).not.toContain("1024x1792");
   });
 
@@ -76,6 +78,15 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
+  it("maps every catalogue sheet onto a Supabase inspiration domain", () => {
+    for (const sheet of SHOWCASE_SHEETS) {
+      expect(supabaseDomainForSheet(sheet.id)).toMatch(/^[a-z0-9-]+$/);
+    }
+    expect(supabaseDomainForSheet("restauration-03")).toBe("restauration");
+    expect(supabaseDomainForSheet("immobilier-business-04")).toBe("finance");
+    expect(supabaseDomainForSheet("sante-tourisme-associations-02")).toBe("tourisme");
+  });
+
   it("embeds concrete design laws in the Rodium prompt", () => {
     const samples = SHOWCASE_SHEETS.filter((sheet) =>
       ["evenementiel-01", "restauration-03", "immobilier-business-04"].includes(sheet.id),
@@ -96,7 +107,7 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("requests max poster size and GPT Image for client-facing posters", () => {
+  it("requests max poster size, Gemini bitmap refs, and GPT Image only for already-liked posters", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
     expect(script).toContain('|| "openai/gpt-image-2"');
     expect(script).toContain("lanczos3");
@@ -104,7 +115,8 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("body.image");
     expect(script).toContain("storage/masters");
     expect(script).toContain("isGptImageModel");
-    expect(script).not.toContain("/chat/completions");
+    expect(script).toContain("fetchSupabaseReference");
+    expect(script).toContain("google/gemini-3.1-flash-image");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
   });
 });

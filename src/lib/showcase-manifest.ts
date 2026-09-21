@@ -19,6 +19,7 @@ export type ShowcaseManifestEntry = {
   modele_texte_utilise: string;
   modele_image_utilise: string;
   cout_rodi: number;
+  fichier_image_master?: string;
   fichier_image_master_4k?: string;
   master_width?: number;
   master_height?: number;
@@ -32,6 +33,15 @@ export type ShowcaseManifestEntry = {
   resize?: string;
   page_reference_pdf?: number | null;
   visual_ref_used?: boolean;
+  reference_id?: string;
+  reference_image?: string;
+  reference_source?: string;
+  reference_analysis?: unknown;
+  human_present?: boolean | null;
+  design_rules_check?: boolean | null;
+  reference_match_check?: boolean | null;
+  resolution?: string;
+  final_status?: string;
   reference_categorisation?: ShowcaseReferenceCategorisation;
   statut: ShowcaseStatus;
   hero_loop: boolean;
@@ -45,5 +55,8 @@ export type ShowcaseManifestFile = {
   rodi_total: number;
   note?: string;
   hero_loop_count?: number;
+  master_size_requested?: string;
+  master_size_note?: string;
+  evidence?: Record<string, unknown>;
   fiches: ShowcaseManifestEntry[];
 };

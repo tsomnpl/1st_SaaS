@@ -18,7 +18,7 @@ import {
   shouldRepair,
   skippedQcReport,
 } from "@/lib/quality-control";
-import { dnaHasStructure } from "@/lib/creative-dna";
+import { dnaSummaryLine } from "@/lib/creative-dna";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
@@ -79,9 +79,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     let qc = skippedQcReport();
     let repaired = false;
     const modelsUsed: string[] = [];
-    const dnaSummary = visual.dna && dnaHasStructure(visual.dna)
-      ? [visual.dna.layout, visual.dna.humanPlacement, visual.dna.ctaPosition].filter(Boolean).join(" | ")
-      : "";
+    const dnaSummary = dnaSummaryLine(visual.dna);
 
     for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
       const rendered = await generateWithRodium({

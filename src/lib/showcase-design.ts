@@ -48,13 +48,33 @@ export function designFor(id: string) {
   return SHOWCASE_DESIGN.find((row) => row.id === id);
 }
 
-export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean) {
+export function supabaseDomainForSheet(id: string) {
+  if (id.startsWith("evenementiel")) return "evenementiel";
+  if (id.startsWith("restauration")) return "restauration";
+  if (id.startsWith("mode")) return "mode";
+  if (id.startsWith("beaute")) return "beaute";
+  if (id === "immobilier-business-01" || id === "immobilier-business-02") return "immobilier";
+  if (id === "immobilier-business-03") return "business";
+  if (id === "immobilier-business-04") return "finance";
+  if (id === "immobilier-business-05") return "e-commerce";
+  if (id === "techno-education-01") return "technologie";
+  if (id.startsWith("techno-education")) return "education";
+  if (id === "sport-finance-01") return "sport";
+  if (id === "sport-finance-02") return "finance";
+  if (id === "sante-tourisme-associations-01") return "sante";
+  if (id === "sante-tourisme-associations-02") return "tourisme";
+  if (id === "sante-tourisme-associations-03") return "associations";
+  return "";
+}
+
+export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean, dnaBlock = "") {
   const design = designFor(sheet.id);
   if (!design) throw new Error(`DESIGN_MISSING_${sheet.id}`);
   return [
     hasVisualRef ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
-    `Vertical poster 3:4, print-sharp, high resolution.`,
+    dnaBlock,
+    `Vertical poster 3:4, print-sharp, high resolution. Recorded size is the model max (typically 1024x1536), not 4K.`,
     `Domain: ${sheet.domaine}.`,
     `Style: ${design.style}. Composition: ${design.composition}.`,
     `Palette limited to ${design.palette.join(", ")} (${design.paletteWhy}).`,
@@ -65,7 +85,10 @@ export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean)
     sheet.prompt,
     "At least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.",
     "Original artwork only. No real brand names, no copied logos, no celebrity likeness.",
-  ].join("\n");
+    "Never copy a phone, WhatsApp, email, address, price or date from the attached reference.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function referenceCategorisation(sheet: ShowcaseSheet) {

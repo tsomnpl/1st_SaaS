@@ -40,6 +40,7 @@ describe("creative dna", () => {
     );
     expect(dna.referenceId).toBe("abc");
     expect(dnaHasStructure(dna)).toBe(true);
+    expect(dna.background).toBe("");
     expect(parseCreativeDna("no json", { referenceId: "x", domain: "Mode & Accessoires" }).composition).toBe("");
   });
 });
