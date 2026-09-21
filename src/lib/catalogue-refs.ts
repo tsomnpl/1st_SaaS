@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { DOMAINS } from "@/lib/domains";
 
 type CatalogueFiche = {
   id: string;
@@ -32,6 +33,15 @@ function loadCatalogueFiches(): CatalogueFiche[] {
   } catch {
     return [];
   }
+}
+
+export function domainKeyForCatalogueDomaine(domaine: string): (typeof DOMAINS)[number] {
+  const found = Object.entries(DOMAIN_TO_CATALOGUE).find(([, labels]) => labels.includes(domaine));
+  return (found?.[0] as (typeof DOMAINS)[number] | undefined) ?? "Evenementiel";
+}
+
+export function createPathForDomaine(domaine: string) {
+  return `/create?domain=${encodeURIComponent(domainKeyForCatalogueDomaine(domaine))}`;
 }
 
 export function catalogueStyleNotesFor(domain: string, count = 2) {

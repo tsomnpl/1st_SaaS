@@ -12,12 +12,7 @@ import {
   posterForDomaine,
   toPoster,
 } from "@/lib/showcase";
-
-const DOMAIN_TONES = [
-  "night", "warm", "gold", "soft", "clean", "dark", "fresh", "clean", "sport", "dark",
-  "fresh", "gold", "sport", "rose", "warm", "clean", "earth", "dark", "night", "fresh",
-  "gold", "clean",
-] as const;
+import { createPathForDomaine } from "@/lib/catalogue-refs";
 
 export default async function Home() {
   const { generated } = await getGeneratedShowcase();
@@ -99,7 +94,13 @@ export default async function Home() {
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
           {landingShowcase.map((poster) => (
-            <VisualPoster key={poster.id ?? poster.title} {...poster} />
+            <Link
+              key={poster.id ?? poster.title}
+              href={createPathForDomaine(poster.domaine ?? "Événementiel")}
+              className="block rounded-[1.5rem] transition hover:-translate-y-0.5 hover:shadow-lg"
+            >
+              <VisualPoster {...poster} />
+            </Link>
           ))}
         </div>
       </section>
@@ -183,7 +184,15 @@ export default async function Home() {
           {DOMAINS.map((domain, index) => {
             const match = posterForDomaine(generated, DOMAIN_LABELS[domain]) ?? posterForDomaine(generated, domain);
             if (match) {
-              return <VisualPoster key={domain} {...toPoster(match)} className="min-h-[180px]" />;
+              return (
+                <Link
+                  key={domain}
+                  href={`/create?domain=${encodeURIComponent(domain)}`}
+                  className="block rounded-[1.5rem] transition hover:-translate-y-0.5 hover:shadow-lg"
+                >
+                  <VisualPoster {...toPoster(match)} className="min-h-[180px]" />
+                </Link>
+              );
             }
             return (
               <Link
