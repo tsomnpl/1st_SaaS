@@ -4,6 +4,7 @@ import {
   PrismaClient,
   User,
 } from "@prisma/client";
+import { sortMintBucketsFefo } from "@/lib/mint-buckets";
 import { prisma } from "@/lib/prisma";
 
 type CreditOptions = {
@@ -85,12 +86,12 @@ export async function consumeOneMint(
       remainingAmount: { gt: 0 },
       OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
     },
-    orderBy: [{ expiresAt: "asc" }, { createdAt: "asc" }],
+    orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
   });
 
   if (!buckets.length) throw new Error("INSUFFICIENT_MINTS");
 
-  const firstBucket = buckets[0];
+  const firstBucket = sortMintBucketsFefo(buckets)[0];
   await client.creditBucket.update({
     where: { id: firstBucket.id },
     data: { remainingAmount: { decrement: 1 } },
@@ -133,13 +134,15 @@ export async function removeCredits(
   const removable = Math.min(amount, account.balance);
   let left = removable;
 
-  const buckets = await client.creditBucket.findMany({
-    where: {
-      userId,
-      remainingAmount: { gt: 0 },
-    },
-    orderBy: [{ expiresAt: "asc" }, { createdAt: "asc" }],
-  });
+  const buckets = sortMintBucketsFefo(
+    await client.creditBucket.findMany({
+      where: {
+        userId,
+        remainingAmount: { gt: 0 },
+      },
+      orderBy: [{ expiresAt: { sort: "asc", nulls: "last" } }, { createdAt: "asc" }],
+    }),
+  );
 
   for (const bucket of buckets) {
     if (left <= 0) break;

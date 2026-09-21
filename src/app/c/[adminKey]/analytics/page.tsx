@@ -25,11 +25,11 @@ export default async function AdminAnalyticsPage({ searchParams }: { searchParam
         <article className="admin-card p-4">{stats.rodiPeriod.toFixed(3)} RODI</article>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <BarChart label="Revenus" points={stats.revenueSeries} color="#6D28D9" />
+        <BarChart label="Revenus" points={stats.revenueSeries} color="#20C997" />
         <BarChart label="Utilisateurs" points={stats.userSeries} color="#3B82F6" />
-        <BarChart label="Générations" points={stats.generationSeries} color="#10B981" />
+        <BarChart label="Générations" points={stats.generationSeries} color="#20C997" />
         <BarChart label="Mouvements Mints" points={stats.mintSeries} color="#F59E0B" />
-        <BarChart label="RODI" points={stats.rodiSeries} color="#6D28D9" />
+        <BarChart label="RODI" points={stats.rodiSeries} color="#20C997" />
       </div>
       <section className="admin-card p-4">
         <h2 className="font-bold">Par offre</h2>

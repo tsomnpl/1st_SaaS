@@ -41,7 +41,11 @@ export default async function HistoryPage() {
               <article key={generation.id} className="card overflow-hidden">
                 {generation.outputUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={generation.outputUrl} alt="" className="aspect-[3/4] w-full object-cover" />
+                  <img
+                    src={generation.outputUrl}
+                    alt={`Affiche « ${brief.title ?? "sans titre"} »${brief.domain ? ` — ${brief.domain}` : ""}`}
+                    className="aspect-[3/4] w-full object-cover"
+                  />
                 ) : (
                   <div className="flex aspect-[3/4] items-center justify-center bg-slate-50 text-sm text-slate-400">
                     {generation.status === "FAILED" ? "Génération échouée" : "En cours"}
@@ -54,7 +58,7 @@ export default async function HistoryPage() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {generation.outputUrl ? (
-                      <a href={generation.outputUrl} download className="text-sm font-semibold text-[#6D28D9]">
+                      <a href={generation.outputUrl} download className="text-sm font-semibold text-[#20C997]">
                         Télécharger
                       </a>
                     ) : null}

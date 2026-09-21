@@ -29,7 +29,7 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
           <Link
             key={value || "all"}
             href={value ? `${base}/payments?status=${value}` : `${base}/payments`}
-            className={`rounded-full px-3 py-1 ${status === value || (!status && !value) ? "bg-[#1E293B] text-white" : "border border-slate-200 bg-white"}`}
+            className={`rounded-full px-3 py-1 ${status === value || (!status && !value) ? "bg-[#111827] text-white" : "border border-slate-200 bg-white"}`}
           >
             {value || "Tous"}
           </Link>
@@ -55,7 +55,7 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
                 <td className="px-3 py-2">{payment.plan.name}</td>
                 <td className="px-3 py-2">{payment.amountFcfa.toLocaleString("fr-FR")}</td>
                 <td className="px-3 py-2">
-                  <Link href={`${base}/payments/${payment.id}`} className="text-[#6D28D9]">
+                  <Link href={`${base}/payments/${payment.id}`} className="text-[#20C997]">
                     {payment.orderId}
                   </Link>
                 </td>

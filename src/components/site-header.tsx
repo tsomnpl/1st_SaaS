@@ -27,22 +27,22 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
 
         <nav className="hidden items-center gap-6 text-sm text-slate-600 md:flex">
           {publicLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-[#6D28D9]">
+            <Link key={link.href} href={link.href} className="transition hover:text-[#20C997]">
               {link.label}
             </Link>
           ))}
           <SignedIn>
-            <Link href="/dashboard" className="transition hover:text-[#6D28D9]">
+            <Link href="/dashboard" className="transition hover:text-[#20C997]">
               Tableau de bord
             </Link>
-            <Link href="/history" className="transition hover:text-[#6D28D9]">
+            <Link href="/history" className="transition hover:text-[#20C997]">
               Historique
             </Link>
-            <Link href="/profile" className="transition hover:text-[#6D28D9]">
+            <Link href="/profile" className="transition hover:text-[#20C997]">
               Profil
             </Link>
             {showAdmin && adminHref ? (
-              <Link href={adminHref} className="transition hover:text-[#6D28D9]">
+              <Link href={adminHref} className="transition hover:text-[#20C997]">
                 Administration
               </Link>
             ) : null}
@@ -51,16 +51,16 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
                 {mintBalance} Mint{mintBalance > 1 ? "s" : ""}
               </span>
             ) : null}
-            <UserButton />
+            <UserButton afterSignOutUrl="/" />
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button type="button" className="transition hover:text-[#6D28D9]">
+              <button type="button" className="transition hover:text-[#20C997]">
                 Connexion
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button type="button" className="transition hover:text-[#6D28D9]">
+              <button type="button" className="transition hover:text-[#20C997]">
                 Inscription
               </button>
             </SignUpButton>

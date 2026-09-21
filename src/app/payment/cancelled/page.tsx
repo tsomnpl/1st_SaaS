@@ -3,13 +3,13 @@ import { PaymentStatusView } from "@/components/payment/payment-status-view";
 import { pageTitle } from "@/lib/seo";
 
 export const metadata: Metadata = {
-  title: pageTitle("Paiement"),
+  title: pageTitle("Paiement annulé"),
   robots: { index: false, follow: false },
 };
 
-type SearchParams = Promise<{ orderId?: string; token?: string; status?: string }>;
+type SearchParams = Promise<{ orderId?: string; token?: string }>;
 
-export default async function PaymentSuccessPage({
+export default async function PaymentCancelledPage({
   searchParams,
 }: {
   searchParams: SearchParams;
@@ -19,7 +19,7 @@ export default async function PaymentSuccessPage({
     <PaymentStatusView
       token={params.token}
       orderId={params.orderId}
-      initialStatus="PENDING"
+      initialStatus="CANCELLED"
     />
   );
 }

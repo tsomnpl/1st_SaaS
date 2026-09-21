@@ -30,18 +30,18 @@ export default async function Home() {
   return (
     <div className="space-y-24 pb-8">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white px-5 py-10 shadow-[0_30px_80px_rgba(15,23,42,0.08)] md:px-10 md:py-14">
-        <div className="pointer-events-none absolute -left-16 top-0 h-56 w-56 rounded-full bg-[#6D28D9]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-[#10B981]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 top-0 h-56 w-56 rounded-full bg-[#20C997]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-[#20C997]/10 blur-3xl" />
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <p className="inline-flex rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6D28D9]">
+            <p className="inline-flex rounded-full border border-[#DFFAF0] bg-[#DFFAF0] px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#111827]">
               Direction artistique incluse
             </p>
-            <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#1E293B] md:text-6xl">
+            <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#111827] md:text-6xl">
               Ton idée. Une affiche qui se remarque.
             </h1>
-            <p className="mt-4 text-lg font-medium text-[#6D28D9]">
+            <p className="mt-4 text-lg font-medium text-[#20C997]">
               Créez des visuels qui marquent.
             </p>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 md:text-lg">
@@ -91,10 +91,10 @@ export default async function Home() {
       <section id="creations" className="space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#20C997]">Showcase</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Des affiches, pas des cartes vides.</h2>
           </div>
-          <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
+          <Link href="/creations" className="text-sm font-semibold text-[#20C997] hover:underline">
             Toute la galerie
           </Link>
         </div>
@@ -107,7 +107,7 @@ export default async function Home() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="card p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">Avant / Après</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#20C997]">Avant / Après</p>
           <h3 className="mt-2 text-2xl font-extrabold">D’un message brut à un visuel qui vend</h3>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
@@ -127,7 +127,7 @@ export default async function Home() {
           </div>
         </article>
         <article className="card p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#20C997]">Questionnaire</p>
           <h3 className="mt-2 text-2xl font-extrabold">Tu réponds. On compose.</h3>
           <div className="mt-6 space-y-3">
             {[
@@ -141,7 +141,7 @@ export default async function Home() {
                 key={question}
                 className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700"
               >
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-violet-50 text-xs font-bold text-[#6D28D9]">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#DFFAF0] text-xs font-bold text-[#111827]">
                   {index + 1}
                 </span>
                 {question}
@@ -159,7 +159,7 @@ export default async function Home() {
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((item) => (
             <article key={item.n} className="card p-5">
-              <p className="text-xs font-bold text-[#6D28D9]">{item.n}</p>
+              <p className="text-xs font-bold text-[#20C997]">{item.n}</p>
               <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
               <p className="mt-1 text-sm text-slate-600">{item.text}</p>
             </article>
@@ -171,14 +171,15 @@ export default async function Home() {
         <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {DOMAINS.map((domain, index) => (
-            <VisualPoster
-              key={domain}
-              title={DOMAIN_LABELS[domain]}
-              subtitle="Affiche pro"
-              cta="Créer"
-              tone={DOMAIN_TONES[index] ?? "clean"}
-              className="min-h-[180px]"
-            />
+            <Link key={domain} href={`/create?domain=${encodeURIComponent(domain)}`} aria-label={`Créer une affiche ${DOMAIN_LABELS[domain]}`}>
+              <VisualPoster
+                title={DOMAIN_LABELS[domain]}
+                subtitle="Affiche pro"
+                cta="Créer"
+                tone={DOMAIN_TONES[index] ?? "clean"}
+                className="min-h-[180px]"
+              />
+            </Link>
           ))}
         </div>
       </section>
@@ -186,7 +187,7 @@ export default async function Home() {
       <section id="tarifs" className="card p-6 md:p-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Tarifs</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#20C997]">Tarifs</p>
             <h2 className="mt-2 text-3xl font-extrabold">1 Mint = 1 affiche</h2>
             <p className="mt-2 text-slate-600">L’export ne consomme aucun Mint.</p>
           </div>
@@ -200,11 +201,11 @@ export default async function Home() {
               key={plan.code}
               href={`/checkout?plan=${plan.code}`}
               className={`rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:shadow-md ${
-                plan.highlighted ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-slate-50"
+                plan.highlighted ? "border-[#20C997] bg-[#DFFAF0]/70" : "border-slate-200 bg-slate-50"
               }`}
             >
-              <p className="text-2xl font-extrabold text-[#1E293B]">{formatFcfa(plan.priceFcfa)}</p>
-              <p className="mt-1 font-semibold text-[#6D28D9]">
+              <p className="text-2xl font-extrabold text-[#111827]">{formatFcfa(plan.priceFcfa)}</p>
+              <p className="mt-1 font-semibold text-[#20C997]">
                 {plan.mintAmount} Mints
               </p>
               <p className="mt-2 text-sm text-slate-600">
@@ -216,7 +217,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="rounded-[1.8rem] bg-[#1E293B] px-8 py-12 text-center text-white md:px-12">
+      <section className="rounded-[1.8rem] bg-[#111827] px-8 py-12 text-center text-white md:px-12">
         <h2 className="text-3xl font-extrabold md:text-4xl">Prêt à lancer ta prochaine affiche ?</h2>
         <p className="mx-auto mt-3 max-w-xl text-white/70">
           Simple, rapide, premium. Tu n’as pas besoin de savoir designer.

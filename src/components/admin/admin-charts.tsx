@@ -1,6 +1,6 @@
 export function Sparkline({
   values,
-  color = "#6D28D9",
+  color = "#20C997",
 }: {
   values: number[];
   color?: string;
@@ -22,7 +22,7 @@ export function Sparkline({
 
 export function BarChart({
   points,
-  color = "#6D28D9",
+  color = "#20C997",
   label,
 }: {
   points: Array<{ label: string; value: number }>;

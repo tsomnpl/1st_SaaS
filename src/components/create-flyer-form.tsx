@@ -26,6 +26,7 @@ export function CreateFlyerForm({
   brandLogoUrl = "",
   regenerateFromId = "",
   initialFormat = "",
+  initialDomain = "",
 }: {
   mintBalance: number;
   canExport?: boolean;
@@ -33,9 +34,14 @@ export function CreateFlyerForm({
   brandLogoUrl?: string;
   regenerateFromId?: string;
   initialFormat?: string;
+  initialDomain?: string;
 }) {
   const [step, setStep] = useState(0);
-  const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
+  const [domain, setDomain] = useState<(typeof DOMAINS)[number]>(
+    DOMAINS.includes(initialDomain as (typeof DOMAINS)[number])
+      ? (initialDomain as (typeof DOMAINS)[number])
+      : "Evenementiel",
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
@@ -129,8 +135,9 @@ export function CreateFlyerForm({
             key={label}
             type="button"
             onClick={() => setStep(index)}
+            aria-current={index === step ? "step" : undefined}
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              index === step ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-500"
+              index === step ? "bg-[#20C997] text-[#111827]" : "bg-slate-100 text-slate-600"
             }`}
           >
             {index + 1}. {label}
@@ -139,7 +146,7 @@ export function CreateFlyerForm({
       </div>
 
       <div className="card p-5">
-        <p className="text-sm font-medium text-[#6D28D9]">Cette création utilisera 1 Mint.</p>
+        <p className="text-sm font-medium text-[#20C997]">Cette création utilisera 1 Mint.</p>
         <h2 className="mt-1 text-xl font-bold">Questionnaire intelligent</h2>
         <p className="mt-1 text-sm text-slate-500">Pas de prompt à écrire. Réponds simplement.</p>
       </div>
@@ -191,7 +198,7 @@ export function CreateFlyerForm({
         <Input
           name="colors"
           label="Couleurs (séparées par des virgules)"
-          placeholder="#1E293B, #6D28D9"
+          placeholder="#111827, #20C997"
           defaultValue={brandColors.join(", ")}
         />
         <Select
@@ -225,7 +232,7 @@ export function CreateFlyerForm({
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Logo (optionnel — mémorisé si tu coches le kit de marque)</span>
-          {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
+          {logoImage ? <p className="text-xs text-[#20C997]">Logo prêt. Tu peux le remplacer.</p> : null}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
@@ -265,7 +272,7 @@ export function CreateFlyerForm({
       {mintBalance <= 0 ? (
         <p className="text-sm text-amber-700">
           Solde insuffisant.{" "}
-          <Link href="/pricing" className="font-semibold text-[#6D28D9] underline">
+          <Link href="/pricing" className="font-semibold text-[#20C997] underline">
             Acheter des Mints
           </Link>
         </p>
@@ -292,14 +299,18 @@ export function CreateFlyerForm({
 
       {result ? (
         <div className="card space-y-3 p-5">
-          <p className="font-semibold text-[#10B981]">Ton affiche est prête.</p>
+          <p className="font-semibold text-[#20C997]">Ton affiche est prête.</p>
           {result.repaired ? (
             <p className="text-sm text-slate-600">La première version a été corrigée (personne / texte / composition).</p>
           ) : null}
           {result.outputUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.outputUrl} alt="Affiche générée" className="w-full rounded-xl border border-slate-200" />
+              <img
+                src={result.outputUrl}
+                alt="Affiche générée à partir de ton brief"
+                className="w-full rounded-xl border border-slate-200"
+              />
               <div className="flex flex-wrap gap-3">
                 <a href={result.outputUrl} download className="btn-primary">
                   Télécharger
@@ -356,7 +367,7 @@ function Input({
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-[#20C997] focus:ring-2"
       />
     </label>
   );
