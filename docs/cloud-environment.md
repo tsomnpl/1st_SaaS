@@ -19,10 +19,10 @@ external service. The dev role, password, and database are all named `flyermint`
 on `localhost:5432`. The install step writes the matching `DATABASE_URL` to a minimal `.env`
 (only when one is not already present).
 
-A dashboard-provided `DATABASE_URL` secret is respected: install and start fall back to the
-local database only when `DATABASE_URL` is unset. As a safety guard, the schema sync and
-seed steps run **only** when `DATABASE_URL` points at `localhost`/`127.0.0.1`, so a real or
-remote database is never mutated by environment setup.
+Provisioning (schema sync + seed) always targets the **local** cluster that install just
+created, so a dashboard-provided or remote `DATABASE_URL` is never mutated by setup. At
+runtime the `start` command respects a provided `DATABASE_URL` secret and only falls back to
+the local database when it is unset.
 
 The `.env` file is intentionally minimal (`DATABASE_URL` + `NEXT_PUBLIC_APP_URL`): copying
 `.env.example` verbatim sets `MONEY_FUSION_API_URL=` (empty), which fails the
@@ -52,12 +52,10 @@ sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='flyermint'"
 npm install
 npx prisma generate
 
-# Sync schema + seed, only for a local database (respect a provided DATABASE_URL)
-export DATABASE_URL="${DATABASE_URL:-$LOCAL_DB_URL}"
-case "$DATABASE_URL" in
-  *@localhost:*|*@127.0.0.1:*) npx prisma db push --skip-generate; npm run db:seed ;;
-  *) echo "External DATABASE_URL detected; skipping prisma db push and seed." ;;
-esac
+# Sync schema + seed into the LOCAL database only
+export DATABASE_URL="$LOCAL_DB_URL"
+npx prisma db push --skip-generate
+npm run db:seed
 ```
 
 ## Start command (runs on every boot)
