@@ -83,8 +83,8 @@
     {
       "id": "restauration-03",
       "domaine": "Restauration",
-      "style": "food héros gros plan",
-      "composition": "plat centré, badge promo, prix dominant",
+      "style": "food héros + personne",
+      "composition": "cuisinier ou client photographié en train de servir/manger le ramen, bol en héros, badge promo, prix dominant",
       "palette": [
         "#1C1917",
         "#F59E0B",
@@ -135,8 +135,8 @@
     {
       "id": "mode-03",
       "domaine": "Mode & Accessoires",
-      "style": "doux poudré",
-      "composition": "titre + une grille légère, pas d'encombrement",
+      "style": "doux poudré + mannequin",
+      "composition": "une personne réelle qui porte et tient les pièces, boutique, pas une grille produits seule",
       "palette": [
         "#F9E4E8",
         "#FFFFFF",

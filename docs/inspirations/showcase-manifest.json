@@ -1,11 +1,12 @@
 {
   "source": "docs/inspirations/catalogue-extrait.json",
-  "generated_at": "2026-09-21T10:17:35.320Z",
+  "generated_at": "2026-09-21T10:46:14.906Z",
   "count": 27,
-  "rodi_total": 163.583,
+  "rodi_total": 164.072,
   "master_size_requested": "1024x1536",
+  "master_size_note": "1024x1536 (max portrait for GPT Image 2 — not 4K)",
   "hero_loop_count": 10,
-  "note": "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Actual pixels recorded per fiche. Master files are 1024x1536 (model max portrait), not 4K.",
+  "note": "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Master files are 1024x1536 (model max portrait), not 4K.",
   "fiches": [
     {
       "id": "evenementiel-01",
@@ -297,7 +298,7 @@
       "titre_original_catalogue": "Borcelle Resto (Promo Spéciale)",
       "titre_affiche_finale": "RAMEN KATSU",
       "sous_titre_affiche_finale": "Promo spéciale",
-      "prompt_image_final": "Inspire from the written professional-poster style notes (composition, palette, layout, type). OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief. Do NOT copy any real brand, logo, or celebrity. Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.\nDesign laws (must follow): - Maximum 2-3 main colors, no scattered palette. - Maximum 2 type families: one impact display for the title, one readable sans for body. - Clear hierarchy: the most important fact (title, date or price) dominates by size, weight and contrast. - Strong contrast: light text on dark ground or the reverse; never pale text on a busy photo. - Alignment on a consistent grid, not random placement. - Proximity: group related facts (date + time + venue) as one block. - Generous white space and safe margins; do not crowd edges. - One strong hero visual, not many weak elements. - Small FLYERMINT badge only. No other real company logos.\nVertical poster 3:4, print-sharp, high resolution.\nDomain: Restauration.\nStyle: food héros gros plan. Composition: plat centré, badge promo, prix dominant.\nPalette limited to #1C1917, #F59E0B, #F8FAFC (sombre chaleureux pour faire briller le plat).\nTypography: display titre + chiffres prix. Ambience: gourmand.\nTitle to render clearly: RAMEN KATSU.\nSubtitle: Promo spéciale.\nMeta: 45K au lieu de 55K. CTA: Commander.\nVertical food poster 3:4. Dark warm tones. Hero photo of steaming chicken katsu ramen with marinated eggs. Title RAMEN KATSU, badge SPECIAL PROMO, price 45K, old price 55K crossed. FLYERMINT badge. Appetizing, high contrast, no real restaurant chain.\nAt least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.\nOriginal artwork only. No real brand names, no copied logos, no celebrity likeness.",
+      "prompt_image_final": "Inspire from the written professional-poster style notes (composition, palette, layout, type). OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief. Do NOT copy any real brand, logo, or celebrity. Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.\nDesign laws (must follow): - Maximum 2-3 main colors, no scattered palette. - Maximum 2 type families: one impact display for the title, one readable sans for body. - Clear hierarchy: the most important fact (title, date or price) dominates by size, weight and contrast. - Strong contrast: light text on dark ground or the reverse; never pale text on a busy photo. - Alignment on a consistent grid, not random placement. - Proximity: group related facts (date + time + venue) as one block. - Generous white space and safe margins; do not crowd edges. - One strong hero visual, not many weak elements. - Small FLYERMINT badge only. No other real company logos.\nVertical poster 3:4, print-sharp, high resolution.\nDomain: Restauration.\nStyle: food héros + personne. Composition: cuisinier ou client photographié en train de servir/manger le ramen, bol en héros, badge promo, prix dominant.\nPalette limited to #1C1917, #F59E0B, #F8FAFC (sombre chaleureux pour faire briller le plat).\nTypography: display titre + chiffres prix. Ambience: gourmand.\nTitle to render clearly: RAMEN KATSU.\nSubtitle: Promo spéciale.\nMeta: 45K au lieu de 55K. CTA: Commander.\nVertical food poster 3:4. Dark warm tones. A real photographed cook or diner belongs in the scene and is using the dish (chopsticks, serving or tasting). Hero is steaming chicken katsu ramen with marinated eggs in their hands or on the counter they work. Not a bowl alone. Title RAMEN KATSU, badge SPECIAL PROMO, price 45K, old price 55K crossed. FLYERMINT badge. Appetizing, high contrast, no real restaurant chain.\nAt least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.\nOriginal artwork only. No real brand names, no copied logos, no celebrity likeness.",
       "regles_design_appliquees": [
         "palette limitée 2-3 couleurs",
         "2 familles typographiques max",
@@ -310,14 +311,16 @@
       ],
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
-      "cout_rodi": 3.64,
+      "cout_rodi": 3.909,
+      "fichier_image_master": "storage/masters/restauration-03-master.webp",
+      "master_size": "1024x1536",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/restauration-03.webp",
       "fichier_image": "/creations/restauration-03.webp",
       "fichier_image_hero": "/creations/hero/restauration-03.webp",
-      "poids_web_ko": 206.8,
-      "poids_ko": 206.8,
+      "poids_web_ko": 167.3,
+      "poids_ko": 167.3,
       "web_width": 1024,
       "web_height": 1536,
       "resize": "sharp lanczos3 width<=1600 webp q85",
@@ -325,8 +328,8 @@
       "visual_ref_used": false,
       "reference_categorisation": {
         "domaine": "Restauration",
-        "style": "food héros gros plan",
-        "composition": "plat centré, badge promo, prix dominant",
+        "style": "food héros + personne",
+        "composition": "cuisinier ou client photographié en train de servir/manger le ramen, bol en héros, badge promo, prix dominant",
         "palette": [
           "#1C1917",
           "#F59E0B",
@@ -335,9 +338,7 @@
         "ambiance": "gourmand"
       },
       "statut": "genere",
-      "hero_loop": true,
-      "fichier_image_master": "storage/masters/restauration-03-master.webp",
-      "master_size": "1024x1536"
+      "hero_loop": true
     },
     {
       "id": "restauration-04",
@@ -486,7 +487,7 @@
       "titre_original_catalogue": "Edith Closet",
       "titre_affiche_finale": "ATELIER CLOSET",
       "sous_titre_affiche_finale": "Braced in beauty",
-      "prompt_image_final": "Inspire from the written professional-poster style notes (composition, palette, layout, type). OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief. Do NOT copy any real brand, logo, or celebrity. Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.\nDesign laws (must follow): - Maximum 2-3 main colors, no scattered palette. - Maximum 2 type families: one impact display for the title, one readable sans for body. - Clear hierarchy: the most important fact (title, date or price) dominates by size, weight and contrast. - Strong contrast: light text on dark ground or the reverse; never pale text on a busy photo. - Alignment on a consistent grid, not random placement. - Proximity: group related facts (date + time + venue) as one block. - Generous white space and safe margins; do not crowd edges. - One strong hero visual, not many weak elements. - Small FLYERMINT badge only. No other real company logos.\nVertical poster 3:4, print-sharp, high resolution.\nDomain: Mode & Accessoires.\nStyle: doux poudré. Composition: titre + une grille légère, pas d'encombrement.\nPalette limited to #F9E4E8, #FFFFFF, #9D174D (rose poudré beauté/mode).\nTypography: script léger + sans. Ambience: délicat.\nTitle to render clearly: ATELIER CLOSET.\nSubtitle: Braced in beauty.\nMeta: Vêtements · sacs · bijoux. CTA: Découvrir.\nVertical fashion poster 3:4. Powder pink and soft white. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as a tasteful grid. FLYERMINT badge. No real boutique name.\nAt least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.\nOriginal artwork only. No real brand names, no copied logos, no celebrity likeness.",
+      "prompt_image_final": "Inspire from the written professional-poster style notes (composition, palette, layout, type). OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief. Do NOT copy any real brand, logo, or celebrity. Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.\nDesign laws (must follow): - Maximum 2-3 main colors, no scattered palette. - Maximum 2 type families: one impact display for the title, one readable sans for body. - Clear hierarchy: the most important fact (title, date or price) dominates by size, weight and contrast. - Strong contrast: light text on dark ground or the reverse; never pale text on a busy photo. - Alignment on a consistent grid, not random placement. - Proximity: group related facts (date + time + venue) as one block. - Generous white space and safe margins; do not crowd edges. - One strong hero visual, not many weak elements. - Small FLYERMINT badge only. No other real company logos.\nVertical poster 3:4, print-sharp, high resolution.\nDomain: Mode & Accessoires.\nStyle: doux poudré + mannequin. Composition: une personne réelle qui porte et tient les pièces, boutique, pas une grille produits seule.\nPalette limited to #F9E4E8, #FFFFFF, #9D174D (rose poudré beauté/mode).\nTypography: script léger + sans. Ambience: délicat.\nTitle to render clearly: ATELIER CLOSET.\nSubtitle: Braced in beauty.\nMeta: Vêtements · sacs · bijoux. CTA: Découvrir.\nVertical fashion poster 3:4. Powder pink and soft white. A real photographed model belongs in the scene: she wears a look and holds a bag or jewelry, boutique setting. Not a product grid without a person. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as supporting props around her. FLYERMINT badge. No real boutique name.\nAt least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.\nOriginal artwork only. No real brand names, no copied logos, no celebrity likeness.",
       "regles_design_appliquees": [
         "palette limitée 2-3 couleurs",
         "2 familles typographiques max",
@@ -499,14 +500,16 @@
       ],
       "modele_texte_utilise": "",
       "modele_image_utilise": "gpt-image-2",
-      "cout_rodi": 6.276,
+      "cout_rodi": 6.496,
+      "fichier_image_master": "storage/masters/mode-03-master.webp",
+      "master_size": "1024x1536",
       "master_width": 1024,
       "master_height": 1536,
       "fichier_image_web": "/creations/mode-03.webp",
       "fichier_image": "/creations/mode-03.webp",
       "fichier_image_hero": "/creations/hero/mode-03.webp",
-      "poids_web_ko": 96.6,
-      "poids_ko": 96.6,
+      "poids_web_ko": 109.1,
+      "poids_ko": 109.1,
       "web_width": 1024,
       "web_height": 1536,
       "resize": "sharp lanczos3 width<=1600 webp q85",
@@ -514,8 +517,8 @@
       "visual_ref_used": false,
       "reference_categorisation": {
         "domaine": "Mode & Accessoires",
-        "style": "doux poudré",
-        "composition": "titre + une grille légère, pas d'encombrement",
+        "style": "doux poudré + mannequin",
+        "composition": "une personne réelle qui porte et tient les pièces, boutique, pas une grille produits seule",
         "palette": [
           "#F9E4E8",
           "#FFFFFF",
@@ -524,9 +527,7 @@
         "ambiance": "délicat"
       },
       "statut": "genere",
-      "hero_loop": true,
-      "fichier_image_master": "storage/masters/mode-03-master.webp",
-      "master_size": "1024x1536"
+      "hero_loop": true
     },
     {
       "id": "beaute-01",
@@ -1296,6 +1297,5 @@
       "fichier_image_master": "storage/masters/sante-tourisme-associations-03-master.webp",
       "master_size": "1024x1536"
     }
-  ],
-  "master_size_note": "1024x1536 (max portrait for GPT Image 2 — not 4K)"
+  ]
 }
