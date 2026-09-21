@@ -16,9 +16,13 @@ This document describes what that configuration does so it stays reviewable and 
 
 A local PostgreSQL instance is provisioned so the full, DB-backed app runs without any
 external service. The dev role, password, and database are all named `flyermint`, reachable
-on `localhost:5432`. The install step exports the matching `DATABASE_URL` for Prisma and
-writes it to a minimal `.env` (only when one is not already present), so real secrets
-provided through the dashboard always take precedence over the local default.
+on `localhost:5432`. The install step writes the matching `DATABASE_URL` to a minimal `.env`
+(only when one is not already present).
+
+A dashboard-provided `DATABASE_URL` secret is respected: install and start fall back to the
+local database only when `DATABASE_URL` is unset. As a safety guard, the schema sync and
+seed steps run **only** when `DATABASE_URL` points at `localhost`/`127.0.0.1`, so a real or
+remote database is never mutated by environment setup.
 
 The `.env` file is intentionally minimal (`DATABASE_URL` + `NEXT_PUBLIC_APP_URL`): copying
 `.env.example` verbatim sets `MONEY_FUSION_API_URL=` (empty), which fails the
@@ -27,6 +31,9 @@ The `.env` file is intentionally minimal (`DATABASE_URL` + `NEXT_PUBLIC_APP_URL`
 ## Install command (runs once, baked into the build snapshot)
 
 ```bash
+DB_USER=flyermint DB_PASSWORD=flyermint DB_NAME=flyermint
+LOCAL_DB_URL="postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME"
+
 # System dependency: PostgreSQL (idempotent)
 command -v pg_ctlcluster >/dev/null 2>&1 || { sudo apt-get update -qq; sudo apt-get install -y postgresql postgresql-contrib; }
 
@@ -39,27 +46,28 @@ sudo -u postgres psql -tAc "SELECT 1 FROM pg_roles WHERE rolname='flyermint'" | 
 sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='flyermint'" | grep -q 1 || sudo -u postgres createdb -O flyermint flyermint
 
 # Local dev env file (only if missing)
-[ -f .env ] || printf 'DATABASE_URL=%s\nNEXT_PUBLIC_APP_URL=http://localhost:3000\n' "$LOCAL_DATABASE_URL" > .env
+[ -f .env ] || printf 'DATABASE_URL=%s\nNEXT_PUBLIC_APP_URL=http://localhost:3000\n' "$LOCAL_DB_URL" > .env
 
 # Application dependencies + Prisma client
 npm install
 npx prisma generate
 
-# Sync schema + seed reference data
-export DATABASE_URL="$LOCAL_DATABASE_URL"
-npx prisma db push --skip-generate
-npm run db:seed
+# Sync schema + seed, only for a local database (respect a provided DATABASE_URL)
+export DATABASE_URL="${DATABASE_URL:-$LOCAL_DB_URL}"
+case "$DATABASE_URL" in
+  *@localhost:*|*@127.0.0.1:*) npx prisma db push --skip-generate; npm run db:seed ;;
+  *) echo "External DATABASE_URL detected; skipping prisma db push and seed." ;;
+esac
 ```
-
-Here `LOCAL_DATABASE_URL` is the local connection string for the `flyermint` role,
-password, and database on `localhost:5432` described above.
 
 ## Start command (runs on every boot)
 
 ```bash
+DB_USER=flyermint DB_PASSWORD=flyermint DB_NAME=flyermint
+LOCAL_DB_URL="postgresql://$DB_USER:$DB_PASSWORD@localhost:5432/$DB_NAME"
 sudo pg_ctlcluster 16 main start 2>/dev/null || true
 until pg_isready -h localhost -p 5432 >/dev/null 2>&1; do sleep 1; done
-export DATABASE_URL="$LOCAL_DATABASE_URL"
+export DATABASE_URL="${DATABASE_URL:-$LOCAL_DB_URL}"
 exec npm run dev
 ```
 
