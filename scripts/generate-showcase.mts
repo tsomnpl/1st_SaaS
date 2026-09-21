@@ -121,8 +121,9 @@ async function bufferToJpegDataUrl(buffer: Buffer) {
   const sharp = (await import("sharp")).default;
   const jpeg = await sharp(buffer)
     .rotate()
-    .resize({ width: 768, height: 1152, fit: "inside", withoutEnlargement: true })
-    .jpeg({ quality: 70 })
+    .resize({ width: 384, height: 576, fit: "inside", withoutEnlargement: true })
+    .blur(0.6)
+    .jpeg({ quality: 55 })
     .toBuffer();
   return { dataUrl: `data:image/jpeg;base64,${jpeg.toString("base64")}`, bytes: jpeg.length };
 }
@@ -417,15 +418,17 @@ function successEntry(params: {
     reference_image: visualRef?.storagePath ?? "",
     reference_source: visualRef?.source ?? "none",
     reference_analysis: dna,
-    human_present: qc ? qc.has_person : null,
-    design_rules_check: qc ? qc.design_rules : null,
-    reference_match_check: qc ? qc.composition_match : null,
+    human_present: qc && !qcWasSkipped(qc) ? qc.has_person : null,
+    design_rules_check: qc && !qcWasSkipped(qc) ? qc.design_rules : null,
+    reference_match_check: qc && !qcWasSkipped(qc) ? qc.composition_match : null,
+    bitmap_attached: Boolean(visualRef?.dataUrl) && String(model).toLowerCase().includes("gemini"),
+    reference_analyzed: Boolean(dna && dnaHasStructure(dna)),
     resolution: `${dims.masterWidth}x${dims.masterHeight}`,
     rodi: rodi,
-    qc,
+    qc: qc && !qcWasSkipped(qc) ? qc : null,
     reference_categorisation: referenceCategorisation(sheet),
     statut: "genere",
-    final_status: "VALIDATED",
+    final_status: qc && !qcWasSkipped(qc) && qc.pass ? "VALIDATED" : "GENERATED_QC_PENDING",
     hero_loop: false,
   };
 }
@@ -598,18 +601,19 @@ async function main() {
     const facts = [sheet.titre_affiche_finale, sheet.sous_titre_affiche_finale, sheet.meta, sheet.cta];
     const dnaSummary = dnaSummaryLine(dna);
 
-    try {
-      console.log("gen", sheet.id, gemini, visualRef ? visualRef.source : "no-ref", visualRef?.id ?? "", hero ? "hero" : "fill");
+    async function renderWith(model: string, attachBitmap: boolean) {
+      let nextPrompt = buildShowcasePrompt(sheet, attachBitmap && Boolean(visualRef?.dataUrl), dnaBlock);
       let result: { url: string; tokens: number; model: string } | null = null;
       let qc: PosterQcReport | null = null;
       let rodi = 0;
-      for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
+      const attempts = 2;
+      for (let attempt = 0; attempt < attempts; attempt += 1) {
         result = await callRodium({
           baseUrl,
           apiKey,
-          model: gemini,
-          prompt,
-          referenceDataUrl: visualRef?.dataUrl ?? "",
+          model,
+          prompt: nextPrompt,
+          referenceDataUrl: attachBitmap ? visualRef?.dataUrl ?? "" : "",
           size: MASTER_SIZE,
         });
         rodi = Number((rodi + estimateRodi(result.model, result.tokens)).toFixed(3));
@@ -621,32 +625,46 @@ async function main() {
           domain: sheet.domaine,
           facts,
           dnaSummary,
-          referenceImageUrl: visualRef?.dataUrl,
+          referenceImageUrl: attachBitmap ? visualRef?.dataUrl : undefined,
         });
-        console.log("qc", sheet.id, "attempt", attempt + 1, "pass", qc.pass, "human", qc.has_person, "generic", qc.looks_ai_generic, qc.issues.join("|"));
+        console.log("qc", sheet.id, model, "attempt", attempt + 1, "pass", qc.pass, "human", qc.has_person, "generic", qc.looks_ai_generic, qc.issues.join("|"));
         if (!shouldRepair(qc) || qcWasSkipped(qc)) break;
-        if (attempt === MAX_QC_ATTEMPTS - 1) break;
-        prompt = applyRepair(prompt, qc);
+        if (attempt === attempts - 1) break;
+        nextPrompt = applyRepair(nextPrompt, qc);
       }
       if (!result) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       if (qc && isCriticalQcFailure(qc)) {
         throw new Error(`RODIUM_QUALITY_FAILED_${(qc.issues.join("|") || "critical").slice(0, 120)}`);
       }
-      const buffer = await loadImageBuffer(result.url);
+      return { result, qc, rodi, prompt: nextPrompt };
+    }
+
+    try {
+      let rendered: Awaited<ReturnType<typeof renderWith>>;
+      try {
+        console.log("gen", sheet.id, gemini, visualRef ? visualRef.source : "no-ref", visualRef?.id ?? "", hero ? "hero" : "fill");
+        rendered = await renderWith(gemini, Boolean(visualRef?.dataUrl));
+      } catch (firstError) {
+        const message = firstError instanceof Error ? firstError.message : String(firstError);
+        console.error("gemini_fail", sheet.id, message);
+        console.log("fallback_gpt", sheet.id, gpt, "dna", Boolean(dnaBlock));
+        rendered = await renderWith(gpt, false);
+      }
+      const buffer = await loadImageBuffer(rendered.result.url);
       const dims = await writeMasterAndWeb(buffer, sheet.id);
       const entry = successEntry({
         sheet,
-        prompt,
-        model: result.model,
-        rodi,
+        prompt: rendered.prompt,
+        model: rendered.result.model,
+        rodi: rendered.rodi,
         dims,
         pageRef,
         visualRef,
         dna,
-        qc,
+        qc: rendered.qc,
       });
       fiches.push(entry);
-      console.log("ok", sheet.id, dims.masterWidth, "x", dims.masterHeight, entry.poids_web_ko, "Ko", result.model, "ref", visualRef?.id ?? "none");
+      console.log("ok", sheet.id, dims.masterWidth, "x", dims.masterHeight, entry.poids_web_ko, "Ko", rendered.result.model, "ref", visualRef?.id ?? "none");
       await persistOutputs(fiches);
     } catch (error) {
       fiches.push({

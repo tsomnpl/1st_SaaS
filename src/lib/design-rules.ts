@@ -26,11 +26,13 @@ export const GLOBAL_DESIGN_PROMPT = [
 
 export const STYLE_REFERENCE_PROMPT = [
   "A real poster bitmap is attached as the COMPOSITION MODEL (Gemini image-to-image).",
-  "Reproduce the STRUCTURE of that image as closely as a professional designer would: subject placement, title zone, price zone, CTA zone, margins, contrast rhythm, crop, and photo treatment.",
-  "Change the INFORMATION, not the layout. Put the client's name, title, date, time, venue, price, phone and CTA into the same visual logic.",
+  "Keep STRUCTURE only: subject placement, title zone, price zone, CTA zone, margins, contrast rhythm, crop, and photo treatment.",
+  "WIPE every original letter, logo, phone, price, date and brand from the attached image. Paint over source typography. Then write ONLY the client facts listed in this prompt.",
+  "If the attached poster has no person, ADD one photoreal person who belongs in this domain. The FlyerMint human rule overrides an empty landscape.",
   "If the client identity requires a different accent color, keep the same structure (dark ground / light type / one accent) and swap only the accent.",
   "Do NOT copy logos, brand names, celebrity likenesses, identifiable real people, or the exact source advertising copy.",
   "Never reuse a phone number, WhatsApp, email, address, social handle, price, or date visible on the reference — those belong to another business.",
+  "Do NOT invent a phone, email, WhatsApp, address, price or date that is not in the client facts.",
   "Do NOT invent a generic centered-person layout if the reference is split (person right, title left, price large, CTA bottom, logo small top).",
   "Do NOT treat the reference as a loose theme. It is the model to follow.",
 ].join(" ");
