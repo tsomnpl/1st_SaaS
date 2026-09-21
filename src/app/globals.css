@@ -1,25 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f7f8fb;
-  --foreground: #1e293b;
-  --night: #1e293b;
-  --violet: #6d28d9;
-  --blue: #3b82f6;
-  --mint: #10b981;
-  --orange: #f59e0b;
+  --background: #ffffff;
+  --foreground: #111827;
+  --night: #111827;
+  --mint: #20c997;
+  --mint-wash: #dffaf0;
+  --white: #ffffff;
   --card: #ffffff;
-  --line: rgba(30, 41, 59, 0.08);
+  --line: rgba(17, 24, 39, 0.08);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-night: var(--night);
-  --color-violet: var(--violet);
-  --color-blue: var(--blue);
   --color-mint: var(--mint);
-  --color-orange: var(--orange);
+  --color-mint-wash: var(--mint-wash);
   --font-sans: var(--font-jakarta);
 }
 
@@ -33,9 +30,14 @@ body {
 body {
   min-height: 100%;
   background:
-    radial-gradient(900px 420px at 8% -10%, rgba(109, 40, 217, 0.08), transparent 55%),
-    radial-gradient(700px 380px at 100% 0%, rgba(16, 185, 129, 0.08), transparent 50%),
+    radial-gradient(900px 420px at 8% -10%, rgba(32, 201, 151, 0.1), transparent 55%),
+    radial-gradient(700px 380px at 100% 0%, rgba(223, 250, 240, 0.7), transparent 50%),
     var(--background);
+}
+
+:focus-visible {
+  outline: 2px solid var(--mint);
+  outline-offset: 2px;
 }
 
 .card {
@@ -47,7 +49,7 @@ body {
 }
 
 .admin-sidebar {
-  @apply h-fit rounded-2xl border border-slate-800 bg-[#1E293B] p-4 text-white;
+  @apply h-fit rounded-2xl border border-slate-800 bg-[#111827] p-4 text-white;
 }
 
 .glass {
@@ -55,15 +57,15 @@ body {
 }
 
 .btn-primary {
-  @apply inline-flex items-center justify-center rounded-full bg-[#6D28D9] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(109,40,217,0.25)] transition hover:bg-[#5B21B6] disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex items-center justify-center rounded-full bg-[#111827] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(17,24,39,0.2)] transition hover:bg-[#1f2937] disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 .btn-secondary {
-  @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-violet-200 hover:text-violet-700;
+  @apply inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition hover:border-[#20C997] hover:text-[#111827];
 }
 
 .btn-mint {
-  @apply inline-flex items-center justify-center rounded-full bg-[#10B981] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_10px_24px_rgba(16,185,129,0.22)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60;
+  @apply inline-flex items-center justify-center rounded-full bg-[#20C997] px-5 py-2.5 text-sm font-semibold text-[#111827] shadow-[0_10px_24px_rgba(32,201,151,0.28)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60;
 }
 
 @keyframes floaty {

@@ -1,13 +1,18 @@
 import { prisma } from "@/lib/prisma";
-import { listRodiumImageModels } from "@/server/rodium";
+import { listRodiumImageModels, getRodiumWallet } from "@/server/rodium";
 import { getAdminStats } from "@/server/admin-stats";
 
 export default async function AdminRodiumPage() {
-  const [stats, models, recent] = await Promise.all([
+  const [stats, models, recent, wallet] = await Promise.all([
     getAdminStats("30"),
     listRodiumImageModels().catch(() => []),
     prisma.generation.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+    getRodiumWallet().catch(() => null),
   ]);
+  const walletBalance =
+    wallet && typeof wallet === "object"
+      ? (wallet.balance ?? wallet.credits ?? wallet.amount ?? null)
+      : null;
 
   return (
     <div className="space-y-4">
@@ -18,10 +23,11 @@ export default async function AdminRodiumPage() {
         <article className="admin-card p-4"><p className="text-sm text-slate-500">RODI 30 jours</p><p className="text-2xl font-bold">{stats.rodiMonth.toFixed(3)}</p></article>
         <article className="admin-card p-4"><p className="text-sm text-slate-500">RODI total</p><p className="text-2xl font-bold">{stats.rodiCost.toFixed(3)}</p></article>
       </div>
-      <div className="grid gap-3 md:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-4">
         <article className="admin-card p-4"><p className="text-sm text-slate-500">Coût moyen</p><p className="text-2xl font-bold">{stats.avgRodi.toFixed(3)}</p></article>
         <article className="admin-card p-4"><p className="text-sm text-slate-500">Durée moyenne</p><p className="text-2xl font-bold">{Math.round(stats.avgDurationMs / 1000)} s</p></article>
         <article className="admin-card p-4"><p className="text-sm text-slate-500">Erreurs</p><p className="text-2xl font-bold">{stats.generationsFailed}</p></article>
+        <article className="admin-card p-4"><p className="text-sm text-slate-500">Portefeuille Rodium</p><p className="text-2xl font-bold">{walletBalance == null ? "n/d" : String(walletBalance)}</p></article>
       </div>
       <section className="admin-card p-4">
         <h2 className="font-bold">Modèles</h2>

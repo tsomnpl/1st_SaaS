@@ -8,7 +8,16 @@ import {
   scoreQuality,
   type CreateBriefInput,
 } from "@/lib/flyermint";
-import { applyRepair, parseQcReport, qcPrompt, shouldRepair, skippedQcReport } from "@/lib/quality-control";
+import {
+  applyRepair,
+  isCriticalQcFailure,
+  MAX_QC_ATTEMPTS,
+  parseQcReport,
+  qcPrompt,
+  shouldRepair,
+  skippedQcReport,
+} from "@/lib/quality-control";
+import { firstAvailableStyleReference } from "@/lib/visual-references";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
@@ -33,7 +42,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   }
 
   const artDirection = buildArtDirection(brief);
-  let prompt = buildPrompt(brief, artDirection);
+  const styleReference = firstAvailableStyleReference(artDirection.visual_reference_paths);
+  let prompt = buildPrompt(brief, artDirection, { hasVisualReferenceImage: Boolean(styleReference) });
   const qualityScores = scoreQuality(brief, prompt);
 
   const generation = await prisma.$transaction(async (tx) => {
@@ -57,36 +67,38 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
-    const first = await generateWithRodium({ prompt, brief });
-    if (!first.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-
-    let imageUrl = first.imageUrl;
-    let model = first.model;
-    let rodiCost = first.rodiCostEstimate;
+    let imageUrl = "";
+    let model = "pending";
+    let rodiCost = 0;
     let qc = skippedQcReport();
     let repaired = false;
+    const modelsUsed: string[] = [];
 
-    const qcRaw = await reviewPosterQuality({
-      imageUrl,
-      prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
-    });
-    if (qcRaw) {
-      qc = parseQcReport(qcRaw);
-      if (shouldRepair(qc)) {
-        prompt = applyRepair(prompt, qc);
-        const second = await generateWithRodium({ prompt, brief });
-        if (second.imageUrl) {
-          imageUrl = second.imageUrl;
-          model = `${first.model}+repair:${second.model}`;
-          rodiCost = Number((first.rodiCostEstimate + second.rodiCostEstimate).toFixed(3));
-          repaired = true;
-          const secondQc = await reviewPosterQuality({
-            imageUrl,
-            prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
-          });
-          if (secondQc) qc = parseQcReport(secondQc);
-        }
-      }
+    for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
+      const rendered = await generateWithRodium({
+        prompt,
+        brief,
+        styleReferenceDataUrl: styleReference?.dataUrl,
+      });
+      if (!rendered.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+      imageUrl = rendered.imageUrl;
+      modelsUsed.push(rendered.model);
+      rodiCost = Number((rodiCost + rendered.rodiCostEstimate).toFixed(3));
+      model = modelsUsed.join("+repair:");
+
+      const qcRaw = await reviewPosterQuality({
+        imageUrl,
+        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format),
+      });
+      qc = qcRaw ? parseQcReport(qcRaw) : skippedQcReport();
+      if (!shouldRepair(qc)) break;
+      if (attempt === MAX_QC_ATTEMPTS - 1) break;
+      prompt = applyRepair(prompt, qc);
+      repaired = true;
+    }
+
+    if (isCriticalQcFailure(qc)) {
+      throw new Error("RODIUM_QUALITY_FAILED");
     }
 
     if (brief.rememberBrand) {
@@ -108,8 +120,10 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           ...qualityScores,
           qc,
           repaired,
+          visualReferenceIds: artDirection.visual_reference_ids,
+          visualReferencePath: styleReference?.path ?? null,
           durationMs: Date.now() - generation.createdAt.getTime(),
-          checks: ["human_required", "art_direction", "qc_vision"],
+          checks: ["human_required", "art_direction", "visual_library", "qc_vision", "format"],
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },
@@ -136,7 +150,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         {
           tx,
           reference: generation.id,
-          metadata: { reason: "RODIUM_FAILURE_REFUND" },
+          metadata: { reason: error instanceof Error ? error.message : "RODIUM_FAILURE_REFUND" },
         },
         null,
       );

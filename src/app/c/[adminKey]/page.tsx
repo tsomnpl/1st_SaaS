@@ -13,21 +13,21 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
   const base = getAdminBasePath();
   const cards = [
     ["Revenus aujourd’hui", `${stats.revenueToday.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#3B82F6"],
-    ["Revenus 7 jours", `${stats.revenueWeek.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#6D28D9"],
-    ["Revenus 30 jours", `${stats.revenueMonth.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#10B981"],
+    ["Revenus 7 jours", `${stats.revenueWeek.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#20C997"],
+    ["Revenus 30 jours", `${stats.revenueMonth.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#20C997"],
     ["Revenus total", `${stats.revenue.toLocaleString("fr-FR")} FCFA`, stats.revenueSeries.map((p) => p.value), "#F59E0B"],
-    ["Utilisateurs", String(stats.usersTotal), stats.userSeries.map((p) => p.value), "#6D28D9"],
+    ["Utilisateurs", String(stats.usersTotal), stats.userSeries.map((p) => p.value), "#20C997"],
     ["Nouveaux / actifs", `${stats.usersNewWeek} / ${stats.usersActive}`, stats.userSeries.map((p) => p.value), "#3B82F6"],
     ["Suspendus", String(stats.usersSuspended), [stats.usersSuspended], "#F59E0B"],
-    ["Mints restants", String(stats.remainingMints), stats.mintSeries.map((p) => p.value), "#10B981"],
+    ["Mints restants", String(stats.remainingMints), stats.mintSeries.map((p) => p.value), "#20C997"],
     ["Mints achetés", String(stats.mintsSold), stats.mintSeries.map((p) => p.value), "#3B82F6"],
-    ["Mints consommés", String(stats.mintsConsumed), stats.mintSeries.map((p) => p.value), "#6D28D9"],
+    ["Mints consommés", String(stats.mintsConsumed), stats.mintSeries.map((p) => p.value), "#20C997"],
     ["Mints expirés / gratuits", `${stats.mintsExpired} / ${stats.mintsFree}`, [stats.mintsExpired, stats.mintsFree], "#F59E0B"],
-    ["Mints admin / remboursés", `${stats.mintsAdminAdd} / ${stats.mintsRefunded}`, [stats.mintsAdminAdd, stats.mintsRefunded], "#10B981"],
-    ["Générations OK / KO", `${stats.generationsSuccess} / ${stats.generationsFailed}`, stats.generationSeries.map((p) => p.value), "#6D28D9"],
+    ["Mints admin / remboursés", `${stats.mintsAdminAdd} / ${stats.mintsRefunded}`, [stats.mintsAdminAdd, stats.mintsRefunded], "#20C997"],
+    ["Générations OK / KO", `${stats.generationsSuccess} / ${stats.generationsFailed}`, stats.generationSeries.map((p) => p.value), "#20C997"],
     ["Taux d’erreur", `${Math.round(stats.errorRate * 100)}%`, [stats.errorRate * 100], "#F59E0B"],
     ["Durée moyenne", `${Math.round(stats.avgDurationMs / 1000)} s`, [stats.avgDurationMs], "#3B82F6"],
-    ["RODI total / période", `${stats.rodiCost.toFixed(3)} / ${stats.rodiPeriod.toFixed(3)}`, stats.rodiSeries.map((p) => p.value), "#10B981"],
+    ["RODI total / période", `${stats.rodiCost.toFixed(3)} / ${stats.rodiPeriod.toFixed(3)}`, stats.rodiSeries.map((p) => p.value), "#20C997"],
     ["Paiements OK / pending", `${stats.successfulPayments} / ${stats.pendingPayments}`, [stats.successfulPayments, stats.pendingPayments], "#3B82F6"],
     ["Failed / cancelled", `${stats.failedPayments} / ${stats.cancelledPayments}`, [stats.failedPayments, stats.cancelledPayments], "#F59E0B"],
   ] as const;
@@ -69,7 +69,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
         ))}
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <BarChart label="Évolution des revenus" points={stats.revenueSeries} color="#6D28D9" />
+        <BarChart label="Évolution des revenus" points={stats.revenueSeries} color="#20C997" />
         <BarChart label="Générations" points={stats.generationSeries} color="#3B82F6" />
       </div>
       <section className="admin-card p-4">

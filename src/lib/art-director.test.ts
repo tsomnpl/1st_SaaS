@@ -33,8 +33,8 @@ describe("poster quality control", () => {
     expect(applyRepair("base prompt", report)).toMatch(/QUALITY REPAIR/);
   });
 
-  it("does not repair a skipped check", () => {
-    expect(shouldRepair(skippedQcReport())).toBe(false);
-    expect(shouldRepair(parseQcReport("not json"))).toBe(false);
+  it("repairs a skipped check instead of shipping it", () => {
+    expect(shouldRepair(skippedQcReport())).toBe(true);
+    expect(shouldRepair(parseQcReport("not json"))).toBe(true);
   });
 });

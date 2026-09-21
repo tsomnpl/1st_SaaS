@@ -45,7 +45,12 @@ export function isLikelyImageModel(modelId: string) {
   return IMAGE_MODEL_HINTS.some((hint) => id.includes(hint));
 }
 
-export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, available: string[] = []) {
+export function selectImageModel(
+  brief: CreateBriefInput,
+  finalPrompt: string,
+  available: string[] = [],
+  options: { hasStyleReference?: boolean } = {},
+) {
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();
   const textHeavyFields = [
@@ -64,13 +69,16 @@ export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, a
     if (brief.mainImageUrl || brief.logoUrl) {
       return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
     }
+    if (options.hasStyleReference) {
+      return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+    }
     if (textHeavyFields >= 6) {
       return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-2";
     }
     if (premiumKeywords.some((k) => promptText.includes(k))) {
       return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
     }
-    return env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-1-mini";
+    return env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-2";
   })();
 
   const allowed = getAllowedImageModels();
@@ -112,17 +120,24 @@ function rodiumHeaders() {
   };
 }
 
-export async function generateWithRodium(input: { prompt: string; brief: CreateBriefInput }) {
+export async function generateWithRodium(input: {
+  prompt: string;
+  brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
+}) {
   if (!env.RODIUMAI_API_KEY) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
   const available = await listRodiumImageModels();
-  const imageModel = selectImageModel(input.brief, input.prompt, available);
+  const imageModel = selectImageModel(input.brief, input.prompt, available, {
+    hasStyleReference: Boolean(input.styleReferenceDataUrl),
+  });
   const render = await renderImage({
     model: imageModel,
     prompt: input.prompt,
     brief: input.brief,
+    styleReferenceDataUrl: input.styleReferenceDataUrl,
   });
 
   const totalTokens = render.usage?.total_tokens ?? 0;
@@ -150,6 +165,7 @@ async function renderImage(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
 }) {
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
@@ -158,9 +174,14 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const reference = params.brief.mainImageUrl || params.brief.logoUrl;
-  if (reference?.startsWith("data:image/") && params.model.toLowerCase().includes("gemini")) {
-    body.image = reference;
+  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl;
+  const styleReference = params.styleReferenceDataUrl;
+  if (params.model.toLowerCase().includes("gemini")) {
+    if (clientReference?.startsWith("data:image/")) {
+      body.image = clientReference;
+    } else if (styleReference?.startsWith("data:image/")) {
+      body.image = styleReference;
+    }
   }
 
   const response = await fetch(endpoint, {

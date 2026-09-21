@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
@@ -88,13 +88,15 @@ export type ArtDirection = {
   format_variants: string[];
   reference_principles: string[];
   reference_ids: string[];
+  visual_reference_ids: string[];
+  visual_reference_paths: string[];
   avoid: string[];
   differentiators: string[];
 };
 
 export function buildArtDirection(input: CreateBriefInput): ArtDirection {
   const palette =
-    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#1E293B", "#6D28D9", "#10B981"];
+    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#111827", "#20C997", "#DFFAF0"];
   const inspiration = selectInspirationReferences(input);
   const playbook = inspiration.selected[0];
   const human = humanStagingFor(input.domain);
@@ -137,6 +139,8 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       ...inspiration.principles,
     ],
     reference_ids: inspiration.selected.map((ref) => ref.id),
+    visual_reference_ids: inspiration.visual.selected.map((ref) => ref.id),
+    visual_reference_paths: inspiration.visual.bitmapPaths,
     avoid: [
       "zero personne humaine",
       "peau plastique, visage cireux, mains deformees",
@@ -154,7 +158,11 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
   };
 }
 
-export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
+export function buildPrompt(
+  input: CreateBriefInput,
+  ad: ArtDirection,
+  options: { hasVisualReferenceImage?: boolean } = {},
+) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
     input.description && `Offer copy: ${input.description}`,
@@ -175,7 +183,7 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
-    STYLE_INSPIRATION_TEXT,
+    options.hasVisualReferenceImage ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
     `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
     `HUMAN SUBJECT (non-negotiable): at least one photoreal person. Role: ${ad.human.role}. Action: ${ad.human.action}. Framing: ${ad.human.framing}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
@@ -189,7 +197,15 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
     `FORMAT: ${ad.format}.`,
     `TITLE TO RENDER EXACTLY: ${input.title}.`,
     ...facts,
-    `Reference principles (inspire, never copy): ${ad.reference_principles.slice(0, 12).join(" || ")}.`,
+    input.creativeFreedom === "liberte_totale"
+      ? "Creative freedom: original composition and photography, still keeping facts exact and one photoreal human."
+      : input.creativeFreedom === "design_tres_precis"
+        ? "Follow the stated colors, mood and layout tightly. Do not invent a different identity."
+        : "Guided freedom: strong art direction, facts locked.",
+    ad.visual_reference_ids.length
+      ? `Visual library sheets (principles only, never copy): ${ad.visual_reference_ids.join(", ")}.`
+      : "",
+    `Reference principles (inspire, never copy): ${ad.reference_principles.slice(0, 16).join(" || ")}.`,
     `Avoid: ${ad.avoid.join("; ")}.`,
     "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
     "If it would not be publishable by a real local business, it is a failure.",
@@ -199,9 +215,22 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
 }
 
 export function factsForQc(input: CreateBriefInput) {
-  return [input.price, input.date, input.time, input.location, input.contactPhone, input.whatsapp, input.cta].filter(
-    Boolean,
-  ) as string[];
+  return [
+    input.title,
+    input.subtitle,
+    input.description,
+    input.price,
+    input.oldPrice,
+    input.newPrice,
+    input.date,
+    input.time,
+    input.location,
+    input.contactPhone,
+    input.whatsapp,
+    input.email,
+    input.cta,
+    ...Object.values(input.adaptiveData).filter(Boolean),
+  ].filter(Boolean) as string[];
 }
 
 export function mergeRegeneratedBrief(previous: CreateBriefInput, next: CreateBriefInput): CreateBriefInput {

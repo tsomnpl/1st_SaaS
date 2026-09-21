@@ -34,11 +34,11 @@ export function HeroPosterLoop({ posters }: { posters: HeroPoster[] }) {
       </div>
       <div className="glass absolute bottom-8 right-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
         Direction artistique
-        <p className="text-sm font-semibold text-[#6D28D9]">Hiérarchie · CTA · Safe zone</p>
+        <p className="text-sm font-semibold text-[#20C997]">Hiérarchie · CTA · Safe zone</p>
       </div>
       <div className="glass absolute right-4 top-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
         Mints
-        <p className="text-lg font-bold text-[#10B981]">1 affiche offerte</p>
+        <p className="text-lg font-bold text-[#20C997]">1 affiche offerte</p>
       </div>
     </div>
   );

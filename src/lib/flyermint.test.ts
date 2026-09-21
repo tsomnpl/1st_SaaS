@@ -40,6 +40,8 @@ describe("flyermint core", () => {
     expect(prompt).toMatch(/HUMAN SUBJECT/);
     expect(prompt).toMatch(/photoreal person/);
     expect(prompt).toContain("Masterclass Business");
+    expect(ad.visual_reference_ids.length).toBeGreaterThan(0);
+    expect(ad.color_palette).toEqual(["#111827", "#20C997", "#DFFAF0"]);
   });
 
   it("computes quality score in expected range", () => {

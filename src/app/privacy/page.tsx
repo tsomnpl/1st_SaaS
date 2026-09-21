@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
+import { LegalNav } from "@/components/legal/legal-nav";
 
 export const metadata: Metadata = {
   title: pageTitle("Confidentialité"),
@@ -56,12 +58,20 @@ export default function PrivacyPage() {
         <li>Analytics : chargés seulement après consentement, et seulement si un domaine analytics est configuré.</li>
         <li>Aucun autre cookie marketing n’est chargé par FlyerMint.</li>
       </ul>
+      <p className="mt-3 text-slate-700">
+        Le détail et la modification du choix sont dans la{" "}
+        <Link href="/cookies" className="font-semibold text-[#20C997] underline-offset-2 hover:underline">
+          politique de cookies
+        </Link>
+        .
+      </p>
       <h2 className="mt-10 text-2xl font-bold">Tes droits</h2>
       <p className="mt-3 text-slate-700">
         Tu peux demander l’accès, la rectification ou la suppression des données liées à ton
         compte depuis l’adresse e-mail associée à ce compte. L’administrateur peut suspendre
         un compte en cas d’abus. Aucun canal e-mail public supplémentaire n’est inventé ici.
       </p>
+      <LegalNav current="/privacy" />
     </article>
   );
 }

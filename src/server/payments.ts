@@ -95,6 +95,24 @@ export async function initMoneyFusionPayment(params: {
   return { checkoutUrl: body.url, tokenPay: body.token, orderId: payment.orderId };
 }
 
+export function extractPaymentToken(payload: Record<string, unknown>) {
+  const nestedData = isRecord(payload.data) ? payload.data : undefined;
+  return String(payload.tokenPay ?? payload.token ?? nestedData?.token ?? "").trim();
+}
+
+export async function confirmVerifiedPayment(token: string, webhookBody?: Record<string, unknown>) {
+  const remote = await verifyMoneyFusionToken(token);
+  const remoteStatus = String(
+    remote.status ?? remote.statut ?? webhookBody?.status ?? webhookBody?.statut ?? "pending",
+  );
+  return confirmPaymentByToken(token, {
+    ...(webhookBody ?? {}),
+    ...remote,
+    status: remoteStatus,
+    statut: remoteStatus,
+  });
+}
+
 export async function verifyMoneyFusionToken(token: string) {
   assertMoneyFusionConfigured();
   const verifyUrl = `https://pay.moneyfusion.net/paiementNotif/${token}`;
@@ -245,4 +263,8 @@ function getNumericField(payload: Record<string, unknown> | undefined, keys: str
     }
   }
   return undefined;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }

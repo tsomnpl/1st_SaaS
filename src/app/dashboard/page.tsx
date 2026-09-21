@@ -26,7 +26,7 @@ export default async function DashboardPage() {
       <section className="card flex flex-col justify-between gap-6 p-6 md:flex-row md:items-center">
         <div>
           <p className="text-sm text-slate-500">Tes Mints</p>
-          <h1 className="mt-1 text-3xl font-extrabold text-[#1E293B]">
+          <h1 className="mt-1 text-3xl font-extrabold text-[#111827]">
             {balance} Mint{balance > 1 ? "s" : ""} restant{balance > 1 ? "s" : ""}
           </h1>
           <p className="mt-1 text-sm text-slate-500">1 Mint = 1 affiche · l’export ne consomme rien</p>
@@ -44,7 +44,7 @@ export default async function DashboardPage() {
       <section className="card p-6">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-bold">Dernières créations</h2>
-          <Link href="/history" className="text-sm font-semibold text-[#6D28D9]">
+          <Link href="/history" className="text-sm font-semibold text-[#20C997]">
             Historique
           </Link>
         </div>

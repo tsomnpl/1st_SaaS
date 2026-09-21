@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
+import { LegalNav } from "@/components/legal/legal-nav";
 
 export const metadata: Metadata = {
   title: pageTitle("Conditions d’utilisation"),
@@ -32,7 +34,11 @@ export default function TermsPage() {
       <p className="mt-3 text-slate-700">
         Le retour navigateur après Money Fusion n’est pas une preuve de paiement. Les Mints
         sont crédités uniquement après confirmation serveur, une seule fois par transaction.
-        Un paiement en attente, annulé ou échoué ne crédite rien.
+        Un paiement en attente, annulé ou échoué ne crédite rien. Le détail est dans la{" "}
+        <Link href="/refund" className="font-semibold text-[#20C997] underline-offset-2 hover:underline">
+          politique de remboursement
+        </Link>
+        .
       </p>
       <h2 className="mt-10 text-2xl font-bold">Générations et exports</h2>
       <p className="mt-3 text-slate-700">
@@ -64,6 +70,7 @@ export default function TermsPage() {
         artistique n’est donnée. Le service est fourni en l’état, selon les fonctionnalités
         réellement implémentées.
       </p>
+      <LegalNav current="/terms" />
     </article>
   );
 }

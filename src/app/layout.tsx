@@ -3,8 +3,18 @@ import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/chrome/public-chrome";
 import "./globals.css";
 
+function safeMetadataBase() {
+  const raw = process.env.NEXT_PUBLIC_APP_URL;
+  try {
+    if (raw && /^https?:\/\//i.test(raw)) return new URL(raw);
+  } catch {
+    // ignore invalid configured URL
+  }
+  return new URL("http://localhost:3000");
+}
+
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://flyermint-t.vercel.app"),
+  metadataBase: safeMetadataBase(),
   title: {
     default: "FlyerMint — Créez des visuels qui marquent",
     template: "%s — FlyerMint",
@@ -34,8 +44,8 @@ export const dynamic = "force-dynamic";
 
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#6D28D9",
-    colorText: "#1E293B",
+    colorPrimary: "#20C997",
+    colorText: "#111827",
     colorBackground: "#FFFFFF",
     borderRadius: "0.9rem",
     fontFamily: "Plus Jakarta Sans, sans-serif",

@@ -22,7 +22,7 @@ export default async function AdminPaymentDetailPage({ params }: { params: Param
 
   return (
     <div className="space-y-4">
-      <Link href={`${getAdminBasePath()}/payments`} className="text-sm text-[#6D28D9]">
+      <Link href={`${getAdminBasePath()}/payments`} className="text-sm text-[#20C997]">
         ← Paiements
       </Link>
       <h1 className="text-3xl font-extrabold">{payment.orderId}</h1>
