@@ -16,6 +16,7 @@ const MASTER_SIZE = "1024x1536";
 const FALLBACK_SIZE = "1024x1536";
 const FORCE_REGEN = process.env.FORCE_REGEN === "1";
 const FORCE_REGEN_ALL = process.env.FORCE_REGEN === "all";
+const ONLY_ID = process.env.ONLY_ID?.trim() || "";
 
 const HERO_IDS = [
   "evenementiel-01",
@@ -337,7 +338,11 @@ async function main() {
     const mapRow = pageMap.fiches.find((row) => row.id === sheet.id);
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
     const hero = HERO_IDS.includes(sheet.id);
-    const model = hero ? gpt : sheet.premium ? geminiPremium : geminiFast;
+    const model = gpt;
+    if (ONLY_ID && sheet.id !== ONLY_ID) {
+      if (previous) fiches.push(previous);
+      continue;
+    }
     const attachBitmap = model.toLowerCase().includes("gemini") && Boolean(mapRow?.local_ref_path);
     const prompt = buildShowcasePrompt(sheet, attachBitmap);
     const categorisation = referenceCategorisation(sheet);

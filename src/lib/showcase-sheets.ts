@@ -354,14 +354,14 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     id: "sante-tourisme-associations-03",
     domaine: "Santé/Tourisme/Associations",
     titre_original_catalogue: "Campagne de Solidarité PECS (Kinshasa)",
-    titre_affiche_finale: "SOLIDARITÉ ENFANCE",
-    sous_titre_affiche_finale: "Enfants de rue · Kinshasa",
-    meta: "Centre Bongisa · Ngaliema",
+    titre_affiche_finale: "SOLIDARITÉ",
+    sous_titre_affiche_finale: "Centre communautaire",
+    meta: "Ngaliema · Kinshasa",
     cta: "Soutenir",
     tone: "clean",
     premium: false,
     prompt:
-      "Vertical solidarity poster 3:4. Reassuring turquoise. Title SOLIDARITE ENFANCE. For street children, Centre Bongisa, Ngaliema. Calm documentary photography style, respectful, no logos of real NGOs. FLYERMINT badge.",
+      "Vertical community-support poster 3:4. Reassuring turquoise. Title SOLIDARITE. Adult volunteers at a community center in Ngaliema, hopeful and respectful. No minors, no distress, no real NGO logos. FLYERMINT badge. Adult volunteers only.",
   },
 ];
 
