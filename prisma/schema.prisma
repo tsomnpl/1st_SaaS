@@ -55,6 +55,7 @@ model User {
   creditTransactions CreditTransaction[]
   payments           Payment[]
   generations        Generation[]
+  brandKit           BrandKit?
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
 }
 
@@ -131,6 +132,16 @@ model CreditTransaction {
   @@index([userId, createdAt])
 }
 
+model BrandKit {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  colors    String[]
+  logoUrl   String?  @db.Text
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
 model Generation {
   id             String           @id @default(cuid())
   userId         String
@@ -175,4 +186,14 @@ model AdminLog {
   metadata   Json?
   createdAt  DateTime @default(now())
   admin      User     @relation("AdminActorLogs", fields: [adminUserId], references: [id])
+}
+
+model WebhookEvent {
+  id        String   @id @default(cuid())
+  provider  String
+  eventKey  String   @unique
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([provider, createdAt])
 }

@@ -1,0 +1,50 @@
+{
+  "source_pdf": "docs/inspirations/catalogue-analyse-affiches.pdf",
+  "note": "Exemples génériques calqués sur le grain du catalogue (6 pages). Aucune marque réelle recopiée.",
+  "champs": ["arriere_plan", "textes", "visuel", "palette_dominante", "style_general"],
+  "regles": [
+    "Arrière-plan: matière + température + texture + lumière (dégradé, uni, fumée, papier, ciel, interface).",
+    "Textes: hiérarchie et placement (haut/centre/bas, encart, bandeau, médaillons) + traitement typo (gras, 3D, incliné, capitales). Jamais le wording visible ni une marque.",
+    "Visuel: sujet, cadrage, pose, traitement (gros plan plat, profil, grille photos, maquette téléphone).",
+    "Palette: 2-3 hex dominants réellement vus.",
+    "Style: une étiquette courte (dramatique, épuré, urgent, editorial, corporate)."
+  ],
+  "exemples": [
+    {
+      "arriere_plan": "Dégradé dramatique aux tons chauds (ambre, brun, orange foncé) avec effets de fumée ou brume.",
+      "textes": "Petit label en haut, titre central massif à effet 3D brillant, bande d'infos et élément graphique minimaliste en bas.",
+      "visuel": "Profil d'un jeune homme regardant vers le haut, éclairage contrasté.",
+      "style_general": "dramatique, concert, tons chauds"
+    },
+    {
+      "arriere_plan": "Beige clair uni et épuré.",
+      "textes": "Emblème circulaire en tête, nom du lieu sous le symbole, encart central d'annonce, options secondaires en bas.",
+      "visuel": "Peu ou pas de photo : composition typographique centrée.",
+      "style_general": "épuré, restauration, fond uni"
+    },
+    {
+      "arriere_plan": "Tons sombres et chaleureux.",
+      "textes": "Mention promo en haut, nom du plat en fort contraste, prix réduit très lisible à côté d'un prix barré.",
+      "visuel": "Bol ou plat fumant en gros plan, texture des ingrédients nette.",
+      "style_general": "appétissant, promo, close-up"
+    },
+    {
+      "arriere_plan": "Rose poudré et blanc doux.",
+      "textes": "Nom de boutique discret, promesse courte, liste de catégories, grille de visuels produits.",
+      "visuel": "Grille de photos vêtements / accessoires, air autour des objets.",
+      "style_general": "editorial mode, doux"
+    },
+    {
+      "arriere_plan": "Bleu nuit profond avec une vague d'accent clair.",
+      "textes": "Question-titre en haut, pastilles de types de biens, mention d'avantage, contacts en bas.",
+      "visuel": "Photos d'intérieurs en bandeau ou mosaïque.",
+      "style_general": "immobilier, confiance, contrasté"
+    },
+    {
+      "arriere_plan": "High-tech sombre et lumineux, reflets d'interface.",
+      "textes": "Promesse courte, trois métriques en cartes, CTA unique.",
+      "visuel": "Maquette d'écran ou de carte, profondeur sombre.",
+      "style_general": "saas, sombre, lumineux"
+    }
+  ]
+}

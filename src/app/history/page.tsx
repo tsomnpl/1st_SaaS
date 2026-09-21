@@ -1,69 +1,86 @@
+import type { Metadata } from "next";
+import Link from "next/link";
+import { pageTitle } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  title: pageTitle("Historique"),
+  robots: { index: false, follow: false },
+};
 import { prisma } from "@/lib/prisma";
-import { getOrCreateCurrentUser } from "@/server/users";
+import { requireActiveCurrentUser } from "@/server/users";
+import { userHasEditableExport } from "@/server/generation";
 
 export default async function HistoryPage() {
-  const user = await getOrCreateCurrentUser();
-  const [generations, transactions, payments] = await Promise.all([
-    prisma.generation.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    }),
-    prisma.creditTransaction.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-    }),
-    prisma.payment.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 20,
-      include: { plan: true },
-    }),
-  ]);
+  const user = await requireActiveCurrentUser();
+  const canExport = await userHasEditableExport(user.id);
+  const generations = await prisma.generation.findMany({
+    where: { userId: user.id },
+    orderBy: { createdAt: "desc" },
+    take: 40,
+  });
 
   return (
     <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Historique</h1>
-
-      <section className="card p-5">
-        <h2 className="text-xl font-semibold">Generations</h2>
-        <div className="mt-3 space-y-2 text-sm">
-          {generations.map((g) => (
-            <div key={g.id} className="rounded bg-white/5 p-3">
-              <p className="font-medium">{String((g.brief as { title?: string })?.title ?? "Sans titre")}</p>
-              <p className="text-white/70">Status: {g.status} | Model: {g.model} | Mint: {g.mintCost}</p>
-            </div>
-          ))}
-          {generations.length === 0 && <p className="text-white/70">Aucune generation.</p>}
+      <div className="flex items-end justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-extrabold">Historique</h1>
+          <p className="mt-1 text-slate-600">Tes affiches, prêtes à télécharger.</p>
         </div>
-      </section>
+        <Link href="/create" className="btn-primary">
+          Créer une affiche
+        </Link>
+      </div>
 
-      <section className="card p-5">
-        <h2 className="text-xl font-semibold">Transactions Mints</h2>
-        <div className="mt-3 space-y-2 text-sm">
-          {transactions.map((t) => (
-            <div key={t.id} className="rounded bg-white/5 p-3">
-              <p>{t.type} | {t.amount > 0 ? `+${t.amount}` : t.amount} Mint</p>
-              <p className="text-white/70">Solde: {t.balanceBefore} {"->"} {t.balanceAfter}</p>
-            </div>
-          ))}
-          {transactions.length === 0 && <p className="text-white/70">Aucune transaction.</p>}
+      {generations.length === 0 ? (
+        <div className="card p-8 text-center text-slate-500">Aucune création pour l’instant.</div>
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {generations.map((generation) => {
+            const brief = generation.brief as { title?: string; domain?: string };
+            return (
+              <article key={generation.id} className="card overflow-hidden">
+                {generation.outputUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={generation.outputUrl} alt="" className="aspect-[3/4] w-full object-cover" />
+                ) : (
+                  <div className="flex aspect-[3/4] items-center justify-center bg-slate-50 text-sm text-slate-400">
+                    {generation.status === "FAILED" ? "Génération échouée" : "En cours"}
+                  </div>
+                )}
+                <div className="space-y-2 p-4">
+                  <p className="font-semibold">{brief.title ?? "Sans titre"}</p>
+                  <p className="text-xs text-slate-500">
+                    {brief.domain ?? "—"} · {new Date(generation.createdAt).toLocaleDateString("fr-FR")}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {generation.outputUrl ? (
+                      <a href={generation.outputUrl} download className="text-sm font-semibold text-[#6D28D9]">
+                        Télécharger
+                      </a>
+                    ) : null}
+                    {canExport && generation.outputUrl ? (
+                      <a
+                        href={`/api/generations/${generation.id}/export`}
+                        className="text-sm font-semibold text-slate-600"
+                      >
+                        Pack éditable
+                      </a>
+                    ) : null}
+                    {generation.outputUrl ? (
+                      <Link
+                        href={`/create?from=${generation.id}&format=whatsapp_status`}
+                        className="text-sm font-semibold text-slate-600"
+                      >
+                        Décliner en statut WhatsApp
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
-      </section>
-
-      <section className="card p-5">
-        <h2 className="text-xl font-semibold">Paiements</h2>
-        <div className="mt-3 space-y-2 text-sm">
-          {payments.map((p) => (
-            <div key={p.id} className="rounded bg-white/5 p-3">
-              <p>{p.plan.name} - {p.amountFcfa.toLocaleString("fr-FR")} FCFA</p>
-              <p className="text-white/70">Status: {p.status} | orderId: {p.orderId}</p>
-            </div>
-          ))}
-          {payments.length === 0 && <p className="text-white/70">Aucun paiement.</p>}
-        </div>
-      </section>
+      )}
     </div>
   );
 }

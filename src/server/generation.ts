@@ -3,19 +3,39 @@ import {
   buildArtDirection,
   buildPrompt,
   createBriefSchema,
+  factsForQc,
+  mergeRegeneratedBrief,
   scoreQuality,
+  type CreateBriefInput,
 } from "@/lib/flyermint";
+import { applyRepair, parseQcReport, qcPrompt, shouldRepair, skippedQcReport } from "@/lib/quality-control";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
-import { generateWithRodium } from "@/server/rodium";
+import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
+import { saveBrandKit } from "@/server/brand-kit";
+import { loadDomainInspirationAnalyses } from "@/lib/inspiration-source";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
   if (!user) throw new Error("USER_NOT_FOUND");
+  if (user.status === "SUSPENDED") throw new Error("ACCOUNT_SUSPENDED");
 
-  const brief = createBriefSchema.parse(unsafeInput);
-  const artDirection = buildArtDirection(brief);
-  const prompt = buildPrompt(brief, artDirection);
+  let brief = createBriefSchema.parse(unsafeInput);
+  if (brief.regenerateFromId) {
+    const previous = await prisma.generation.findFirst({
+      where: { id: brief.regenerateFromId, userId: user.id, status: GenerationStatus.COMPLETED },
+    });
+    if (previous) {
+      const parsed = createBriefSchema.safeParse(previous.brief);
+      if (parsed.success) {
+        brief = mergeRegeneratedBrief(parsed.data, brief);
+      }
+    }
+  }
+
+  const library = await loadDomainInspirationAnalyses(brief.domain, 3);
+  const artDirection = buildArtDirection(brief, library);
+  let prompt = buildPrompt(brief, artDirection);
   const qualityScores = scoreQuality(brief, prompt);
 
   const generation = await prisma.$transaction(async (tx) => {
@@ -39,20 +59,60 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
-    const result = await generateWithRodium({ prompt, brief });
-    const parsedOutput = safeJsonParse(result.rawText);
-    const outputUrl = String(
-      (parsedOutput && (parsedOutput.imageUrl as string)) || "",
-    );
+    const first = await generateWithRodium({ prompt, brief });
+    if (!first.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+
+    let imageUrl = first.imageUrl;
+    let model = first.model;
+    let rodiCost = first.rodiCostEstimate;
+    let qc = skippedQcReport();
+    let repaired = false;
+
+    const qcRaw = await reviewPosterQuality({
+      imageUrl,
+      prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+    });
+    if (qcRaw) {
+      qc = parseQcReport(qcRaw);
+      if (shouldRepair(qc)) {
+        prompt = applyRepair(prompt, qc);
+        const second = await generateWithRodium({ prompt, brief });
+        if (second.imageUrl) {
+          imageUrl = second.imageUrl;
+          model = `${first.model}+repair:${second.model}`;
+          rodiCost = Number((first.rodiCostEstimate + second.rodiCostEstimate).toFixed(3));
+          repaired = true;
+          const secondQc = await reviewPosterQuality({
+            imageUrl,
+            prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+          });
+          if (secondQc) qc = parseQcReport(secondQc);
+        }
+      }
+    }
+
+    if (brief.rememberBrand) {
+      await saveBrandKit(user.id, {
+        colors: brief.colors.slice(0, 3),
+        logoUrl: brief.logoUrl,
+      });
+    }
 
     const updated = await prisma.generation.update({
       where: { id: generation.id },
       data: {
-        model: result.model,
-        rodiCost: result.rodiCostEstimate,
-        outputUrl: outputUrl || null,
+        prompt,
+        model,
+        rodiCost,
+        outputUrl: imageUrl,
         qualityScore: qualityScores.overall_score,
-        qualityDetails: qualityScores as Prisma.JsonObject,
+        qualityDetails: {
+          ...qualityScores,
+          qc,
+          repaired,
+          durationMs: Date.now() - generation.createdAt.getTime(),
+          checks: ["human_required", "art_direction", "qc_vision"],
+        } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },
     });
@@ -62,9 +122,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       outputUrl: updated.outputUrl,
       quality: qualityScores,
       artDirection,
-      differentiators: artDirection.differentiators,
-      costRodi: result.rodiCostEstimate,
-      model: result.model,
+      repaired,
     };
   } catch (error) {
     await prisma.$transaction(async (tx) => {
@@ -90,10 +148,15 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   }
 }
 
-function safeJsonParse(value: string): Record<string, unknown> | null {
-  try {
-    return JSON.parse(value);
-  } catch {
-    return null;
-  }
+export async function userHasEditableExport(userId: string) {
+  const paid = await prisma.payment.findFirst({
+    where: {
+      userId,
+      status: "COMPLETED",
+      plan: { editableExport: true },
+    },
+  });
+  return Boolean(paid);
 }
+
+export type { CreateBriefInput };

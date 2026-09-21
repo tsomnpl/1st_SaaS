@@ -1,35 +1,65 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
+import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
+import { catalogueStyleNotesFor } from "@/lib/catalogue-refs";
+import {
+  formatInspirationForPrompt,
+  type InspirationAnalysis,
+} from "@/lib/inspiration-source";
+
+function isSafeImageRef(value: string) {
+  if (value.startsWith("https://")) return true;
+  const match = value.match(/^data:image\/(jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=\s]+)$/i);
+  if (!match) return false;
+  const padding = (match[2].match(/=+$/) ?? [""])[0].length;
+  const bytes = Math.floor((match[2].replace(/\s/g, "").length * 3) / 4) - padding;
+  return bytes > 0 && bytes <= 2_000_000;
+}
+
+const imageRef = z.string().refine(isSafeImageRef, "INVALID_IMAGE").optional();
+
+const optionalPhone = z
+  .string()
+  .optional()
+  .refine((value) => !value || /^[0-9+\s().-]{6,20}$/.test(value), "INVALID_PHONE");
+const optionalEmail = z
+  .string()
+  .optional()
+  .refine((value) => !value || z.string().email().safeParse(value).success, "INVALID_EMAIL");
+const optionalText = (max: number) => z.string().max(max).optional();
 
 export const createBriefSchema = z.object({
-  visualType: z.string().min(2),
+  visualType: z.string().min(2).max(80),
   domain: z.enum(DOMAINS),
-  objective: z.string().min(2),
-  targetAudience: z.string().min(2),
-  title: z.string().min(2),
-  subtitle: z.string().optional(),
-  description: z.string().optional(),
-  price: z.string().optional(),
-  oldPrice: z.string().optional(),
-  newPrice: z.string().optional(),
-  date: z.string().optional(),
-  time: z.string().optional(),
-  location: z.string().optional(),
-  contactPhone: z.string().optional(),
-  whatsapp: z.string().optional(),
-  email: z.string().optional(),
-  cta: z.string().optional(),
-  style: z.string().optional(),
-  colors: z.array(z.string()).default([]),
-  mood: z.string().optional(),
-  format: z.string().min(2),
+  objective: z.string().min(2).max(240),
+  targetAudience: z.string().min(2).max(240),
+  title: z.string().min(2).max(120),
+  subtitle: optionalText(160),
+  description: optionalText(2000),
+  price: optionalText(40),
+  oldPrice: optionalText(40),
+  newPrice: optionalText(40),
+  date: optionalText(40),
+  time: optionalText(40),
+  location: optionalText(160),
+  contactPhone: optionalPhone,
+  whatsapp: optionalPhone,
+  email: optionalEmail,
+  cta: optionalText(80),
+  style: optionalText(80),
+  colors: z.array(z.string().max(40)).max(8).default([]),
+  mood: optionalText(80),
+  format: z.string().min(2).max(40),
   creativeFreedom: z
     .enum(["liberte_totale", "liberte_guidee", "design_tres_precis"])
     .default("liberte_guidee"),
-  mainImageUrl: z.string().url().optional(),
-  logoUrl: z.string().url().optional(),
-  adaptiveData: z.record(z.string(), z.string()).default({}),
+  mainImageUrl: imageRef,
+  logoUrl: imageRef,
+  regenerateFromId: z.string().min(3).max(80).optional(),
+  rememberBrand: z.boolean().optional(),
+  adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
 });
 
 export type CreateBriefInput = z.infer<typeof createBriefSchema>;
@@ -37,6 +67,14 @@ export type CreateBriefInput = z.infer<typeof createBriefSchema>;
 export type ArtDirection = {
   concept: string;
   main_subject: string;
+  human: {
+    role: string;
+    action: string;
+    framing: string;
+    wardrobe: string;
+    expression: string;
+    why: string;
+  };
   secondary_elements: string[];
   composition: string;
   visual_hierarchy: string[];
@@ -47,108 +85,146 @@ export type ArtDirection = {
   };
   background: string;
   lighting: string;
+  photography: string;
   mood: string;
   negative_space: string;
   cta: string;
   format: string;
+  format_variants: string[];
   reference_principles: string[];
   reference_ids: string[];
   avoid: string[];
   differentiators: string[];
 };
 
-export function buildArtDirection(input: CreateBriefInput): ArtDirection {
+export function buildArtDirection(
+  input: CreateBriefInput,
+  library: InspirationAnalysis[] = [],
+): ArtDirection {
   const palette =
-    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#111827", "#20C997", "#FFFFFF"];
+    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#1E293B", "#6D28D9", "#10B981"];
   const inspiration = selectInspirationReferences(input);
+  const playbook = inspiration.selected[0];
+  const human = humanStagingFor(input.domain);
+  const catalogueNotes = catalogueStyleNotesFor(input.domain);
+  const libraryIds = library.map((item) => `insp-${item.id}`);
 
   return {
-    concept: `${input.style ?? "moderne"} orientee conversion pour ${input.domain}`,
-    main_subject: input.mainImageUrl ? "image utilisateur principale" : input.title,
+    concept: `${input.style ?? playbook?.style ?? "moderne"} — direction artistique ${input.domain}`,
+    main_subject: input.mainImageUrl ? "personne/photo fournie par le client (ne pas remplacer)" : human.role,
+    human,
     secondary_elements: [input.subtitle, input.description, input.location].filter(Boolean) as string[],
-    composition: "hero central avec zone texte lisible et CTA contrastant",
+    composition: playbook?.composition ?? "un heros humain, un message, un CTA",
     visual_hierarchy: [
       `Titre: ${input.title}`,
       input.price ? `Prix: ${input.price}` : "Offre principale",
       input.cta ? `CTA: ${input.cta}` : "Call to action visible",
-      "Infos pratiques",
+      "Infos pratiques groupees",
     ],
     color_palette: palette,
     typography: {
-      heading: "Sans Serif Bold",
-      body: "Sans Serif Regular",
+      heading: "Display impact (une famille)",
+      body: "Sans lisible (deuxieme famille max)",
     },
-    background: "fond propre a contraste eleve",
-    lighting: "eclairage doux axe sur le sujet principal",
-    mood: input.mood ?? "professionnel",
-    negative_space: "marges de respiration autour titre et CTA",
+    background: playbook?.imageTreatment ?? "fond photographique coherent",
+    lighting: "lumiere photographique commerciale, ombres coherentes",
+    photography: "photographie publicitaire realiste, peau naturelle, mains correctes, pas de look IA",
+    mood: input.mood ?? playbook?.mood ?? "professionnel",
+    negative_space: "safe zone pour titre et CTA, ne pas coller les bords",
     cta: input.cta ?? "Contactez-nous",
     format: input.format,
+    format_variants: [
+      "instagram_post 1:1 — sujet un peu plus centre",
+      "instagram_story / whatsapp_status 9:16 — sujet bas, titre haut",
+      "affiche_a4 / affiche_a3 — plus de marge print, meme identite",
+    ],
     reference_principles: [
+      "une personne humaine obligatoire, integree, naturelle",
       "lisibilite prioritaire",
       "grille et alignements constants",
       "contraste fort texte/fond",
       "2-3 couleurs principales maximum",
       ...inspiration.principles,
+      ...catalogueNotes,
+      ...formatInspirationForPrompt(library),
     ],
-    reference_ids: inspiration.selected.map((ref) => ref.id),
+    reference_ids: [...inspiration.selected.map((ref) => ref.id), ...libraryIds],
     avoid: [
-      "texte colle aux bords",
-      "effets excessifs qui nuisent a la lisibilite",
+      "zero personne humaine",
+      "peau plastique, visage cireux, mains deformees",
+      "texte colle aux bords ou lettres illegibles",
+      "collage de 5 elements sans hierarchie",
       "copie directe d'une reference",
+      "faits inventes (date, prix, tel)",
     ],
     differentiators: [
-      "angle commercial explicite selon objectif",
-      "CTA calibre pour conversion",
-      "structure premium reutilisable multi-format",
-      "adaptation domaine automatique",
-      "coherence visuelle multi-campagne",
+      "directeur artistique par domaine, pas un template unique",
+      "personne + produit/service + message dans une seule composition",
+      "identite reutilisable multi-format",
+      "CTA calibre conversion (WhatsApp/telephone si fourni)",
     ],
   };
 }
 
 export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
+  const facts = [
+    input.subtitle && `Subtitle: ${input.subtitle}`,
+    input.description && `Offer copy: ${input.description}`,
+    input.price && `Price (exact): ${input.price}`,
+    input.oldPrice && `Old price (exact): ${input.oldPrice}`,
+    input.newPrice && `New price (exact): ${input.newPrice}`,
+    input.date && `Date (exact): ${input.date}`,
+    input.time && `Time (exact): ${input.time}`,
+    input.location && `Location (exact): ${input.location}`,
+    input.contactPhone && `Phone (exact): ${input.contactPhone}`,
+    input.whatsapp && `WhatsApp (exact): ${input.whatsapp}`,
+    input.email && `Email (exact): ${input.email}`,
+    ...Object.entries(input.adaptiveData)
+      .filter(([, value]) => value)
+      .map(([key, value]) => `${key}: ${value}`),
+  ].filter(Boolean);
+
   return [
-    "Create a professional advertising flyer.",
-    `Visual type: ${input.visualType}.`,
-    `Domain: ${input.domain}.`,
-    `Objective: ${input.objective}.`,
-    `Target audience: ${input.targetAudience}.`,
-    `Title (must be clear): ${input.title}.`,
-    input.subtitle ? `Subtitle: ${input.subtitle}.` : "",
-    input.description ? `Description: ${input.description}.` : "",
-    input.price ? `Price to preserve exactly: ${input.price}.` : "",
-    input.oldPrice ? `Old price: ${input.oldPrice}.` : "",
-    input.newPrice ? `New price: ${input.newPrice}.` : "",
-    input.date ? `Date to preserve: ${input.date}.` : "",
-    input.time ? `Time to preserve: ${input.time}.` : "",
-    input.location ? `Location to preserve: ${input.location}.` : "",
-    input.contactPhone ? `Phone to preserve: ${input.contactPhone}.` : "",
-    input.whatsapp ? `WhatsApp to preserve: ${input.whatsapp}.` : "",
-    input.email ? `Email to preserve: ${input.email}.` : "",
-    `Format: ${input.format}.`,
-    `Creative freedom: ${input.creativeFreedom}.`,
-    `Main composition: ${ad.composition}.`,
-    `Visual hierarchy: ${ad.visual_hierarchy.join(" | ")}.`,
-    `Palette: ${ad.color_palette.join(", ")}.`,
-    `Mood: ${ad.mood}.`,
-    `Lighting: ${ad.lighting}.`,
-    `Background: ${ad.background}.`,
-    `Negative space: ${ad.negative_space}.`,
-    `CTA: ${ad.cta}.`,
-    `Reference principles: ${ad.reference_principles.join(" || ")}.`,
-    `Reference ids: ${ad.reference_ids.join(", ")}.`,
+    "You are FlyerMint's senior art director, not a generic image generator.",
+    "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
+    STYLE_INSPIRATION_TEXT,
+    GLOBAL_DESIGN_PROMPT,
+    `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
+    `HUMAN SUBJECT (non-negotiable): at least one photoreal person. Role: ${ad.human.role}. Action: ${ad.human.action}. Framing: ${ad.human.framing}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
     input.mainImageUrl
-      ? "Use the user image as the primary subject. Do not replace the subject."
-      : "Create a coherent primary subject matching the brief.",
-    "Do not invent business details.",
-    "Do not copy any reference poster, layout, artwork, or composition from inspiration files.",
-    "Use design laws only: hierarchy, contrast, alignment, proximity, repetition, balance, white space, readable CTA.",
-    "If the user provided a photo, logo, or product image, it MUST remain the main subject.",
-    "Prioritize readability over visual effects.",
+      ? "The client photo IS the human subject. Do not replace their face or body. Integrate them into the scene."
+      : "Invent an original person who looks photographed, natural West/Central African or matching the stated audience. No celebrity likeness.",
+    input.logoUrl ? "Keep the client logo small, sharp, in a corner or badge. Do not redraw or invent another logo." : "",
+    `ENVIRONMENT: ${ad.background}. Lighting: ${ad.lighting}. Photography: ${ad.photography}. Mood: ${ad.mood}.`,
+    `COMPOSITION: ${ad.composition}. Hierarchy: ${ad.visual_hierarchy.join(" | ")}. Negative space: ${ad.negative_space}.`,
+    `DESIGN: palette ${ad.color_palette.join(", ")}. Type: ${ad.typography.heading} + ${ad.typography.body}. CTA: ${ad.cta}.`,
+    `FORMAT: ${ad.format}.`,
+    `TITLE TO RENDER EXACTLY: ${input.title}.`,
+    ...facts,
+    `Reference principles (inspire, never copy): ${ad.reference_principles.join(" || ")}.`,
+    `Avoid: ${ad.avoid.join("; ")}.`,
+    "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
+    "If it would not be publishable by a real local business, it is a failure.",
   ]
     .filter(Boolean)
     .join("\n");
+}
+
+export function factsForQc(input: CreateBriefInput) {
+  return [input.price, input.date, input.time, input.location, input.contactPhone, input.whatsapp, input.cta].filter(
+    Boolean,
+  ) as string[];
+}
+
+export function mergeRegeneratedBrief(previous: CreateBriefInput, next: CreateBriefInput): CreateBriefInput {
+  return {
+    ...previous,
+    ...next,
+    colors: next.colors.length ? next.colors : previous.colors,
+    adaptiveData: { ...previous.adaptiveData, ...next.adaptiveData },
+    mainImageUrl: next.mainImageUrl || previous.mainImageUrl,
+    logoUrl: next.logoUrl || previous.logoUrl,
+  };
 }
 
 export function scoreQuality(input: CreateBriefInput, prompt: string) {
@@ -161,9 +237,10 @@ export function scoreQuality(input: CreateBriefInput, prompt: string) {
     ? 85
     : 60;
 
-  const readabilityScore = prompt.includes("Prioritize readability") ? 90 : 70;
-  const compositionScore = prompt.includes("Visual hierarchy") ? 88 : 65;
-  const imageScore = input.mainImageUrl ? 90 : 75;
+  const readabilityScore = /readable|spelled|lisibil/i.test(prompt) ? 90 : 70;
+  const compositionScore = /hierarch/i.test(prompt) ? 88 : 65;
+  const humanScore = /human subject|photoreal person/i.test(prompt) ? 92 : 50;
+  const imageScore = input.mainImageUrl ? 90 : 80;
   const designScore = Math.round((readabilityScore + compositionScore) / 2);
   const formatScore = input.format ? 90 : 70;
   const brandScore = input.colors.length <= 3 ? 85 : 70;
@@ -173,9 +250,10 @@ export function scoreQuality(input: CreateBriefInput, prompt: string) {
       readabilityScore +
       compositionScore +
       imageScore +
+      humanScore +
       brandScore +
       formatScore) /
-      7,
+      8,
   );
 
   return {
@@ -184,6 +262,7 @@ export function scoreQuality(input: CreateBriefInput, prompt: string) {
     readability_score: readabilityScore,
     composition_score: compositionScore,
     image_score: imageScore,
+    human_score: humanScore,
     brand_score: brandScore,
     format_score: formatScore,
     overall_score: overallScore,

@@ -43,3 +43,16 @@ next-env.d.ts
 # inspiration binaries (principles live in src/lib/inspiration.ts)
 docs/inspirations/*.pdf
 docs/inspirations/*.docx
+
+# raw showcase renders — keep only compressed webp if committed
+public/creations/raw/
+public/creations/*.png
+public/creations/*.jpg
+
+# private PDF page extracts (style reference only — never serve)
+storage/private/
+storage/masters/
+storage/web/
+
+# local inspiration upload reports (never commit source inventory)
+docs/inspirations/*upload-report*

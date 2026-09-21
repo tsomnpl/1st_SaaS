@@ -8,3 +8,10 @@ Fichiers attendus (non versionnes s'ils sont trop lourds):
 - `references.pdf`
 - `catalogue-analyse-affiches.docx`
 - `bases-du-design-lpt.pdf`
+
+Bibliothèque locale (Pinterest / Behance / portfolios) — **pas des créations FlyerMint** :
+- Upload : `scripts/upload-inspirations.py` (voir `UPLOAD-LOCAL.md`)
+- Stockage : bucket Supabase privé `inspirations-source`
+- Table : `inspiration_source`
+- Descriptions IA : `scripts/analyze-inspirations.py` (JSON privé `_analysis/`, jamais public)
+- Interdit : afficher, republier, ou servir ces images sur le site.

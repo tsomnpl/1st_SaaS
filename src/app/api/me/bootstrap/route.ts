@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { getOrCreateCurrentUser } from "@/server/users";
 import { prisma } from "@/lib/prisma";
+import { getBrandKit } from "@/server/brand-kit";
+import { safeJsonError } from "@/lib/safe-api";
 
 export async function POST() {
   try {
@@ -8,6 +10,7 @@ export async function POST() {
     const account = await prisma.creditAccount.findUnique({
       where: { userId: user.id },
     });
+    const kit = await getBrandKit(user.id);
 
     return NextResponse.json({
       ok: true,
@@ -17,15 +20,11 @@ export async function POST() {
         status: user.status,
       },
       balance: account?.balance ?? 0,
+      brandKit: kit
+        ? { colors: kit.colors, hasLogo: Boolean(kit.logoUrl) }
+        : { colors: [], hasLogo: false },
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: getErrorMessage(error) },
-      { status: 401 },
-    );
+    return safeJsonError(error, 401);
   }
-}
-
-function getErrorMessage(error: unknown) {
-  return error instanceof Error ? error.message : "UNKNOWN_ERROR";
 }

@@ -1,72 +1,37 @@
-## FlyerMint MVP
+## FlyerMint
 
-FlyerMint est un SaaS de creation d'affiches professionnelles avec IA.
+SaaS de création d’affiches professionnelles avec IA.
 
-Positionnement: **ton directeur artistique IA**, pas juste un generateur d'images.
+Positionnement : ton directeur artistique, pas un générateur brut.
 
-### Atouts differenciateurs integres
+### Stack
 
-- Questionnaire intelligent par domaine (questions adaptatives)
-- Rule engine business: `1 Mint = 1 affiche`
-- Ledger complet des Mints (FREE_GRANT, PURCHASE, GENERATION, REFUND, etc.)
-- Consommation FEFO (mints expirant bientot consommes d'abord)
-- Paiement Money Fusion avec idempotence webhook
-- Pipeline interne: brief -> art direction -> prompt -> generation -> quality score
-- Monitoring cout RODI (objectif 10-20 par affiche)
-- Base Admin separee et protegee cote serveur
+Next.js 16 · TypeScript · Tailwind · Clerk · Prisma · PostgreSQL · Zod
 
-## Stack
-
-- Next.js 16 (App Router)
-- TypeScript
-- Tailwind CSS
-- Clerk
-- Prisma + PostgreSQL
-- Zod
-
-## Setup
-
-1) Installer les dependances
+### Setup
 
 ```bash
 npm install
-```
-
-2) Configurer les variables:
-
-```bash
 cp .env.example .env
-```
-
-3) Migrer la base:
-
-```bash
 npm run prisma:generate
-npm run prisma:migrate
+npx prisma migrate deploy
 npm run db:seed
-```
-
-4) Lancer:
-
-```bash
 npm run dev
 ```
 
-## Notes importantes
+### Règles métier
 
-- Ne jamais exposer de secret dans le frontend ou les logs.
-- `/payment/success` n'accorde jamais des Mints sans verification serveur.
-- Les endpoints admin exigent un role admin cote serveur.
-- Webhook Money Fusion public recommande: `/api/webhooks/moneyfusion`.
+- 1 Mint = 1 affiche
+- 1 Mint offert à l’inscription
+- L’export ne consomme aucun Mint
+- `/payment/success` ne crédite jamais les Mints
+- Le webhook Money Fusion public : `/api/webhooks/moneyfusion`
 
-## Money Fusion (URLs a configurer)
+### Money Fusion
 
-Domaine de production actuel:
+Return URL unique : `{NEXT_PUBLIC_APP_URL}/payment/success`  
+Webhook : `{NEXT_PUBLIC_APP_URL}/api/webhooks/moneyfusion`
 
-- Adresse du site: `https://flyermint-t.vercel.app`
-- Return URL: `https://flyermint-t.vercel.app/payment/success`
-- Webhook URL: `https://flyermint-t.vercel.app/api/webhooks/moneyfusion`
+Ne renseigne ces URLs dans Money Fusion qu’après un webhook qui crédite réellement.
 
-Dans Vercel, `NEXT_PUBLIC_APP_URL` et `MONEY_FUSION_WEBHOOK_URL` doivent pointer vers ces URLs.
-
-Les references (PDF / catalogue) restent internes. Elles nourrissent les principes de composition, jamais une copie d'affiche pour le client.
+Les références visuelles restent internes. Elles nourrissent la composition, jamais une copie d’affiche.

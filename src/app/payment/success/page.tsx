@@ -11,19 +11,22 @@ export default async function PaymentSuccessPage({
 
   return (
     <div className="card mx-auto max-w-2xl space-y-4 p-6">
-      <h1 className="text-2xl font-bold text-[#20C997]">Paiement recu</h1>
-      <p className="text-white/80">
-        Merci. Tes Mints seront credites automatiquement des que le paiement est confirme.
-        Tu peux revenir au dashboard dans un instant.
+      <h1 className="text-2xl font-extrabold text-[#10B981]">Paiement reçu</h1>
+      <p className="text-slate-600">
+        Merci. Tes Mints seront crédités automatiquement dès que le paiement est confirmé
+        par Money Fusion. Cette page n’est pas une preuve de paiement.
       </p>
       {params.orderId || params.token ? (
-        <p className="text-sm text-white/50">
-          Reference: {params.orderId ?? params.token}
-        </p>
+        <p className="text-sm text-slate-400">Référence : {params.orderId ?? params.token}</p>
       ) : null}
-      <Link href="/dashboard" className="inline-block rounded bg-emerald-500 px-4 py-2 font-semibold text-slate-900">
-        Retour au dashboard
-      </Link>
+      <div className="flex gap-3">
+        <Link href="/dashboard" className="btn-primary">
+          Tableau de bord
+        </Link>
+        <Link href="/create" className="btn-secondary">
+          Créer une affiche
+        </Link>
+      </div>
     </div>
   );
 }

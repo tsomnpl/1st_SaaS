@@ -1,5 +1,6 @@
 import { CreditTransactionType, PaymentStatus, Prisma } from "@prisma/client";
-import { env } from "@/lib/env";
+import { env, getAppUrl } from "@/lib/env";
+import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { ensureOfficialPlans } from "@/server/plans";
@@ -50,19 +51,17 @@ export async function initMoneyFusionPayment(params: {
       status: PaymentStatus.PENDING,
       provider: "MONEY_FUSION",
     },
-    include: { plan: true },
   });
 
+  const appUrl = getAppUrl();
   const payload: MoneyFusionInitPayload = {
     totalPrice: plan.priceFcfa,
     article: plan.name,
     numeroSend: params.numeroSend,
     nomclient: params.nomclient,
     personal_Info: payment.orderId,
-    return_url: `${env.NEXT_PUBLIC_APP_URL}/payment/success`,
-    webhook_url:
-      env.MONEY_FUSION_WEBHOOK_URL ??
-      `${env.NEXT_PUBLIC_APP_URL}/api/webhooks/moneyfusion`,
+    return_url: `${appUrl}/payment/success`,
+    webhook_url: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
   };
 
   const endpoint = `${env.MONEY_FUSION_API_URL}/paiement`;
@@ -104,9 +103,24 @@ export async function verifyMoneyFusionToken(token: string) {
   return (await response.json()) as Record<string, unknown>;
 }
 
-function isCompletedStatus(raw: string) {
+export function classifyPaymentStatus(raw: string): PaymentStatus {
   const normalized = raw.toLowerCase();
-  return normalized.includes("paid") || normalized.includes("completed");
+  if (
+    normalized.includes("paid") ||
+    normalized.includes("completed") ||
+    normalized.includes("success") ||
+    normalized.includes("payé") ||
+    normalized.includes("paye")
+  ) {
+    return PaymentStatus.COMPLETED;
+  }
+  if (normalized.includes("cancel") || normalized.includes("annul")) {
+    return PaymentStatus.CANCELLED;
+  }
+  if (normalized.includes("fail") || normalized.includes("error") || normalized.includes("refus")) {
+    return PaymentStatus.FAILED;
+  }
+  return PaymentStatus.PENDING;
 }
 
 export async function confirmPaymentByToken(token: string, payload?: Record<string, unknown>) {
@@ -116,11 +130,30 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   });
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
 
+  const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
+  const classified = classifyPaymentStatus(remoteStatus);
+  const eventKey = `moneyfusion:${token}:${classified}`;
+  const safePayload = sanitizeRecord(payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue;
+
+  try {
+    await prisma.webhookEvent.create({
+      data: {
+        provider: "MONEY_FUSION",
+        eventKey,
+        payload: safePayload,
+      },
+    });
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002") {
+      return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+    }
+    throw error;
+  }
+
   if (payment.status === PaymentStatus.COMPLETED) {
     return payment;
   }
 
-  const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
   const payloadOrderId = getStringField(payload, ["orderId", "order_id", "personal_Info"]);
   const payloadAmount = getNumericField(payload, ["amount", "totalPrice", "montant"]);
 
@@ -131,77 +164,77 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
     throw new Error("PAYMENT_AMOUNT_MISMATCH");
   }
 
-  const shouldComplete = isCompletedStatus(remoteStatus);
-  if (!shouldComplete) {
+  if (classified !== PaymentStatus.COMPLETED) {
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
+        status: classified === PaymentStatus.PENDING ? payment.status : classified,
         rawStatus: remoteStatus,
-        rawResponse: payload
-          ? (payload as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+        rawResponse: payload ? safePayload : Prisma.JsonNull,
+        webhookState: classified,
       },
     });
-    return payment;
+    return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
   }
 
   await prisma.$transaction(async (tx) => {
-    const fresh = await tx.payment.findUnique({
-      where: { id: payment.id },
-      include: { plan: true },
-    });
-    if (!fresh || fresh.status === PaymentStatus.COMPLETED) return;
-
-    await grantCredits(
-      fresh.userId,
-      fresh.plan.mintAmount,
-      CreditTransactionType.PURCHASE,
-      {
-        tx,
-        reference: fresh.orderId,
-        metadata: {
-          planCode: fresh.plan.code,
-          tokenPay: fresh.tokenPay,
-        },
+    const claimed = await tx.payment.updateMany({
+      where: {
+        id: payment.id,
+        status: { not: PaymentStatus.COMPLETED },
+        creditedAt: null,
       },
-      fresh.plan.durationDays ? new Date(Date.now() + fresh.plan.durationDays * 86400000) : null,
-    );
-
-    await tx.payment.update({
-      where: { id: fresh.id },
       data: {
         status: PaymentStatus.COMPLETED,
         rawStatus: remoteStatus,
-        rawResponse: payload
-          ? (payload as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+        rawResponse: payload ? safePayload : Prisma.JsonNull,
+        webhookState: "COMPLETED",
         creditedAt: new Date(),
       },
     });
+    if (claimed.count === 0) return;
+
+    const alreadyGranted = await tx.creditTransaction.findFirst({
+      where: {
+        userId: payment.userId,
+        type: CreditTransactionType.PURCHASE,
+        reference: payment.orderId,
+      },
+    });
+    if (alreadyGranted) return;
+
+    await grantCredits(
+      payment.userId,
+      payment.plan.mintAmount,
+      CreditTransactionType.PURCHASE,
+      {
+        tx,
+        reference: payment.orderId,
+        metadata: {
+          planCode: payment.plan.code,
+          tokenPay: payment.tokenPay,
+        },
+      },
+      payment.plan.durationDays
+        ? new Date(Date.now() + payment.plan.durationDays * 86400000)
+        : null,
+    );
   });
 
   return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
 }
 
-function getStringField(
-  payload: Record<string, unknown> | undefined,
-  keys: string[],
-) {
+function getStringField(payload: Record<string, unknown> | undefined, keys: string[]) {
   if (!payload) return undefined;
   for (const key of keys) {
     const value = payload[key];
     if (typeof value === "string" && value.trim()) return value.trim();
-    if (Array.isArray(value) && value.length > 0) {
-      return JSON.stringify(value);
-    }
+    if (Array.isArray(value) && value.length > 0) return JSON.stringify(value);
   }
   return undefined;
 }
 
-function getNumericField(
-  payload: Record<string, unknown> | undefined,
-  keys: string[],
-) {
+function getNumericField(payload: Record<string, unknown> | undefined, keys: string[]) {
   if (!payload) return undefined;
   for (const key of keys) {
     const value = payload[key];
