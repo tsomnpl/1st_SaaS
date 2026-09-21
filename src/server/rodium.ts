@@ -326,7 +326,7 @@ export async function analyzeStyleReference(input: {
           },
         ],
         temperature: 0,
-        max_tokens: 700,
+        max_tokens: 2500,
       }),
     });
     if (!response.ok) return "";
