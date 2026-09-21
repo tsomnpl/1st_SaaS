@@ -7,22 +7,17 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 import { UserButton } from "@clerk/nextjs";
-import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { getBrandKit } from "@/server/brand-kit";
 
 export default async function ProfilePage() {
   const user = await requireActiveCurrentUser();
-  const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null);
   const kit = await getBrandKit(user.id);
 
   return (
     <div className="card mx-auto max-w-xl space-y-5 p-6">
       <h1 className="text-3xl font-extrabold">Profil</h1>
       <p className="text-slate-600">{user.email ?? user.name ?? "Compte FlyerMint"}</p>
-      <p className="text-sm text-slate-500">
-        Solde : {account?.balance ?? 0} Mint{(account?.balance ?? 0) > 1 ? "s" : ""}
-      </p>
       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
         <p className="font-semibold">Kit de marque</p>
         {kit?.colors?.length || kit?.logoUrl ? (

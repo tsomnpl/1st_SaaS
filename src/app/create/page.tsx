@@ -45,8 +45,7 @@ export default async function CreatePage({
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">Créer une affiche</h1>
         <p className="mt-2 text-slate-600">
-          Solde : <span className="font-semibold text-[#6D28D9]">{balance} Mint{balance > 1 ? "s" : ""}</span>
-          . 1 Mint = 1 affiche. Direction artistique + personne réelle + contrôle qualité inclus.
+          1 Mint = 1 affiche. Direction artistique + personne réelle + contrôle qualité inclus.
         </p>
       </div>
       <CreateFlyerForm
