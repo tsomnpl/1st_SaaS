@@ -64,6 +64,7 @@ describe("image model routing", () => {
 describe("payments", () => {
   it("classifies money fusion statuses", () => {
     expect(classifyPaymentStatus("paid")).toBe("COMPLETED");
+    expect(classifyPaymentStatus("no paid")).toBe("PENDING");
     expect(classifyPaymentStatus("cancelled")).toBe("CANCELLED");
     expect(classifyPaymentStatus("failed")).toBe("FAILED");
     expect(classifyPaymentStatus("pending")).toBe("PENDING");
