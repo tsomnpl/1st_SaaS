@@ -65,6 +65,7 @@ type VisualRef = {
   id: string;
   storagePath: string;
   dataUrl: string;
+  analysisDataUrl: string;
   bytes: number;
   domain: string;
   source: "supabase" | "local";
@@ -117,14 +118,13 @@ function pickIndex(seed: string, length: number) {
   return hash % length;
 }
 
-async function bufferToJpegDataUrl(buffer: Buffer) {
+async function bufferToJpegDataUrl(buffer: Buffer, opts: { width: number; height: number; quality: number; blur?: number }) {
   const sharp = (await import("sharp")).default;
-  const jpeg = await sharp(buffer)
+  let pipeline = sharp(buffer)
     .rotate()
-    .resize({ width: 384, height: 576, fit: "inside", withoutEnlargement: true })
-    .blur(0.6)
-    .jpeg({ quality: 55 })
-    .toBuffer();
+    .resize({ width: opts.width, height: opts.height, fit: "inside", withoutEnlargement: true });
+  if (opts.blur) pipeline = pipeline.blur(opts.blur);
+  const jpeg = await pipeline.jpeg({ quality: opts.quality }).toBuffer();
   return { dataUrl: `data:image/jpeg;base64,${jpeg.toString("base64")}`, bytes: jpeg.length };
 }
 
@@ -134,12 +134,14 @@ async function referenceDataUrl(localPath?: string | null): Promise<VisualRef | 
   try {
     const { readFile: read } = await import("node:fs/promises");
     const raw = await read(abs);
-    const jpeg = await bufferToJpegDataUrl(raw);
+    const analysis = await bufferToJpegDataUrl(raw, { width: 768, height: 1152, quality: 72 });
+    const gen = await bufferToJpegDataUrl(raw, { width: 384, height: 576, quality: 55, blur: 0.6 });
     return {
       id: localPath,
       storagePath: localPath,
-      dataUrl: jpeg.dataUrl,
-      bytes: jpeg.bytes,
+      dataUrl: gen.dataUrl,
+      analysisDataUrl: analysis.dataUrl,
+      bytes: gen.bytes,
       domain: "",
       source: "local",
     };
@@ -175,12 +177,14 @@ async function fetchSupabaseReference(domaine: string, seed: string): Promise<Vi
   if (!file.ok) return null;
   const buffer = Buffer.from(await file.arrayBuffer());
   if (!buffer.length) return null;
-  const jpeg = await bufferToJpegDataUrl(buffer);
+  const analysis = await bufferToJpegDataUrl(buffer, { width: 768, height: 1152, quality: 72 });
+  const gen = await bufferToJpegDataUrl(buffer, { width: 384, height: 576, quality: 55, blur: 0.6 });
   return {
     id: row.id,
     storagePath: row.storage_path,
-    dataUrl: jpeg.dataUrl,
-    bytes: jpeg.bytes,
+    dataUrl: gen.dataUrl,
+    analysisDataUrl: analysis.dataUrl,
+    bytes: gen.bytes,
     domain: row.domaine,
     source: "supabase",
   };
@@ -591,7 +595,7 @@ async function main() {
       ? await analyzeDna({
           baseUrl,
           apiKey,
-          imageUrl: visualRef.dataUrl,
+          imageUrl: visualRef.analysisDataUrl || visualRef.dataUrl,
           domain: sheet.domaine,
           referenceId: visualRef.id,
         })
