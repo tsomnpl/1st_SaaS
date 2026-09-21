@@ -13,7 +13,7 @@ export async function SiteHeaderHost() {
         where: { clerkUserId: session.userId },
         include: { creditAccount: true },
       });
-      mintBalance = user?.creditAccount?.balance ?? null;
+      mintBalance = user ? (user.creditAccount?.balance ?? 0) : 0;
       showAdmin = await currentUserIsAdmin();
     } catch {
       mintBalance = null;

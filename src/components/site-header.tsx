@@ -4,6 +4,7 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@cl
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { BrandLogo } from "@/components/brand/logo";
+import { MintBalanceBanner } from "@/components/mint-balance-banner";
 
 type Props = {
   mintBalance?: number | null;
@@ -60,11 +61,6 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
                 Admin
               </Link>
             ) : null}
-            {typeof mintBalance === "number" ? (
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
-                {mintBalance} Mint{mintBalance > 1 ? "s" : ""}
-              </span>
-            ) : null}
             <UserButton />
           </SignedIn>
           <SignedOut>
@@ -98,6 +94,8 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
           </span>
         </button>
       </div>
+
+      {typeof mintBalance === "number" ? <MintBalanceBanner balance={mintBalance} /> : null}
 
       {open ? (
         <div className="border-t border-slate-100 bg-white px-4 py-4 md:hidden">
