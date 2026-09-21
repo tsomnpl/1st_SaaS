@@ -1,5 +1,6 @@
 import { CreateBriefInput } from "@/lib/flyermint";
 import { DOMAINS } from "@/lib/domains";
+import { selectVisualReferences } from "@/lib/visual-references";
 
 export type InspirationReference = {
   id: string;
@@ -283,11 +284,13 @@ export const INSPIRATION_LIBRARY: InspirationReference[] = DOMAINS.map((domain) 
 export function selectInspirationReferences(input: CreateBriefInput) {
   const playbook = INSPIRATION_LIBRARY.find((ref) => ref.domain === input.domain);
   const extra = INSPIRATION_LIBRARY.filter((ref) => ref.domain !== input.domain).slice(0, 0);
+  const visual = selectVisualReferences(input);
 
   const selected = playbook ? [playbook, ...extra] : INSPIRATION_LIBRARY.slice(0, 1);
 
   return {
     selected,
+    visual,
     principles: [
       ...DESIGN_LAWS,
       ...(playbook
@@ -299,6 +302,7 @@ export function selectInspirationReferences(input: CreateBriefInput) {
             `Densite: ${playbook.density} | mood: ${playbook.mood}`,
           ]
         : []),
+      ...visual.principles,
     ],
   };
 }

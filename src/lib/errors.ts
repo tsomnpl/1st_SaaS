@@ -13,6 +13,8 @@ const MESSAGES: Record<string, string> = {
   RODIUM_UNAVAILABLE: "La génération n’est pas disponible pour le moment.",
   RODIUM_NO_IMAGE_MODEL: "Aucun modèle image n’est disponible actuellement.",
   GENERATION_FAILED: "La génération a échoué. Ton Mint n’a pas été débité.",
+  RODIUM_QUALITY_FAILED: "L’affiche n’était pas publiable. Ton Mint a été recrédité.",
+  PAYMENT_VERIFY_FAILED: "Le statut du paiement n’a pas pu être vérifié.",
   INVALID_IMAGE: "L’image fournie n’est pas valide (JPG, PNG ou WEBP, 2 Mo max).",
   INVALID_PHONE: "Le numéro de téléphone n’est pas valide.",
   INVALID_EMAIL: "L’e-mail n’est pas valide.",
