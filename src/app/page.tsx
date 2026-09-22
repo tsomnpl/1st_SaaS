@@ -162,28 +162,22 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
-        <p className="max-w-2xl text-sm text-slate-500">
-          Une vraie affiche quand elle existe. Sinon, un état vide — jamais un rectangle coloré présenté comme une création.
-        </p>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {visuals.domains.map(({ domain, label, poster }) => (
-            <Link key={domain} href={`/create?domain=${encodeURIComponent(domain)}`} aria-label={`Créer une affiche ${label}`}>
-              {poster ? (
+      {visuals.domains.length ? (
+        <section className="space-y-6">
+          <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
+          <p className="max-w-2xl text-sm text-slate-500">
+            Seulement les univers qui ont déjà une affiche réelle. Les autres restent dans le formulaire de
+            création — jamais une tuile vide présentée comme une création.
+          </p>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {visuals.domains.map(({ domain, label, poster }) => (
+              <Link key={domain} href={`/create?domain=${encodeURIComponent(domain)}`} aria-label={`Créer une affiche ${label}`}>
                 <VisualPoster title={label} imageSrc={poster.imageSrc} overlayLabel={label} className="min-h-[180px]" />
-              ) : (
-                <VisualPoster
-                  title={label}
-                  state={galleryError ? "error" : "empty"}
-                  emptyMessage="Aucune création disponible pour cette catégorie."
-                  className="min-h-[180px]"
-                />
-              )}
-            </Link>
-          ))}
-        </div>
-      </section>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
 
       <section id="tarifs" className="card p-6 md:p-10">
         <div className="flex flex-wrap items-end justify-between gap-4">

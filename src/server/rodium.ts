@@ -1,5 +1,5 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { env, getAllowedImageModels } from "@/lib/env";
+import { env, getAllowedImageModels, getRodiumApiKey } from "@/lib/env";
 
 type RodiumResponse = {
   id?: string;
@@ -71,17 +71,18 @@ export function selectImageModel(
   ].filter(Boolean).length;
 
   const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
+  const fastModel = env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-lite-image";
   const preferred = (() => {
     if (brief.mainImageUrl || brief.logoUrl || options.hasStyleReference) {
       return editModel;
     }
     if (textHeavyFields >= 6) {
-      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-2";
+      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || fastModel;
     }
     if (premiumKeywords.some((k) => promptText.includes(k))) {
-      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
+      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || fastModel;
     }
-    return env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-2";
+    return fastModel;
   })();
 
   const allowed = getAllowedImageModels();
@@ -120,7 +121,7 @@ export function canConsumeReferenceBitmap(modelId: string) {
 }
 
 export async function listRodiumImageModels() {
-  if (!env.RODIUMAI_API_KEY) return [];
+  if (!getRodiumApiKey()) return [];
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/models`, {
       headers: rodiumHeaders(),
@@ -139,7 +140,7 @@ export async function listRodiumImageModels() {
 }
 
 function rodiumHeaders() {
-  const key = env.RODIUMAI_API_KEY ?? "";
+  const key = getRodiumApiKey();
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${key}`,
@@ -152,7 +153,7 @@ export async function generateWithRodium(input: {
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
-  if (!env.RODIUMAI_API_KEY) {
+  if (!getRodiumApiKey()) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
@@ -221,7 +222,7 @@ async function postGeminiImage(model: string, prompt: string, attached: string):
     if (attached && isProvidedQuotaError(raw)) {
       return postGeminiImage(model, prompt, "");
     }
-    throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
+    throwRodiumHttpError(response.status, raw);
   }
   const data = JSON.parse(raw) as RodiumResponse;
   const imageUrl = extractGeneratedImageUrl(data);
@@ -283,12 +284,24 @@ async function renderImage(params: {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
+    const raw = await response.text();
+    if (response.status === 402 || isProvidedQuotaError(raw)) {
+      const fallback = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
+      return postGeminiImage(fallback, params.prompt, "");
+    }
+    throwRodiumHttpError(response.status, raw);
   }
   const data = (await response.json()) as RodiumResponse;
   const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
   return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage, bitmapAttached: false };
+}
+
+function throwRodiumHttpError(status: number, raw: string): never {
+  if (status === 402 || isProvidedQuotaError(raw)) {
+    throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+  }
+  throw new Error(`RODIUM_IMAGES_FAILED_${status}`);
 }
 
 export function sizeForFormat(format: string) {
@@ -306,7 +319,7 @@ export function sizeForFormat(format: string) {
 }
 
 export async function getRodiumWallet() {
-  if (!env.RODIUMAI_API_KEY) return null;
+  if (!getRodiumApiKey()) return null;
   const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
     headers: rodiumHeaders(),
     cache: "no-store",
@@ -329,7 +342,7 @@ export async function reviewPosterQuality(input: {
   prompt: string;
   referenceImageUrl?: string;
 }) {
-  if (!env.RODIUMAI_API_KEY) return "";
+  if (!getRodiumApiKey()) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
   const content: Array<Record<string, unknown>> = [
     { type: "text", text: input.prompt },
@@ -365,7 +378,7 @@ export async function analyzeStyleReference(input: {
   domain: string;
   referenceId: string;
 }) {
-  if (!env.RODIUMAI_API_KEY || !input.imageUrl) return "";
+  if (!getRodiumApiKey() || !input.imageUrl) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
   const prompt = [
     "You are FlyerMint's art director. Analyze this poster as a COMPOSITION MODEL.",

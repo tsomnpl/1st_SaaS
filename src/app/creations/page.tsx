@@ -23,7 +23,7 @@ export default async function CreationsPage() {
             {visuals.error
               ? "Impossible de charger les créations."
               : realCount
-                ? `${realCount} affiches réelles. Les catégories sans visuel FlyerMint restent vides — jamais un dégradé à la place d’une affiche.`
+                ? `${realCount} affiches réelles. Les univers sans visuel n’apparaissent pas ici.`
                 : "Aucune création disponible pour le moment."}
           </p>
         </div>
@@ -51,28 +51,22 @@ export default async function CreationsPage() {
         <VisualPoster title="Galerie" state="empty" className="max-w-[240px]" />
       )}
 
-      <section className="space-y-4">
-        <h2 className="text-xl font-extrabold">Par domaine</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {visuals.domains.map(({ domain, label, poster }) => (
-            <Link
-              key={domain}
-              href={`/create?domain=${encodeURIComponent(domain)}`}
-              aria-label={`Créer une affiche ${label}`}
-            >
-              {poster ? (
+      {visuals.domains.length ? (
+        <section className="space-y-4">
+          <h2 className="text-xl font-extrabold">Par domaine</h2>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {visuals.domains.map(({ domain, label, poster }) => (
+              <Link
+                key={domain}
+                href={`/create?domain=${encodeURIComponent(domain)}`}
+                aria-label={`Créer une affiche ${label}`}
+              >
                 <VisualPoster title={label} imageSrc={poster.imageSrc} overlayLabel={label} />
-              ) : (
-                <VisualPoster
-                  title={label}
-                  state={visuals.error ? "error" : "empty"}
-                  emptyMessage="Aucune création disponible pour cette catégorie."
-                />
-              )}
-            </Link>
-          ))}
-        </div>
-      </section>
+              </Link>
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }

@@ -13,6 +13,10 @@ const MESSAGES: Record<string, string> = {
   RODIUM_UNAVAILABLE: "La génération n’est pas disponible pour le moment.",
   RODIUM_NO_IMAGE_MODEL: "Aucun modèle image n’est disponible actuellement.",
   RODIUM_NO_IMAGE_EDIT_MODEL: "Aucun modèle image-to-image n’est disponible pour utiliser la référence visuelle.",
+  RODIUM_INSUFFICIENT_BALANCE:
+    "La génération d’image n’a pas pu partir : crédits Rodium insuffisants. Ton Mint n’a pas été débité.",
+  RODIUM_IMAGES_FAILED_402:
+    "La génération d’image n’a pas pu partir : crédits Rodium insuffisants. Ton Mint n’a pas été débité.",
   GENERATION_FAILED: "La génération a échoué. Ton Mint n’a pas été débité.",
   RODIUM_QUALITY_FAILED: "L’affiche n’était pas publiable. Ton Mint a été recrédité.",
   PAYMENT_VERIFY_FAILED: "Le statut du paiement n’a pas pu être vérifié.",
@@ -27,6 +31,26 @@ const MESSAGES: Record<string, string> = {
 export function publicErrorMessage(error: unknown) {
   const code = error instanceof Error ? error.message : "UNKNOWN";
   if (MESSAGES[code]) return MESSAGES[code];
+  if (Object.values(MESSAGES).includes(code)) return code;
   if (code.startsWith("RODIUM_")) return MESSAGES.RODIUM_UNAVAILABLE;
   return "Une erreur est survenue. Réessaie dans un instant.";
+}
+
+export function generationFailurePayload(error: unknown) {
+  const raw = error instanceof Error ? error.message : "GENERATION_FAILED";
+  const code = raw === "RODIUM_IMAGES_FAILED_402" ? "RODIUM_INSUFFICIENT_BALANCE" : raw;
+  const status =
+    code === "UNAUTHORIZED"
+      ? 401
+      : code === "INSUFFICIENT_MINTS" || code === "RODIUM_INSUFFICIENT_BALANCE"
+        ? 402
+        : 400;
+  return {
+    status,
+    body: {
+      ok: false as const,
+      error: code,
+      message: publicErrorMessage(new Error(code)),
+    },
+  };
 }

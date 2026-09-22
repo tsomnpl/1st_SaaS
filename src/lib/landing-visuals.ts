@@ -83,11 +83,13 @@ export async function getLandingVisuals() {
     }
   }
 
-  const domains = DOMAINS.map((domain) => ({
-    domain,
-    label: DOMAIN_LABELS[domain],
-    poster: byDomain.get(domain) ?? null,
-  }));
+  const domains = DOMAINS.map((domain) => {
+    const poster = byDomain.get(domain);
+    if (!poster) return null;
+    return { domain, label: DOMAIN_LABELS[domain], poster };
+  }).filter((item): item is { domain: (typeof DOMAINS)[number]; label: string; poster: LandingPoster } =>
+    Boolean(item),
+  );
 
   const afterPoster =
     real.find((poster) => poster.domainKey === "Restauration") ?? real[0] ?? null;
@@ -137,11 +139,11 @@ export async function getLandingVisualsSafe() {
       realPosters: [] as LandingPoster[],
       heroPosters: [] as LandingPoster[],
       showcase: [] as LandingPoster[],
-      domains: DOMAINS.map((domain) => ({
-        domain,
-        label: DOMAIN_LABELS[domain],
-        poster: null,
-      })),
+      domains: [] as Array<{
+        domain: (typeof DOMAINS)[number];
+        label: string;
+        poster: LandingPoster;
+      }>,
       afterPoster: null,
       manifestCount: 0,
       error: "Impossible de charger les créations.",

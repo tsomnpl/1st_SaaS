@@ -35,7 +35,7 @@ describe("image model routing", () => {
       "concert premium",
       ["openai/gpt-5", "openai/gpt-image-2", "google/gemini-3.1-flash-lite-image"],
     );
-    expect(model).toBe("openai/gpt-image-2");
+    expect(model).toBe("google/gemini-3.1-flash-lite-image");
   });
 
   it("routes a style-reference job to an image-edit model", () => {

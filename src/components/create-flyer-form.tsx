@@ -117,8 +117,15 @@ export function CreateFlyerForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      const data = (await response.json()) as { ok: boolean; error?: string } & Result;
-      if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
+      const data = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        message?: string;
+      } & Result;
+      if (!data.ok) {
+        setError(data.message || publicErrorMessage(new Error(data.error ?? "GENERATION_FAILED")));
+        return;
+      }
       setResult(data);
     } catch (e) {
       setError(publicErrorMessage(e));

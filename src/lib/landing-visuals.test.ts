@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { DOMAINS } from "./domains";
 import { getLandingVisuals } from "./landing-visuals";
+import { isSafeCreationAsset } from "./creation-assets";
 import { SUPABASE_DOMAIN_BY_APP } from "./inspiration-domains";
 import { dnaHasStructure, parseCreativeDna } from "./creative-dna";
 
@@ -16,11 +17,21 @@ describe("landing visuals", () => {
       expect(poster.imageSrc.startsWith("/creations/")).toBe(true);
       expect(existsSync(path.join(process.cwd(), "public", poster.imageSrc.replace(/^\//, "")))).toBe(true);
     }
-    expect(visuals.domains).toHaveLength(DOMAINS.length);
-    const withImage = visuals.domains.filter((item) => item.poster);
-    const empty = visuals.domains.filter((item) => !item.poster);
-    expect(withImage.length).toBeGreaterThan(0);
-    expect(withImage.length + empty.length).toBe(DOMAINS.length);
+    expect(visuals.domains.length).toBeGreaterThan(0);
+    expect(visuals.domains.length).toBeLessThanOrEqual(DOMAINS.length);
+    expect(visuals.domains.every((item) => Boolean(item.poster))).toBe(true);
+    for (const item of visuals.domains) {
+      expect(item.poster.imageSrc.startsWith("/creations/")).toBe(true);
+      expect(existsSync(path.join(process.cwd(), "public", item.poster.imageSrc.replace(/^\//, "")))).toBe(true);
+    }
+  });
+
+  it("serves gallery webps safely and 404s missing files instead of crashing", () => {
+    expect(isSafeCreationAsset("evenementiel-01.webp")).toBe(true);
+    expect(isSafeCreationAsset("hero/evenementiel-01.webp")).toBe(true);
+    expect(isSafeCreationAsset("../package.json")).toBe(false);
+    expect(isSafeCreationAsset("evenementiel-01.png")).toBe(false);
+    expect(isSafeCreationAsset("")).toBe(false);
   });
 });
 

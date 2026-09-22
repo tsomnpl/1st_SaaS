@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
-import { publicErrorMessage } from "./errors";
+import { publicErrorMessage, generationFailurePayload } from "./errors";
 import { SECURITY_HEADERS } from "./security-headers";
 import { createBriefSchema } from "./flyermint";
 import { z } from "zod";
@@ -28,6 +28,18 @@ describe("security helpers", () => {
     expect(publicErrorMessage(new Error("CLERK_SECRET_KEY"))).toBe(
       "Une erreur est survenue. Réessaie dans un instant.",
     );
+    expect(publicErrorMessage(new Error("RODIUM_INSUFFICIENT_BALANCE"))).toMatch(/crédits Rodium/i);
+    expect(publicErrorMessage(new Error("RODIUM_IMAGES_FAILED_402"))).toBe(
+      publicErrorMessage(new Error("RODIUM_INSUFFICIENT_BALANCE")),
+    );
+    expect(publicErrorMessage(new Error("La génération a échoué. Ton Mint n’a pas été débité."))).toBe(
+      "La génération a échoué. Ton Mint n’a pas été débité.",
+    );
+    expect(generationFailurePayload(new Error("RODIUM_IMAGES_FAILED_402"))).toMatchObject({
+      status: 402,
+      body: { ok: false, error: "RODIUM_INSUFFICIENT_BALANCE" },
+    });
+    expect(generationFailurePayload(new Error("GENERATION_FAILED")).status).toBe(400);
   });
 
   it("rejects mint balance overwrite payloads", () => {

@@ -1,12 +1,15 @@
 import { auth } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
-import { publicErrorMessage } from "@/lib/errors";
+import { generationFailurePayload, publicErrorMessage } from "@/lib/errors";
 import { runGeneration } from "@/server/generation";
 
 export async function POST(request: Request) {
   const session = await auth();
   if (!session.userId) {
-    return NextResponse.json({ ok: false, error: "UNAUTHORIZED" }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, error: "UNAUTHORIZED", message: publicErrorMessage(new Error("UNAUTHORIZED")) },
+      { status: 401 },
+    );
   }
 
   try {
@@ -19,9 +22,7 @@ export async function POST(request: Request) {
       repaired: result.repaired,
     });
   } catch (error) {
-    return NextResponse.json(
-      { ok: false, error: publicErrorMessage(error) },
-      { status: 400 },
-    );
+    const failure = generationFailurePayload(error);
+    return NextResponse.json(failure.body, { status: failure.status });
   }
 }
