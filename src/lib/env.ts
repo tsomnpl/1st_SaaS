@@ -12,6 +12,7 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: optionalString,
   DATABASE_URL: optionalString,
   RODIUMAI_API_KEY: optionalString,
+  RODIUM_API_KEY: optionalString,
   RODIUMAI_BASE_URL: z.preprocess(
     emptyToUndefined,
     z.string().url().default("https://api.rodiumai.io/v1"),
@@ -37,7 +38,8 @@ export const env = envSchema.parse({
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   DATABASE_URL: process.env.DATABASE_URL,
-  RODIUMAI_API_KEY: process.env.RODIUMAI_API_KEY,
+  RODIUMAI_API_KEY: process.env.RODIUMAI_API_KEY || process.env.RODIUM_API_KEY,
+  RODIUM_API_KEY: process.env.RODIUM_API_KEY || process.env.RODIUMAI_API_KEY,
   RODIUMAI_BASE_URL: process.env.RODIUMAI_BASE_URL,
   RODIUMAI_MODEL: process.env.RODIUMAI_MODEL,
   RODIUMAI_TEXT_MODEL: process.env.RODIUMAI_TEXT_MODEL,
@@ -62,6 +64,13 @@ export function getAdminPrivatePath() {
 
 export function getAdminBasePath() {
   return "/admin";
+}
+
+/** Prefer the provided `RODIUM_API_KEY` secret over the legacy `RODIUMAI_API_KEY` alias. */
+export function getRodiumApiKey() {
+  const provided = (process.env.RODIUM_API_KEY || "").trim();
+  if (provided) return provided;
+  return (env.RODIUM_API_KEY || env.RODIUMAI_API_KEY || "").trim();
 }
 
 export function getAllowedImageModels() {

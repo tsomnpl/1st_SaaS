@@ -38,7 +38,10 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
 
   const [library, visualReference] = await Promise.all([
     loadDomainInspirationAnalyses(brief.domain, 3),
-    loadVisualReferenceForDomain(brief.domain),
+    Promise.race([
+      loadVisualReferenceForDomain(brief.domain),
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 8_000)),
+    ]),
   ]);
   const artDirection = buildArtDirection(brief, library);
   if (visualReference) {

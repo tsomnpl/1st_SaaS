@@ -294,7 +294,7 @@ async function persistOutputs(
 async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
-  const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
+  const apiKey = process.env.RODIUM_API_KEY?.trim() || process.env.RODIUMAI_API_KEY?.trim() || "";
   const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
   const geminiFast = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
   const geminiPremium = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";

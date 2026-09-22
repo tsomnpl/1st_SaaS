@@ -49,7 +49,6 @@ export function CreateFlyerForm({
   const [logoImage, setLogoImage] = useState(brandLogoUrl);
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
-  const canGenerate = mintBalance > 0 && confirmMint;
 
   async function readImage(file: File | undefined) {
     if (!file) return "";
@@ -67,6 +66,14 @@ export function CreateFlyerForm({
     event.preventDefault();
     if (step < 3) {
       setStep((value) => value + 1);
+      return;
+    }
+    if (mintBalance <= 0) {
+      setError("Il te faut 1 Mint pour générer une affiche.");
+      return;
+    }
+    if (!confirmMint) {
+      setError("Coche la confirmation « utiliser 1 Mint » pour lancer la génération.");
       return;
     }
     setLoading(true);
@@ -109,18 +116,40 @@ export function CreateFlyerForm({
       adaptiveData,
     };
 
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 120_000);
     try {
       const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
+        signal: controller.signal,
       });
-      const data = (await response.json()) as { ok: boolean; error?: string } & Result;
-      if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
+      const data = (await response.json()) as {
+        ok: boolean;
+        error?: string;
+        message?: string;
+      } & Result;
+      if (!response.ok || !data.ok) {
+        // Prefer code → mapped French message; fall back to server message if already human.
+        const code = data.error ?? "GENERATION_FAILED";
+        const mapped = publicErrorMessage(new Error(code));
+        const generic = "Une erreur est survenue. Réessaie dans un instant.";
+        throw new Error(
+          mapped !== generic || !data.message ? mapped : data.message,
+        );
+      }
       setResult(data);
     } catch (e) {
-      setError(publicErrorMessage(e));
+      if (e instanceof DOMException && e.name === "AbortError") {
+        setError(publicErrorMessage(new Error("GENERATION_TIMEOUT")));
+      } else if (e instanceof Error) {
+        setError(e.message);
+      } else {
+        setError(publicErrorMessage(e));
+      }
     } finally {
+      window.clearTimeout(timeout);
       setLoading(false);
     }
   }
@@ -275,9 +304,15 @@ export function CreateFlyerForm({
         </p>
       ) : null}
 
+      {step === 3 && mintBalance > 0 && !confirmMint ? (
+        <p className="text-sm text-amber-700">
+          Coche la case « Je confirme utiliser 1 Mint » ci-dessus pour activer la génération.
+        </p>
+      ) : null}
+
       <div className="flex flex-wrap gap-3">
         {step > 0 ? (
-          <button type="button" className="btn-secondary" onClick={() => setStep((value) => value - 1)}>
+          <button type="button" className="btn-secondary" onClick={() => setStep((value) => value - 1)} disabled={loading}>
             Retour
           </button>
         ) : null}
@@ -286,13 +321,27 @@ export function CreateFlyerForm({
             Continuer
           </button>
         ) : (
-          <button type="submit" disabled={loading || !canGenerate} className="btn-primary">
+          <button
+            type="submit"
+            disabled={loading || mintBalance <= 0}
+            aria-busy={loading}
+            className="btn-primary disabled:cursor-not-allowed disabled:opacity-60"
+          >
             {loading ? "Génération en cours…" : "Générer mon affiche — 1 Mint"}
           </button>
         )}
       </div>
 
-      {error ? <p className="text-sm text-red-600">{error}</p> : null}
+      {loading ? (
+        <div className="rounded-xl border border-violet/30 bg-violet/5 px-4 py-3 text-sm text-slate-700" role="status">
+          <p className="font-semibold text-violet">Génération en cours…</p>
+          <p className="mt-1 text-slate-600">
+            Direction artistique puis rendu image. Ça peut prendre jusqu’à 2 minutes — ne ferme pas cette page.
+          </p>
+        </div>
+      ) : null}
+
+      {error ? <p className="text-sm text-red-600" role="alert">{error}</p> : null}
 
       {result ? (
         <div className="card space-y-3 p-5">

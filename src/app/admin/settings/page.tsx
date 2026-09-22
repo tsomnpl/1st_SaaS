@@ -4,7 +4,7 @@ export default function AdminSettingsPage() {
   const configured = {
     clerk: Boolean(process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY && process.env.CLERK_SECRET_KEY),
     database: Boolean(process.env.DATABASE_URL),
-    rodium: Boolean(process.env.RODIUMAI_API_KEY),
+    rodium: Boolean(process.env.RODIUM_API_KEY || process.env.RODIUMAI_API_KEY),
     moneyFusion: Boolean(process.env.MONEY_FUSION_API_URL),
     adminEmail: Boolean(process.env.ADMIN_EMAIL),
     privatePath: Boolean(process.env.ADMIN_PRIVATE_PATH),

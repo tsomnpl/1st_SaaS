@@ -1,5 +1,5 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { env, getAllowedImageModels } from "@/lib/env";
+import { env, getAllowedImageModels, getRodiumApiKey } from "@/lib/env";
 
 type RodiumResponse = {
   id?: string;
@@ -90,7 +90,8 @@ export function selectImageModel(
 }
 
 export async function listRodiumImageModels() {
-  if (!env.RODIUMAI_API_KEY) return [];
+  const apiKey = getRodiumApiKey();
+  if (!apiKey) return [];
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/models`, {
       headers: rodiumHeaders(),
@@ -109,7 +110,7 @@ export async function listRodiumImageModels() {
 }
 
 function rodiumHeaders() {
-  const key = env.RODIUMAI_API_KEY ?? "";
+  const key = getRodiumApiKey();
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${key}`,
@@ -117,13 +118,39 @@ function rodiumHeaders() {
   };
 }
 
+export async function getRodiumWallet() {
+  if (!getRodiumApiKey()) return null;
+  const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
+    headers: rodiumHeaders(),
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  return (await response.json()) as Record<string, unknown>;
+}
+
+/** Available RODI = balance − reserved (what image calls actually spend). */
+export function rodiumDisponible(wallet: Record<string, unknown> | null | undefined) {
+  if (!wallet) return null;
+  const balance = Number(wallet.balance_rodi ?? wallet.balance ?? NaN);
+  const reserved = Number(wallet.reserved_rodi ?? wallet.reserved ?? 0);
+  if (!Number.isFinite(balance)) return null;
+  return Math.max(0, balance - (Number.isFinite(reserved) ? reserved : 0));
+}
+
 export async function generateWithRodium(input: {
   prompt: string;
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
-  if (!env.RODIUMAI_API_KEY) {
+  if (!getRodiumApiKey()) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
+  }
+
+  // Fail fast when the provided key has no free RODI (reserved ≠ spendable).
+  const wallet = await getRodiumWallet();
+  const disponible = rodiumDisponible(wallet);
+  if (disponible !== null && disponible < 1) {
+    throw new Error("RODIUM_INSUFFICIENT_BALANCE");
   }
 
   const available = await listRodiumImageModels();
@@ -187,6 +214,13 @@ async function renderImage(params: {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
+    const raw = await response.text().catch(() => "");
+    if (
+      response.status === 402 ||
+      /insufficient_balance|insufficient_quota|solde/i.test(raw)
+    ) {
+      throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+    }
     throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
   }
   const data = (await response.json()) as RodiumResponse;
@@ -215,16 +249,6 @@ export function sizeForFormat(format: string) {
   return "1024x1024";
 }
 
-export async function getRodiumWallet() {
-  if (!env.RODIUMAI_API_KEY) return null;
-  const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
-    headers: rodiumHeaders(),
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  return (await response.json()) as Record<string, unknown>;
-}
-
 function textFromChat(data: RodiumResponse) {
   const content = data.choices?.[0]?.message?.content;
   if (typeof content === "string") return content;
@@ -235,7 +259,7 @@ function textFromChat(data: RodiumResponse) {
 }
 
 export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
-  if (!env.RODIUMAI_API_KEY) return "";
+  if (!getRodiumApiKey()) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
