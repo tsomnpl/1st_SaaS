@@ -20,6 +20,8 @@ export async function POST(request: Request) {
       generationId: result.generationId,
       outputUrl: result.outputUrl,
       repaired: result.repaired,
+      personalReferenceDenied: result.personalReferenceDenied,
+      personalReferenceUsed: result.personalReferenceUsed,
     });
   } catch (error) {
     const failure = generationFailurePayload(error);

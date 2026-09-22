@@ -118,6 +118,8 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
       "1 Mint = 1 affiche",
       "Export image inclus",
       "Pack éditable (image + textes + HTML)",
+      "Référence visuelle personnelle optionnelle",
+      "Reproduire une composition (PRO)",
     ],
   },
   {
@@ -137,6 +139,8 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
       "1 Mint = 1 affiche",
       "Export image inclus",
       "Pack éditable (image + textes + HTML)",
+      "Référence visuelle personnelle optionnelle",
+      "Reproduire une composition (PRO)",
     ],
   },
 ];

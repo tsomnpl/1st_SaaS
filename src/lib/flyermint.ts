@@ -1,9 +1,15 @@
 import { z } from "zod";
+import { CREATION_MODE_IDS } from "@/lib/creation-modes";
 import { DOMAINS } from "@/lib/domains";
 import { dnaPromptBlock, type CreativeDna } from "@/lib/creative-dna";
 import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
+import {
+  assetRolesPrompt,
+  personalReferencePromptSection,
+  type PersonalReferenceAnalysis,
+} from "@/lib/personal-reference";
 
 function isSafeImageRef(value: string) {
   if (value.startsWith("https://")) return true;
@@ -27,6 +33,7 @@ const optionalEmail = z
 const optionalText = (max: number) => z.string().max(max).optional();
 
 export const createBriefSchema = z.object({
+  creationMode: z.enum(CREATION_MODE_IDS).default("idea"),
   visualType: z.string().min(2).max(80),
   domain: z.enum(DOMAINS),
   objective: z.string().min(2).max(240),
@@ -53,6 +60,8 @@ export const createBriefSchema = z.object({
     .default("liberte_guidee"),
   mainImageUrl: imageRef,
   logoUrl: imageRef,
+  personalReferenceUrl: imageRef,
+  secondaryImageUrl: imageRef,
   regenerateFromId: z.string().min(3).max(80).optional(),
   rememberBrand: z.boolean().optional(),
   adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
@@ -208,7 +217,11 @@ export function applyVisualLibrary(
 export function buildPrompt(
   input: CreateBriefInput,
   ad: ArtDirection,
-  options: { hasVisualReferenceImage?: boolean; dna?: CreativeDna | null } = {},
+  options: {
+    hasVisualReferenceImage?: boolean;
+    dna?: CreativeDna | null;
+    personalReference?: PersonalReferenceAnalysis | null;
+  } = {},
 ) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
@@ -228,26 +241,32 @@ export function buildPrompt(
   ].filter(Boolean);
   const dna = options.dna ?? null;
   const structure = dna?.layout || dna?.composition || ad.composition;
+  const hasPersonal = Boolean(input.personalReferenceUrl);
 
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Pipeline: visual library → domain → style → selected reference → visual analysis → art direction → image prompt → generation → quality control.",
+    `0. CREATION MODE: ${input.creationMode}.`,
     options.hasVisualReferenceImage ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
     dna ? dnaPromptBlock(dna) : "",
+    hasPersonal ? personalReferencePromptSection(options.personalReference ?? null) : "",
+    hasPersonal ? assetRolesPrompt(input) : input.mainImageUrl || input.logoUrl ? assetRolesPrompt(input) : "",
     `1. DOMAIN: ${input.domain}. Visual type: ${input.visualType}.`,
     `2. OBJECTIVE: ${input.objective}. Audience: ${input.targetAudience}.`,
     `3. CLIENT INFORMATION (render exactly, never invent): TITLE ${input.title}. ${facts.join(" ")} CTA: ${ad.cta}.`,
-    options.hasVisualReferenceImage
-      ? "4. VISUAL REFERENCE: a real poster bitmap is attached. It is the composition MODEL, not a theme hint. Follow its structure."
-      : "4. VISUAL REFERENCE: no bitmap attached; follow the written Creative DNA / catalog principles strictly.",
+    hasPersonal
+      ? "4. VISUAL REFERENCE: FlyerMint internal library still informs craft (Creative DNA). A PERSONAL poster is also attached as composition grammar to transpose — wipe original commercial content."
+      : options.hasVisualReferenceImage
+        ? "4. VISUAL REFERENCE: a real poster bitmap is attached. It is the composition MODEL, not a theme hint. Follow its structure."
+        : "4. VISUAL REFERENCE: no bitmap attached; follow the written Creative DNA / catalog principles strictly.",
     `5. STRUCTURE TO KEEP: ${structure}. Do not invent a different grid.`,
     `6. COMPOSITION: ${dna?.composition || ad.composition}. Hierarchy: ${ad.visual_hierarchy.join(" | ")}.`,
     `7. HUMAN SUBJECT (non-negotiable): at least one photoreal person. Placement: ${dna?.humanPlacement || ad.human.framing}. Scale: ${dna?.subjectScale || "match the reference"}. Role: ${dna?.humanRole || ad.human.role}. Action: ${ad.human.action}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
     input.mainImageUrl
-      ? "The client photo IS the human subject. Do not replace their face or body. Integrate them into the scene."
+      ? "The client photo IS the human subject or product to keep. Do not replace their face, body or product. Integrate them into the scene."
       : "Invent an original person who looks photographed, natural West/Central African or matching the stated audience. No celebrity likeness. Do not reuse the same generic face across domains.",
-    input.logoUrl ? "Keep the client logo small, sharp, in a corner or badge. Do not redraw or invent another logo." : "",
+    input.logoUrl ? "USER_LOGO must appear: keep the client logo small, sharp, in a corner or badge. Do not redraw or invent another logo." : "",
     `8. PHOTOGRAPHIC STYLE: ${ad.photography}. Environment: ${ad.background}. Lighting: ${ad.lighting}. Mood: ${dna?.mood || ad.mood}. Treatment: ${dna?.imageTreatment || ad.background}.`,
     `8b. TEXT ZONES: title ${dna?.titleHierarchy || dna?.textPosition || "dominant title block from the reference"}. Price: ${dna?.pricePosition || "same zone as the reference"}. CTA: ${dna?.ctaPosition || ad.cta}.`,
     `9. TYPOGRAPHY: ${dna?.typographyHierarchy || `${ad.typography.heading} + ${ad.typography.body}`}.`,
@@ -303,6 +322,10 @@ export function mergeRegeneratedBrief(previous: CreateBriefInput, next: CreateBr
     adaptiveData: { ...previous.adaptiveData, ...next.adaptiveData },
     mainImageUrl: next.mainImageUrl || previous.mainImageUrl,
     logoUrl: next.logoUrl || previous.logoUrl,
+    personalReferenceUrl: next.personalReferenceUrl || previous.personalReferenceUrl,
+    secondaryImageUrl: next.secondaryImageUrl || previous.secondaryImageUrl,
+    creationMode: next.creationMode || previous.creationMode,
+    newPrice: next.newPrice || previous.newPrice,
   };
 }
 

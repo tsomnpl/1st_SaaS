@@ -96,6 +96,7 @@ export function qcPrompt(
   facts: string[],
   format?: string,
   dnaSummary?: string,
+  personalGrammar?: string,
 ) {
   return [
     "You are the FlyerMint art director doing a quality check on a finished poster.",
@@ -109,7 +110,10 @@ export function qcPrompt(
     format ? `Requested format/orientation: ${format}.` : "",
     `Title that must appear correctly: ${briefTitle}.`,
     facts.length ? `Facts that must not be altered or invented: ${facts.join(" | ")}.` : "",
-    dnaSummary ? `Reference structure that MUST remain recognizable: ${dnaSummary}.` : "",
+    dnaSummary ? `FlyerMint internal reference structure that MUST remain recognizable: ${dnaSummary}.` : "",
+    personalGrammar
+      ? `PERSONAL composition grammar that MUST be transposed (not copied as content): ${personalGrammar}. Also check: new product represented, supplied logo present if given, product photo integrated if given, commercial facts exact, perspective coherent, borders kept when they matter, hierarchy preserved, not overcrowded, result is a transposition not an unrelated layout.`
+      : "",
     "repair_prompt: one short English instruction to fix the worst issue, or empty if pass.",
   ]
     .filter(Boolean)
@@ -229,7 +233,7 @@ export function applyRepair(prompt: string, report: PosterQcReport) {
   }
   if (!report.composition_match || !report.reference_match) {
     extras.push(
-      "PROBLEM: composition does not follow the attached reference. Restore the same layout: subject placement, title block, price, CTA, margins. Change facts only, not structure.",
+      "PROBLEM: composition does not follow the attached reference. Restore the same layout: subject placement, title block, price, CTA, margins, borders and perspective. Change facts only, not structure. If a PERSONAL_REFERENCE was attached, transpose its grammar — do not invent an unrelated poster.",
     );
   }
   if (!report.design_rules || !report.hierarchy || !report.contrast || !report.alignment) {

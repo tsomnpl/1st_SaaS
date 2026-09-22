@@ -18,6 +18,8 @@ describe("flyermint core", () => {
 
     expect(brief.title).toBe("Formation IA 2026");
     expect(brief.domain).toBe("Education & Formation");
+    expect(brief.creationMode).toBe("idea");
+    expect(brief.personalReferenceUrl).toBeUndefined();
   });
 
   it("builds art direction with differentiators", () => {
