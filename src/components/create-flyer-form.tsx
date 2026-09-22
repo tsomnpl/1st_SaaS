@@ -38,6 +38,7 @@ export function CreateFlyerForm({
   initialFormat = "",
   initialDomain = "",
   initialMode = "",
+  initialStep = 0,
 }: {
   mintBalance: number;
   canExport?: boolean;
@@ -48,6 +49,7 @@ export function CreateFlyerForm({
   initialFormat?: string;
   initialDomain?: string;
   initialMode?: string;
+  initialStep?: number;
 }) {
   const startingMode =
     initialMode && CREATION_MODES.some((mode) => mode.id === initialMode)
@@ -56,7 +58,7 @@ export function CreateFlyerForm({
         ? "idea"
         : null;
   const [mode, setMode] = useState<CreationModeId | null>(startingMode);
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(Math.min(3, Math.max(0, initialStep)));
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>(
     DOMAINS.includes(initialDomain as (typeof DOMAINS)[number])
       ? (initialDomain as (typeof DOMAINS)[number])
