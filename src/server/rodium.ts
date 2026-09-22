@@ -70,7 +70,7 @@ export function selectImageModel(
     brief.cta,
   ].filter(Boolean).length;
 
-  const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+  const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
   const preferred = (() => {
     if (brief.mainImageUrl || brief.logoUrl || options.hasStyleReference) {
       return editModel;

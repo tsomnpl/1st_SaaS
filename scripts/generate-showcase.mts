@@ -570,7 +570,7 @@ async function main() {
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
   const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
   const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
-  const gemini = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+  const gemini = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
 
   if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
 
@@ -707,6 +707,9 @@ async function main() {
       } catch (firstError) {
         const message = firstError instanceof Error ? firstError.message : String(firstError);
         console.error("gemini_fail", sheet.id, message);
+        if (message.includes("INSUFFICIENT_BALANCE") || message.includes("provided")) {
+          throw firstError;
+        }
         console.log("fallback_gpt", sheet.id, gpt, "dna", Boolean(dnaBlock));
         rendered = await renderWith(gpt, false);
       }

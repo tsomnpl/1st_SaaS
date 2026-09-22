@@ -118,7 +118,7 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("storage/masters");
     expect(script).toContain("isGptImageModel");
     expect(script).toContain("fetchSupabaseReference");
-    expect(script).toContain("google/gemini-3.1-flash-image");
+    expect(script).toContain("google/gemini-3.1-flash-lite-image");
     expect(script).toContain("image_url");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
   });
