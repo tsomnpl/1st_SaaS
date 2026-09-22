@@ -1,10 +1,15 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { env, getAllowedImageModels } from "@/lib/env";
+import { env, getAllowedImageModels, getRodiumApiKey } from "@/lib/env";
 
 type RodiumResponse = {
   id?: string;
   model?: string;
-  choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string; image_url?: { url?: string } }> } }>;
+  choices?: Array<{
+    message?: {
+      content?: string | Array<{ type?: string; text?: string; image_url?: { url?: string } }>;
+      images?: Array<{ image_url?: { url?: string }; url?: string }>;
+    };
+  }>;
   data?: Array<{ url?: string; b64_json?: string }>;
   usage?: {
     prompt_tokens?: number;
@@ -65,20 +70,19 @@ export function selectImageModel(
     brief.cta,
   ].filter(Boolean).length;
 
+  const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
+  const fastModel = env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-lite-image";
   const preferred = (() => {
-    if (brief.mainImageUrl || brief.logoUrl) {
-      return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
-    }
-    if (options.hasStyleReference) {
-      return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+    if (brief.mainImageUrl || brief.logoUrl || options.hasStyleReference) {
+      return editModel;
     }
     if (textHeavyFields >= 6) {
-      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || "openai/gpt-image-2";
+      return env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY?.trim() || fastModel;
     }
     if (premiumKeywords.some((k) => promptText.includes(k))) {
-      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
+      return env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || fastModel;
     }
-    return env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "openai/gpt-image-2";
+    return fastModel;
   })();
 
   const allowed = getAllowedImageModels();
@@ -86,14 +90,38 @@ export function selectImageModel(
     .filter(isLikelyImageModel)
     .filter((id) => (allowed.length ? allowed.includes(id) : true));
 
+  if (options.hasStyleReference || brief.mainImageUrl || brief.logoUrl) {
+    const visionPool = pool.filter(canConsumeReferenceBitmap);
+    if (visionPool.includes(preferred)) return preferred;
+    if (visionPool.includes(editModel)) return editModel;
+    if (visionPool.length > 0) return visionPool[0];
+    if (canConsumeReferenceBitmap(editModel) && allowed.length === 0 && available.length === 0) {
+      return editModel;
+    }
+    throw new Error("RODIUM_NO_IMAGE_EDIT_MODEL");
+  }
+
   if (pool.includes(preferred)) return preferred;
   if (pool.length > 0) return pool[0];
   if (isLikelyImageModel(preferred) && allowed.length === 0) return preferred;
   throw new Error("RODIUM_NO_IMAGE_MODEL");
 }
 
+export function canConsumeReferenceBitmap(modelId: string) {
+  const id = modelId.toLowerCase();
+  if (id.includes("gpt-image") || id.includes("dall-e") || id.includes("dalle")) return false;
+  return (
+    id.includes("gemini") ||
+    id.includes("imagen") ||
+    id.includes("flux") ||
+    id.includes("banana") ||
+    id.includes("seedream") ||
+    id.includes("image-edit")
+  );
+}
+
 export async function listRodiumImageModels() {
-  if (!env.RODIUMAI_API_KEY) return [];
+  if (!getRodiumApiKey()) return [];
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/models`, {
       headers: rodiumHeaders(),
@@ -112,7 +140,7 @@ export async function listRodiumImageModels() {
 }
 
 function rodiumHeaders() {
-  const key = env.RODIUMAI_API_KEY ?? "";
+  const key = getRodiumApiKey();
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${key}`,
@@ -125,7 +153,7 @@ export async function generateWithRodium(input: {
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
-  if (!env.RODIUMAI_API_KEY) {
+  if (!getRodiumApiKey()) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
@@ -147,6 +175,7 @@ export async function generateWithRodium(input: {
     imageModel,
     imageUrl: render.imageUrl,
     rawText: render.rawText,
+    bitmapAttached: render.bitmapAttached,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -161,12 +190,86 @@ export function estimateRodiCost(model: string, totalTokens: number) {
   return Number(((totalTokens / 1000) * perThousandTokens).toFixed(3));
 }
 
+function isProvidedQuotaError(text: string) {
+  return (
+    text.includes("insufficient_balance") ||
+    text.includes("insufficient_quota") ||
+    text.includes("provided")
+  );
+}
+
+async function postGeminiImage(model: string, prompt: string, attached: string): Promise<{
+  imageUrl: string;
+  rawText: string;
+  usage: RodiumResponse["usage"];
+  bitmapAttached: boolean;
+}> {
+  const content: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
+  if (attached) {
+    content.push({ type: "image_url", image_url: { url: attached } });
+  }
+  const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: rodiumHeaders(),
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content }],
+      temperature: 0.4,
+    }),
+  });
+  const raw = await response.text();
+  if (!response.ok) {
+    if (attached && isProvidedQuotaError(raw)) {
+      return postGeminiImage(model, prompt, "");
+    }
+    throwRodiumHttpError(response.status, raw);
+  }
+  const data = JSON.parse(raw) as RodiumResponse;
+  const imageUrl = extractGeneratedImageUrl(data);
+  if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+  return {
+    imageUrl,
+    rawText: JSON.stringify({ model: data.model, bitmap_attached: Boolean(attached) }),
+    usage: data.usage,
+    bitmapAttached: Boolean(attached),
+  };
+}
+
+function extractGeneratedImageUrl(data: RodiumResponse) {
+  const first = data.data?.[0];
+  if (first?.url) return first.url;
+  if (first?.b64_json) return `data:image/png;base64,${first.b64_json}`;
+  const message = data.choices?.[0]?.message;
+  const fromList = message?.images?.[0]?.image_url?.url || message?.images?.[0]?.url;
+  if (fromList) return fromList;
+  const content = message?.content;
+  if (Array.isArray(content)) {
+    for (const part of content) {
+      if (part.image_url?.url) return part.image_url.url;
+    }
+  }
+  return "";
+}
+
 async function renderImage(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
+  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl || "";
+  const styleReference = params.styleReferenceDataUrl ?? "";
+  const bitmap = clientReference.startsWith("data:image/")
+    ? clientReference
+    : styleReference.startsWith("data:image/")
+      ? styleReference
+      : "";
+  const attached = canConsumeReferenceBitmap(params.model) ? bitmap : "";
+
+  if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
+    return postGeminiImage(params.model, params.prompt, attached);
+  }
+
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
     model: params.model,
@@ -174,15 +277,7 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl;
-  const styleReference = params.styleReferenceDataUrl;
-  if (params.model.toLowerCase().includes("gemini")) {
-    if (clientReference?.startsWith("data:image/")) {
-      body.image = clientReference;
-    } else if (styleReference?.startsWith("data:image/")) {
-      body.image = styleReference;
-    }
-  }
+  if (attached) body.image = attached;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -190,17 +285,24 @@ async function renderImage(params: {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
+    const raw = await response.text();
+    if (response.status === 402 || isProvidedQuotaError(raw)) {
+      const fallback = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
+      return postGeminiImage(fallback, params.prompt, "");
+    }
+    throwRodiumHttpError(response.status, raw);
   }
   const data = (await response.json()) as RodiumResponse;
-  const first = data.data?.[0];
-  const imageUrl = first?.url
-    ? first.url
-    : first?.b64_json
-      ? `data:image/png;base64,${first.b64_json}`
-      : "";
+  const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage, bitmapAttached: false };
+}
+
+function throwRodiumHttpError(status: number, raw: string): never {
+  if (status === 402 || isProvidedQuotaError(raw)) {
+    throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+  }
+  throw new Error(`RODIUM_IMAGES_FAILED_${status}`);
 }
 
 export function sizeForFormat(format: string) {
@@ -218,7 +320,7 @@ export function sizeForFormat(format: string) {
 }
 
 export async function getRodiumWallet() {
-  if (!env.RODIUMAI_API_KEY) return null;
+  if (!getRodiumApiKey()) return null;
   const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
     headers: rodiumHeaders(),
     cache: "no-store",
@@ -236,9 +338,58 @@ function textFromChat(data: RodiumResponse) {
   return "";
 }
 
-export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
-  if (!env.RODIUMAI_API_KEY) return "";
+export async function reviewPosterQuality(input: {
+  imageUrl: string;
+  prompt: string;
+  referenceImageUrl?: string;
+}) {
+  if (!getRodiumApiKey()) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const content: Array<Record<string, unknown>> = [
+    { type: "text", text: input.prompt },
+    { type: "image_url", image_url: { url: input.imageUrl } },
+  ];
+  if (input.referenceImageUrl && input.referenceImageUrl.length < 900_000) {
+    content.push({
+      type: "image_url",
+      image_url: { url: input.referenceImageUrl },
+    });
+  }
+  try {
+    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: rodiumHeaders(),
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content }],
+        temperature: 0,
+        max_tokens: 500,
+      }),
+    });
+    if (!response.ok) return "";
+    const data = (await response.json()) as RodiumResponse;
+    return textFromChat(data).trim();
+  } catch {
+    return "";
+  }
+}
+
+export async function analyzeStyleReference(input: {
+  imageUrl: string;
+  domain: string;
+  referenceId: string;
+}) {
+  if (!getRodiumApiKey() || !input.imageUrl) return "";
+  const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const prompt = [
+    "You are FlyerMint's art director. Analyze this poster as a COMPOSITION MODEL.",
+    `Domain: ${input.domain}. Reference id: ${input.referenceId}.`,
+    "Describe STRUCTURE only. Never transcribe brand names, logos, phone numbers, or identifiable people.",
+    "Return JSON only with keys:",
+    "background, composition, layout, humanPlacement, subjectScale, textPosition, titleHierarchy,",
+    "humanRole, imageTreatment, typographyHierarchy, colorPalette (string[] of 2-4 descriptive swatches, not brand names),",
+    "contrast, spacing, whiteSpace, margins, safeZone, ctaPosition, pricePosition, mood, visualDensity, aspectRatio.",
+  ].join(" ");
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -249,13 +400,13 @@ export async function reviewPosterQuality(input: { imageUrl: string; prompt: str
           {
             role: "user",
             content: [
-              { type: "text", text: input.prompt },
+              { type: "text", text: prompt },
               { type: "image_url", image_url: { url: input.imageUrl } },
             ],
           },
         ],
         temperature: 0,
-        max_tokens: 500,
+        max_tokens: 2500,
       }),
     });
     if (!response.ok) return "";

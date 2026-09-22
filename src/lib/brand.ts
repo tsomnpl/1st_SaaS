@@ -2,9 +2,11 @@ export const BRAND = {
   name: "FlyerMint",
   slogan: "Créez des visuels qui marquent.",
   colors: {
-    night: "#111827",
-    mint: "#20C997",
-    mintWash: "#DFFAF0",
+    night: "#1E293B",
+    violet: "#6D28D9",
+    blue: "#3B82F6",
+    mint: "#10B981",
+    orange: "#F59E0B",
     white: "#FFFFFF",
   },
 } as const;
@@ -23,17 +25,17 @@ export const STEPS = [
   {
     n: "03",
     title: "Direction artistique",
-    text: "Hiérarchie, palette, composition et CTA sont construits automatiquement.",
+    text: "Une référence visuelle du domaine est analysée : composition, personne, typo, couleurs, CTA.",
   },
   {
     n: "04",
     title: "Génération",
-    text: "Un modèle image spécialisé compose l’affiche professionnelle.",
+    text: "Un modèle image compatible (image-to-image) compose l’affiche sur cette structure.",
   },
   {
     n: "05",
     title: "Contrôle",
-    text: "Lisibilité, textes, marges et cohérence sont vérifiés.",
+    text: "Personne, ressemblance de structure, textes, marges et cohérence sont vérifiés.",
   },
   {
     n: "06",

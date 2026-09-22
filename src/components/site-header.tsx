@@ -27,22 +27,22 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
 
         <nav className="hidden items-center gap-6 text-sm text-slate-600 md:flex">
           {publicLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-[#20C997]">
+            <Link key={link.href} href={link.href} className="transition hover:text-[#6D28D9]">
               {link.label}
             </Link>
           ))}
           <SignedIn>
-            <Link href="/dashboard" className="transition hover:text-[#20C997]">
+            <Link href="/dashboard" className="transition hover:text-[#6D28D9]">
               Tableau de bord
             </Link>
-            <Link href="/history" className="transition hover:text-[#20C997]">
+            <Link href="/history" className="transition hover:text-[#6D28D9]">
               Historique
             </Link>
-            <Link href="/profile" className="transition hover:text-[#20C997]">
+            <Link href="/profile" className="transition hover:text-[#6D28D9]">
               Profil
             </Link>
             {showAdmin && adminHref ? (
-              <Link href={adminHref} className="transition hover:text-[#20C997]">
+              <Link href={adminHref} className="transition hover:text-[#6D28D9]">
                 Administration
               </Link>
             ) : null}
@@ -55,12 +55,12 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button type="button" className="transition hover:text-[#20C997]">
+              <button type="button" className="transition hover:text-[#6D28D9]">
                 Connexion
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button type="button" className="transition hover:text-[#20C997]">
+              <button type="button" className="transition hover:text-[#6D28D9]">
                 Inscription
               </button>
             </SignUpButton>

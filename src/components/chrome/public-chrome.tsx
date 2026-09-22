@@ -31,15 +31,15 @@ export function PublicChrome({ children }: { children: ReactNode }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="hidden transition hover:text-[#20C997] sm:inline"
+                  className="hidden transition hover:text-[#6D28D9] sm:inline"
                 >
                   {link.label}
                 </Link>
               ))}
-              <Link href="/sign-in" className="hidden transition hover:text-[#20C997] sm:inline">
+              <Link href="/sign-in" className="hidden transition hover:text-[#6D28D9] sm:inline">
                 Connexion
               </Link>
-              <Link href="/sign-up" className="hidden transition hover:text-[#20C997] sm:inline">
+              <Link href="/sign-up" className="hidden transition hover:text-[#6D28D9] sm:inline">
                 Inscription
               </Link>
               <Link href="/create" className="btn-primary whitespace-nowrap">

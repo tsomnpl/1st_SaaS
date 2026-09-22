@@ -1,5 +1,6 @@
 import { CreditTransactionType, GenerationStatus, Prisma } from "@prisma/client";
 import {
+  applyVisualLibrary,
   buildArtDirection,
   buildPrompt,
   createBriefSchema,
@@ -17,11 +18,12 @@ import {
   shouldRepair,
   skippedQcReport,
 } from "@/lib/quality-control";
-import { firstAvailableStyleReference } from "@/lib/visual-references";
+import { dnaSummaryLine } from "@/lib/creative-dna";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
+import { resolveVisualLibrary } from "@/server/visual-library";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -41,10 +43,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     }
   }
 
-  const artDirection = buildArtDirection(brief);
-  const styleReference = firstAvailableStyleReference(artDirection.visual_reference_paths);
-  let prompt = buildPrompt(brief, artDirection, { hasVisualReferenceImage: Boolean(styleReference) });
-  const qualityScores = scoreQuality(brief, prompt);
+  const baseDirection = buildArtDirection(brief);
+  const qualityScores = scoreQuality(brief, buildPrompt(brief, baseDirection));
 
   const generation = await prisma.$transaction(async (tx) => {
     await consumeOneMint(user.id, {
@@ -58,8 +58,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         userId: user.id,
         mintCost: 1,
         brief: brief as Prisma.JsonObject,
-        artDirection: artDirection as Prisma.JsonObject,
-        prompt,
+        artDirection: baseDirection as Prisma.JsonObject,
+        prompt: buildPrompt(brief, baseDirection),
         model: "pending",
         status: GenerationStatus.PENDING,
       },
@@ -67,28 +67,38 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
+    const visual = await resolveVisualLibrary(brief, baseDirection.visual_reference_paths);
+    const artDirection = applyVisualLibrary(baseDirection, visual, brief.colors);
+    let prompt = buildPrompt(brief, artDirection, {
+      hasVisualReferenceImage: Boolean(visual.dataUrl),
+      dna: visual.dna,
+    });
     let imageUrl = "";
     let model = "pending";
     let rodiCost = 0;
     let qc = skippedQcReport();
     let repaired = false;
     const modelsUsed: string[] = [];
+    const dnaSummary = dnaSummaryLine(visual.dna);
+    let bitmapAttached = false;
 
     for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
       const rendered = await generateWithRodium({
         prompt,
         brief,
-        styleReferenceDataUrl: styleReference?.dataUrl,
+        styleReferenceDataUrl: visual.dataUrl || undefined,
       });
       if (!rendered.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       imageUrl = rendered.imageUrl;
+      bitmapAttached = rendered.bitmapAttached;
       modelsUsed.push(rendered.model);
       rodiCost = Number((rodiCost + rendered.rodiCostEstimate).toFixed(3));
       model = modelsUsed.join("+repair:");
 
       const qcRaw = await reviewPosterQuality({
         imageUrl,
-        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format),
+        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format, dnaSummary),
+        referenceImageUrl: visual.dataUrl || undefined,
       });
       qc = qcRaw ? parseQcReport(qcRaw) : skippedQcReport();
       if (!shouldRepair(qc)) break;
@@ -112,6 +122,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       where: { id: generation.id },
       data: {
         prompt,
+        artDirection: artDirection as Prisma.JsonObject,
         model,
         rodiCost,
         outputUrl: imageUrl,
@@ -120,10 +131,24 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           ...qualityScores,
           qc,
           repaired,
+          task: "IMAGE_GENERATION",
+          visualLibrarySource: visual.source,
+          visualReferenceId: visual.referenceId || null,
+          visualReferencePath: visual.storagePath || null,
+          visualReferenceBytes: visual.bytes,
+          bitmapAttached,
+          creativeDna: visual.dna,
           visualReferenceIds: artDirection.visual_reference_ids,
-          visualReferencePath: styleReference?.path ?? null,
           durationMs: Date.now() - generation.createdAt.getTime(),
-          checks: ["human_required", "art_direction", "visual_library", "qc_vision", "format"],
+          checks: [
+            "human_required",
+            "art_direction",
+            "visual_library",
+            "bitmap_attached",
+            "qc_vision",
+            "composition_match",
+            "format",
+          ],
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },
@@ -135,6 +160,11 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       quality: qualityScores,
       artDirection,
       repaired,
+      visualReference: {
+        source: visual.source,
+        id: visual.referenceId,
+        attached: Boolean(visual.dataUrl),
+      },
     };
   } catch (error) {
     await prisma.$transaction(async (tx) => {

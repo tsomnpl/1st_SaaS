@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
+import { dnaPromptBlock, type CreativeDna } from "@/lib/creative-dna";
 import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
@@ -148,6 +149,9 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "collage de 5 elements sans hierarchie",
       "copie directe d'une reference",
       "faits inventes (date, prix, tel)",
+      "reprise du telephone, email, adresse ou handle de la reference",
+      "affiche gradient sans photo",
+      "personne genérique réutilisée d'un domaine à l'autre",
     ],
     differentiators: [
       "directeur artistique par domaine, pas un template unique",
@@ -158,10 +162,53 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
   };
 }
 
+export type VisualLibraryApplyInput = {
+  source: "supabase" | "local" | "none";
+  referenceId: string;
+  storagePath: string;
+  dna: CreativeDna | null;
+  principles: string[];
+};
+
+export function applyVisualLibrary(
+  ad: ArtDirection,
+  hit: VisualLibraryApplyInput,
+  clientColors: string[],
+): ArtDirection {
+  if (hit.source === "none" && !hit.referenceId) return ad;
+  const palette = clientColors.length
+    ? clientColors.slice(0, 3)
+    : hit.dna?.colorPalette?.length
+      ? hit.dna.colorPalette.slice(0, 3)
+      : ad.color_palette;
+  const human = hit.dna?.humanRole
+    ? {
+        ...ad.human,
+        role: hit.dna.humanRole,
+        framing: hit.dna.humanPlacement || ad.human.framing,
+      }
+    : ad.human;
+  return {
+    ...ad,
+    human,
+    composition: hit.dna?.composition || ad.composition,
+    background: hit.dna?.background || hit.dna?.imageTreatment || ad.background,
+    mood: hit.dna?.mood || ad.mood,
+    color_palette: palette,
+    visual_reference_ids: hit.referenceId
+      ? [hit.referenceId, ...ad.visual_reference_ids.filter((id) => id !== hit.referenceId)]
+      : ad.visual_reference_ids,
+    visual_reference_paths: hit.storagePath
+      ? [hit.storagePath, ...ad.visual_reference_paths.filter((path) => path !== hit.storagePath)]
+      : ad.visual_reference_paths,
+    reference_principles: [...hit.principles, ...ad.reference_principles],
+  };
+}
+
 export function buildPrompt(
   input: CreateBriefInput,
   ad: ArtDirection,
-  options: { hasVisualReferenceImage?: boolean } = {},
+  options: { hasVisualReferenceImage?: boolean; dna?: CreativeDna | null } = {},
 ) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
@@ -179,35 +226,50 @@ export function buildPrompt(
       .filter(([, value]) => value)
       .map(([key, value]) => `${key}: ${value}`),
   ].filter(Boolean);
+  const dna = options.dna ?? null;
+  const structure = dna?.layout || dna?.composition || ad.composition;
 
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
-    "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
+    "Pipeline: visual library → domain → style → selected reference → visual analysis → art direction → image prompt → generation → quality control.",
     options.hasVisualReferenceImage ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
-    `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
-    `HUMAN SUBJECT (non-negotiable): at least one photoreal person. Role: ${ad.human.role}. Action: ${ad.human.action}. Framing: ${ad.human.framing}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
+    dna ? dnaPromptBlock(dna) : "",
+    `1. DOMAIN: ${input.domain}. Visual type: ${input.visualType}.`,
+    `2. OBJECTIVE: ${input.objective}. Audience: ${input.targetAudience}.`,
+    `3. CLIENT INFORMATION (render exactly, never invent): TITLE ${input.title}. ${facts.join(" ")} CTA: ${ad.cta}.`,
+    options.hasVisualReferenceImage
+      ? "4. VISUAL REFERENCE: a real poster bitmap is attached. It is the composition MODEL, not a theme hint. Follow its structure."
+      : "4. VISUAL REFERENCE: no bitmap attached; follow the written Creative DNA / catalog principles strictly.",
+    `5. STRUCTURE TO KEEP: ${structure}. Do not invent a different grid.`,
+    `6. COMPOSITION: ${dna?.composition || ad.composition}. Hierarchy: ${ad.visual_hierarchy.join(" | ")}.`,
+    `7. HUMAN SUBJECT (non-negotiable): at least one photoreal person. Placement: ${dna?.humanPlacement || ad.human.framing}. Scale: ${dna?.subjectScale || "match the reference"}. Role: ${dna?.humanRole || ad.human.role}. Action: ${ad.human.action}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
     input.mainImageUrl
       ? "The client photo IS the human subject. Do not replace their face or body. Integrate them into the scene."
-      : "Invent an original person who looks photographed, natural West/Central African or matching the stated audience. No celebrity likeness.",
+      : "Invent an original person who looks photographed, natural West/Central African or matching the stated audience. No celebrity likeness. Do not reuse the same generic face across domains.",
     input.logoUrl ? "Keep the client logo small, sharp, in a corner or badge. Do not redraw or invent another logo." : "",
-    `ENVIRONMENT: ${ad.background}. Lighting: ${ad.lighting}. Photography: ${ad.photography}. Mood: ${ad.mood}.`,
-    `COMPOSITION: ${ad.composition}. Hierarchy: ${ad.visual_hierarchy.join(" | ")}. Negative space: ${ad.negative_space}.`,
-    `DESIGN: palette ${ad.color_palette.join(", ")}. Type: ${ad.typography.heading} + ${ad.typography.body}. CTA: ${ad.cta}.`,
-    `FORMAT: ${ad.format}.`,
-    `TITLE TO RENDER EXACTLY: ${input.title}.`,
-    ...facts,
+    `8. PHOTOGRAPHIC STYLE: ${ad.photography}. Environment: ${ad.background}. Lighting: ${ad.lighting}. Mood: ${dna?.mood || ad.mood}. Treatment: ${dna?.imageTreatment || ad.background}.`,
+    `8b. TEXT ZONES: title ${dna?.titleHierarchy || dna?.textPosition || "dominant title block from the reference"}. Price: ${dna?.pricePosition || "same zone as the reference"}. CTA: ${dna?.ctaPosition || ad.cta}.`,
+    `9. TYPOGRAPHY: ${dna?.typographyHierarchy || `${ad.typography.heading} + ${ad.typography.body}`}.`,
+    `10. COLORS: ${ad.color_palette.join(", ")}. If the client identity changes the accent, keep the same structure and swap only the accent.`,
+    `11. CONTRAST: ${dna?.contrast || "strong text vs background, never pale type on a busy photo"}.`,
+    `12. MARGINS: ${dna?.margins || "keep the same breathing rhythm as the reference"}. No important element touching the edge.`,
+    `13. SAFE ZONE / WHITE SPACE: ${dna?.safeZone || dna?.whiteSpace || dna?.spacing || ad.negative_space}.`,
+    `14. FORMAT: ${ad.format}. Aspect ${dna?.aspectRatio || "match requested format"}.`,
+    "15. REALISM CONSTRAINTS: natural skin, real pores, correct hands, domain-specific person. No plastic AI look, no celebrity, no copied logos.",
+    "16. QUALITY CONTROL: reject generic AI collages, random human placement, gradient-only posters, and any layout that does not match the reference structure.",
     input.creativeFreedom === "liberte_totale"
-      ? "Creative freedom: original composition and photography, still keeping facts exact and one photoreal human."
+      ? "Creative freedom: original photography inside the SAME structure, facts exact, one photoreal human."
       : input.creativeFreedom === "design_tres_precis"
         ? "Follow the stated colors, mood and layout tightly. Do not invent a different identity."
-        : "Guided freedom: strong art direction, facts locked.",
+        : "Guided freedom: strong art direction, facts locked, structure from the reference.",
     ad.visual_reference_ids.length
-      ? `Visual library sheets (principles only, never copy): ${ad.visual_reference_ids.join(", ")}.`
+      ? `Visual library ids: ${ad.visual_reference_ids.join(", ")}.`
       : "",
-    `Reference principles (inspire, never copy): ${ad.reference_principles.slice(0, 16).join(" || ")}.`,
+    `Reference principles: ${ad.reference_principles.slice(0, 16).join(" || ")}.`,
     `Avoid: ${ad.avoid.join("; ")}.`,
-    "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
+    "Do not invent business details. If a phone, email, price or date is not in the client information, do not render one.",
+    "Never copy contact details from the attached reference.",
     "If it would not be publishable by a real local business, it is a failure.",
   ]
     .filter(Boolean)

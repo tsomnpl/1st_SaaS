@@ -44,28 +44,77 @@ export const SHOWCASE_DESIGN: ShowcaseDesign[] = [
   { id: "sante-tourisme-associations-03", style: "solidarité turquoise", composition: "message centré, un visuel humain respectueux, CTA don", palette: ["#14B8A6", "#F8FAFC", "#0F172A"], paletteWhy: "turquoise rassurant associations", ambiance: "solidaire", typography: "sans lisible, message court", rules: RULES },
 ];
 
+export const EXTRA_SHOWCASE_DESIGN: ShowcaseDesign[] = [
+  { id: "mariage-01", style: "cérémonie ivoire + jardin", composition: "couple héros centré, titre haut, infos groupées bas", palette: ["#F5F0E8", "#3F6212", "#1C1917"], paletteWhy: "ivoire lin + vert jardin mariage", ambiance: "intime", typography: "serif display + sans", rules: RULES },
+  { id: "anniversaire-01", style: "fête chaude photo-card", composition: "honored person héros, date/lieu encart", palette: ["#C2410C", "#FDE68A", "#1C1917"], paletteWhy: "ambre/terracotta = joie d'anniversaire", ambiance: "festif", typography: "display joyeux + sans", rules: RULES },
+  { id: "emploi-01", style: "recrutement documentaire", composition: "titre poste dominant, métier groupé, humain au travail", palette: ["#1E3A8A", "#F8FAFC", "#0F172A"], paletteWhy: "bleu confiance emploi", ambiance: "pro", typography: "sans net, titre fort", rules: RULES },
+  { id: "agriculture-01", style: "terroir daylight", composition: "producteur + récolte héros, titre haut, marché en meta", palette: ["#854D0E", "#3F6212", "#FEF3C7"], paletteWhy: "ocre terre + vert feuille", ambiance: "raciné", typography: "sans robuste", rules: RULES },
+  { id: "automobile-01", style: "atelier graphite", composition: "véhicule + personne pour l'échelle, infos horaires groupées", palette: ["#111827", "#F59E0B", "#E5E7EB"], paletteWhy: "graphite atelier + ambre phare", ambiance: "technique", typography: "condensed bold + sans", rules: RULES },
+  { id: "musique-01", style: "scène live gold", composition: "artiste en mouvement, titre, ticket infos bas", palette: ["#0F172A", "#D4A017", "#F8FAFC"], paletteWhy: "nuit + or scène", ambiance: "live", typography: "display impact + sans", rules: RULES },
+  { id: "culture-01", style: "festival indigo or", composition: "performer héros, titre festival, dates groupées", palette: ["#312E81", "#D4A017", "#7C2D12"], paletteWhy: "indigo/or/terracotta culture", ambiance: "rituel", typography: "serif display + sans", rules: RULES },
+  { id: "services-01", style: "service à domicile clair", composition: "technicien à la porte, promesse titre, RDV en bande", palette: ["#ECFDF5", "#334155", "#10B981"], paletteWhy: "lin/sage = confiance ménage", ambiance: "fiable", typography: "sans lisible", rules: RULES },
+];
+
 export function designFor(id: string) {
-  return SHOWCASE_DESIGN.find((row) => row.id === id);
+  return SHOWCASE_DESIGN.find((row) => row.id === id) ?? EXTRA_SHOWCASE_DESIGN.find((row) => row.id === id);
 }
 
-export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean) {
+export function supabaseDomainForSheet(id: string) {
+  if (id.startsWith("evenementiel")) return "evenementiel";
+  if (id.startsWith("restauration")) return "restauration";
+  if (id.startsWith("mode")) return "mode";
+  if (id.startsWith("beaute")) return "beaute";
+  if (id === "immobilier-business-01" || id === "immobilier-business-02") return "immobilier";
+  if (id === "immobilier-business-03") return "business";
+  if (id === "immobilier-business-04") return "finance";
+  if (id === "immobilier-business-05") return "e-commerce";
+  if (id === "techno-education-01") return "technologie";
+  if (id.startsWith("techno-education")) return "education";
+  if (id === "sport-finance-01") return "sport";
+  if (id === "sport-finance-02") return "finance";
+  if (id === "sante-tourisme-associations-01") return "sante";
+  if (id === "sante-tourisme-associations-02") return "tourisme";
+  if (id === "sante-tourisme-associations-03") return "associations";
+  if (id.startsWith("mariage")) return "mariage";
+  if (id.startsWith("anniversaire")) return "anniversaire";
+  if (id.startsWith("emploi")) return "emploi";
+  if (id.startsWith("agriculture")) return "agriculture";
+  if (id.startsWith("automobile")) return "automobile";
+  if (id.startsWith("musique")) return "musique";
+  if (id.startsWith("culture")) return "religion-culture";
+  if (id.startsWith("services")) return "services";
+  return "";
+}
+
+export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean, dnaBlock = "") {
   const design = designFor(sheet.id);
   if (!design) throw new Error(`DESIGN_MISSING_${sheet.id}`);
   return [
     hasVisualRef ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
-    `Vertical poster 3:4, print-sharp, high resolution.`,
+    dnaBlock,
+    `Vertical poster 3:4, print-sharp, high resolution. Recorded size is the model max (typically 1024x1536), not 4K.`,
     `Domain: ${sheet.domaine}.`,
     `Style: ${design.style}. Composition: ${design.composition}.`,
     `Palette limited to ${design.palette.join(", ")} (${design.paletteWhy}).`,
     `Typography: ${design.typography}. Ambience: ${design.ambiance}.`,
-    `Title to render clearly: ${sheet.titre_affiche_finale}.`,
+    `Title to render clearly, and no other brand name: ${sheet.titre_affiche_finale}.`,
     `Subtitle: ${sheet.sous_titre_affiche_finale}.`,
     `Meta: ${sheet.meta}. CTA: ${sheet.cta}.`,
+    "VISIBLE WORDS (exact, nothing else):",
+    `TITLE=${sheet.titre_affiche_finale}`,
+    `SUBTITLE=${sheet.sous_titre_affiche_finale}`,
+    `META=${sheet.meta}`,
+    `CTA=${sheet.cta}`,
+    "BADGE=FLYERMINT",
     sheet.prompt,
     "At least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.",
+    "If the reference has no person, add one. Do not invent a phone, email, price or date that is not listed above.",
     "Original artwork only. No real brand names, no copied logos, no celebrity likeness.",
-  ].join("\n");
+    "Never copy a phone, WhatsApp, email, address, price or date from the attached reference.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 }
 
 export function referenceCategorisation(sheet: ShowcaseSheet) {

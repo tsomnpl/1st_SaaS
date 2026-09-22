@@ -5,18 +5,8 @@ import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { ensureOfficialPlans } from "@/server/plans";
 
-type MoneyFusionInitPayload = {
-  totalPrice: number;
-  article: string;
-  numeroSend: string;
-  nomclient: string;
-  personal_Info: string;
-  return_url: string;
-  webhook_url: string;
-};
-
 type MoneyFusionInitResponse = {
-  statut?: string;
+  statut?: boolean | string;
   token?: string;
   message?: string;
   url?: string;
@@ -25,6 +15,49 @@ type MoneyFusionInitResponse = {
 function assertMoneyFusionConfigured() {
   if (!env.MONEY_FUSION_API_URL) throw new Error("MONEY_FUSION_API_URL_MISSING");
   if (!env.NEXT_PUBLIC_APP_URL) throw new Error("NEXT_PUBLIC_APP_URL_MISSING");
+}
+
+export function moneyFusionPayEndpoint(apiUrl: string) {
+  return apiUrl.replace(/\/$/, "");
+}
+
+export function buildMoneyFusionInitPayload(params: {
+  planName: string;
+  amountFcfa: number;
+  numeroSend: string;
+  nomclient: string;
+  userId: string;
+  orderId: string;
+  returnUrl: string;
+  webhookUrl: string;
+}) {
+  return {
+    totalPrice: params.amountFcfa,
+    article: [{ [params.planName]: params.amountFcfa }],
+    articles: [{ name: params.planName, price: String(params.amountFcfa), quantity: 1 }],
+    numeroSend: params.numeroSend,
+    nomclient: params.nomclient,
+    nomClient: params.nomclient,
+    personal_Info: [{ userId: params.userId, orderId: params.orderId }],
+    return_url: params.returnUrl,
+    returnUrl: params.returnUrl,
+    webhook_url: params.webhookUrl,
+    webhookUrl: params.webhookUrl,
+    userId: params.userId,
+    orderId: params.orderId,
+  };
+}
+
+export function moneyFusionRawStatus(payload?: Record<string, unknown>) {
+  if (!payload) return "pending";
+  const event = String(payload.event ?? payload.type ?? "").toLowerCase();
+  if (event.includes("completed") || event.includes("success")) return "paid";
+  if (event.includes("cancelled") || event.includes("canceled")) return "cancelled";
+  if (event.includes("fail") || event.includes("error")) return "failed";
+  const nested = isRecord(payload.data) ? payload.data : undefined;
+  return String(
+    payload.status ?? payload.statut ?? nested?.statut ?? nested?.status ?? "pending",
+  );
 }
 
 export async function initMoneyFusionPayment(params: {
@@ -54,24 +87,30 @@ export async function initMoneyFusionPayment(params: {
   });
 
   const appUrl = getAppUrl();
-  const payload: MoneyFusionInitPayload = {
-    totalPrice: plan.priceFcfa,
-    article: plan.name,
+  const payload = buildMoneyFusionInitPayload({
+    planName: plan.name,
+    amountFcfa: plan.priceFcfa,
     numeroSend: params.numeroSend,
     nomclient: params.nomclient,
-    personal_Info: payment.orderId,
-    return_url: `${appUrl}/payment/success`,
-    webhook_url: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
-  };
+    userId: params.userId,
+    orderId: payment.orderId,
+    returnUrl: `${appUrl}/payment/success`,
+    webhookUrl: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
+  });
 
-  const endpoint = `${env.MONEY_FUSION_API_URL}/paiement`;
+  const endpoint = moneyFusionPayEndpoint(env.MONEY_FUSION_API_URL ?? "");
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (env.MONEY_FUSION_API_KEY) {
+    headers.Authorization = `Bearer ${env.MONEY_FUSION_API_KEY}`;
+  }
+
   const response = await fetch(endpoint, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify(payload),
   });
 
-  const body = (await response.json()) as MoneyFusionInitResponse;
+  const body = (await response.json().catch(() => ({}))) as MoneyFusionInitResponse;
   if (!response.ok || !body.token || !body.url) {
     await prisma.payment.update({
       where: { id: payment.id },
@@ -87,7 +126,7 @@ export async function initMoneyFusionPayment(params: {
     where: { id: payment.id },
     data: {
       tokenPay: body.token,
-      rawStatus: body.statut,
+      rawStatus: String(body.statut ?? body.message ?? ""),
       rawResponse: body as Prisma.JsonObject,
     },
   });
@@ -97,14 +136,12 @@ export async function initMoneyFusionPayment(params: {
 
 export function extractPaymentToken(payload: Record<string, unknown>) {
   const nestedData = isRecord(payload.data) ? payload.data : undefined;
-  return String(payload.tokenPay ?? payload.token ?? nestedData?.token ?? "").trim();
+  return String(payload.tokenPay ?? payload.token ?? nestedData?.tokenPay ?? nestedData?.token ?? "").trim();
 }
 
 export async function confirmVerifiedPayment(token: string, webhookBody?: Record<string, unknown>) {
   const remote = await verifyMoneyFusionToken(token);
-  const remoteStatus = String(
-    remote.status ?? remote.statut ?? webhookBody?.status ?? webhookBody?.statut ?? "pending",
-  );
+  const remoteStatus = moneyFusionRawStatus({ ...(webhookBody ?? {}), ...remote });
   return confirmPaymentByToken(token, {
     ...(webhookBody ?? {}),
     ...remote,
@@ -122,7 +159,10 @@ export async function verifyMoneyFusionToken(token: string) {
 }
 
 export function classifyPaymentStatus(raw: string): PaymentStatus {
-  const normalized = raw.toLowerCase();
+  const normalized = raw.toLowerCase().trim();
+  if (normalized.includes("no paid") || normalized.includes("nopaid") || normalized.includes("non pay")) {
+    return PaymentStatus.PENDING;
+  }
   if (
     normalized.includes("paid") ||
     normalized.includes("completed") ||
@@ -148,7 +188,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   });
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
 
-  const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
+  const remoteStatus = moneyFusionRawStatus(payload) || String(payment.rawStatus ?? "pending");
   const classified = classifyPaymentStatus(remoteStatus);
   const eventKey = `moneyfusion:${token}:${classified}`;
   const safePayload = sanitizeRecord(payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue;
@@ -173,7 +213,9 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   }
 
   const payloadOrderId = getStringField(payload, ["orderId", "order_id", "personal_Info"]);
-  const payloadAmount = getNumericField(payload, ["amount", "totalPrice", "montant"]);
+  const nested = isRecord(payload?.data) ? payload.data : undefined;
+  const payloadAmount = getNumericField(payload, ["amount", "totalPrice", "montant", "Montant"])
+    ?? getNumericField(nested, ["amount", "totalPrice", "montant", "Montant"]);
 
   if (payloadOrderId && !String(payloadOrderId).includes(payment.orderId)) {
     throw new Error("PAYMENT_ORDER_MISMATCH");

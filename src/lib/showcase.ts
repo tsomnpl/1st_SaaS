@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { SHOWCASE_SHEETS } from "@/lib/showcase-sheets";
+import { ALL_SHOWCASE_SHEETS } from "@/lib/showcase-sheets";
 import type { ShowcaseManifestEntry, ShowcaseManifestFile } from "@/lib/showcase-manifest";
 
 export async function loadShowcaseManifest(): Promise<ShowcaseManifestFile | null> {
@@ -20,7 +20,7 @@ export async function getGeneratedShowcase() {
 }
 
 export function sheetFor(id: string) {
-  return SHOWCASE_SHEETS.find((sheet) => sheet.id === id);
+  return ALL_SHOWCASE_SHEETS.find((sheet) => sheet.id === id);
 }
 
 export function toPoster(entry: ShowcaseManifestEntry, hero = false) {

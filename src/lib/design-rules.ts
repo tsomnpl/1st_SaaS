@@ -25,16 +25,21 @@ export const GLOBAL_DESIGN_PROMPT = [
 ].join(" ");
 
 export const STYLE_REFERENCE_PROMPT = [
-  "A style-reference image is attached (Gemini image-to-image only).",
-  "Inspire composition, palette, layout and typographic treatment from it.",
-  "Do NOT copy or near-copy the reference.",
-  "Do NOT reproduce any logo, brand name, celebrity likeness, or identifiable real-company text visible on the reference.",
-  "Generate an ORIGINAL poster in that style, with the new generic titles given below.",
+  "A real poster bitmap is attached as the COMPOSITION MODEL (Gemini image-to-image).",
+  "Keep STRUCTURE only: subject placement, title zone, price zone, CTA zone, margins, contrast rhythm, crop, and photo treatment.",
+  "WIPE every original letter, logo, phone, price, date and brand from the attached image. Paint over source typography. Then write ONLY the client facts listed in this prompt.",
+  "If the attached poster has no person, ADD one photoreal person who belongs in this domain. The FlyerMint human rule overrides an empty landscape.",
+  "If the client identity requires a different accent color, keep the same structure (dark ground / light type / one accent) and swap only the accent.",
+  "Do NOT copy logos, brand names, celebrity likenesses, identifiable real people, or the exact source advertising copy.",
+  "Never reuse a phone number, WhatsApp, email, address, social handle, price, or date visible on the reference — those belong to another business.",
+  "Do NOT invent a phone, email, WhatsApp, address, price or date that is not in the client facts.",
+  "Do NOT invent a generic centered-person layout if the reference is split (person right, title left, price large, CTA bottom, logo small top).",
+  "Do NOT treat the reference as a loose theme. It is the model to follow.",
 ].join(" ");
 
 export const STYLE_INSPIRATION_TEXT = [
-  "Inspire from the written professional-poster style notes (composition, palette, layout, type).",
-  "OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief.",
+  "No bitmap could be attached. Follow the written Creative DNA / catalog principles as strictly as a visual brief.",
+  "Keep domain-specific human staging, hierarchy, crop and contrast.",
   "Do NOT copy any real brand, logo, or celebrity.",
   "Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.",
 ].join(" ");

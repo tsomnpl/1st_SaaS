@@ -33,15 +33,38 @@ describe("image model routing", () => {
         adaptiveData: {},
       } as unknown as CreateBriefInput,
       "concert premium",
-      ["openai/gpt-5", "openai/gpt-image-2", "google/gemini-3.1-flash-image"],
+      ["openai/gpt-5", "openai/gpt-image-2", "google/gemini-3.1-flash-lite-image"],
     );
-    expect(model).toBe("openai/gpt-image-2");
+    expect(model).toBe("google/gemini-3.1-flash-lite-image");
+  });
+
+  it("routes a style-reference job to an image-edit model", () => {
+    const brief = {
+      visualType: "Affiche",
+      domain: "Restauration",
+      objective: "Faire commander",
+      targetAudience: "Public",
+      title: "Menu",
+      format: "affiche",
+      creativeFreedom: "liberte_guidee",
+      colors: [],
+      adaptiveData: {},
+    } as unknown as CreateBriefInput;
+    expect(
+      selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2", "google/gemini-3.1-flash-image"], {
+        hasStyleReference: true,
+      }),
+    ).toBe("google/gemini-3.1-flash-image");
+    expect(() =>
+      selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2"], { hasStyleReference: true }),
+    ).toThrow("RODIUM_NO_IMAGE_EDIT_MODEL");
   });
 });
 
 describe("payments", () => {
   it("classifies money fusion statuses", () => {
     expect(classifyPaymentStatus("paid")).toBe("COMPLETED");
+    expect(classifyPaymentStatus("no paid")).toBe("PENDING");
     expect(classifyPaymentStatus("cancelled")).toBe("CANCELLED");
     expect(classifyPaymentStatus("failed")).toBe("FAILED");
     expect(classifyPaymentStatus("pending")).toBe("PENDING");

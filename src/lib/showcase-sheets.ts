@@ -367,6 +367,116 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
 
 export const SHOWCASE_ORDER = SHOWCASE_SHEETS.map((sheet) => sheet.id);
 
+/** Extra gallery posters for domains that have no official catalogue fiche. Do not add these to SHOWCASE_SHEETS. */
+export const EXTRA_SHOWCASE_SHEETS: ShowcaseSheet[] = [
+  {
+    id: "mariage-01",
+    domaine: "Mariage",
+    titre_original_catalogue: "Galerie — Mariage (hors catalogue 27 fiches)",
+    titre_affiche_finale: "IVOIRE & LIN",
+    sous_titre_affiche_finale: "Cérémonie au jardin",
+    meta: "Sam. 18h · Jardin des Palmes",
+    cta: "Confirmer",
+    tone: "gold",
+    premium: true,
+    prompt:
+      "Vertical wedding poster 3:4. Cream ivory linen and deep forest green. Photoreal West African couple in ceremonial attire standing together in a garden, natural skin and hands, intimate not celebrity. Huge title IVOIRE & LIN. Subtitle Cérémonie au jardin. Meta Sam. 18h · Jardin des Palmes. CTA Confirmer. Small FLYERMINT badge. No real wedding brands, no copied logos.",
+  },
+  {
+    id: "anniversaire-01",
+    domaine: "Anniversaire",
+    titre_original_catalogue: "Galerie — Anniversaire (hors catalogue 27 fiches)",
+    titre_affiche_finale: "TRENTE SOLEILS",
+    sous_titre_affiche_finale: "Soirée privée",
+    meta: "Sam. 20h · Villa Nyara",
+    cta: "Viens fêter",
+    tone: "warm",
+    premium: false,
+    prompt:
+      "Vertical birthday poster 3:4. Warm amber and terracotta. Photoreal young adult honoree laughing with friends around a cake, natural skin, real hands, photographed joy not stock grin. Title TRENTE SOLEILS. Subtitle Soirée privée. Meta Sam. 20h · Villa Nyara. CTA Viens fêter. Small FLYERMINT badge. No real party brands.",
+  },
+  {
+    id: "emploi-01",
+    domaine: "Emploi & Recrutement",
+    titre_original_catalogue: "Galerie — Recrutement (hors catalogue 27 fiches)",
+    titre_affiche_finale: "POSTE OUVERT",
+    sous_titre_affiche_finale: "Chargé commercial",
+    meta: "CDI · Plateau · 30 sept",
+    cta: "Postuler",
+    tone: "clean",
+    premium: false,
+    prompt:
+      "Vertical recruitment poster 3:4. Clean navy and paper white. Photoreal colleague at a real workspace welcoming a candidate, documentary not stock handshake. Title POSTE OUVERT. Subtitle Chargé commercial. Meta CDI · Plateau · 30 sept. CTA Postuler. Small FLYERMINT badge. No real company logos.",
+  },
+  {
+    id: "agriculture-01",
+    domaine: "Agriculture",
+    titre_original_catalogue: "Galerie — Agriculture (hors catalogue 27 fiches)",
+    titre_affiche_finale: "TERRE VIVE",
+    sous_titre_affiche_finale: "Marché des producteurs",
+    meta: "Dim. 7h · Plateau",
+    cta: "Venir",
+    tone: "earth",
+    premium: false,
+    prompt:
+      "Vertical agriculture poster 3:4. Earth ochre, leaf green, daylight. Photoreal farmer carrying crates of produce in a field or market, work clothes, pride on the face, dirt on hands allowed. Title TERRE VIVE. Subtitle Marché des producteurs. Meta Dim. 7h · Plateau. CTA Venir. Small FLYERMINT badge. No real agribusiness brands.",
+  },
+  {
+    id: "automobile-01",
+    domaine: "Automobile",
+    titre_original_catalogue: "Galerie — Automobile (hors catalogue 27 fiches)",
+    titre_affiche_finale: "ATELIER NORD",
+    sous_titre_affiche_finale: "Révision et pneus",
+    meta: "8h–18h · Zone industrielle",
+    cta: "Prendre RDV",
+    tone: "dark",
+    premium: false,
+    prompt:
+      "Vertical auto workshop poster 3:4. Graphite, amber light, concrete. Photoreal mechanic or driver beside a generic unbranded car, three-quarter view, person for scale. Title ATELIER NORD. Subtitle Révision et pneus. Meta 8h–18h · Zone industrielle. CTA Prendre RDV. Small FLYERMINT badge. No car manufacturer logos, no real garage brands.",
+  },
+  {
+    id: "musique-01",
+    domaine: "Musique",
+    titre_original_catalogue: "Galerie — Musique (hors catalogue 27 fiches)",
+    titre_affiche_finale: "RIVE SESSION",
+    sous_titre_affiche_finale: "Live acoustique",
+    meta: "Ven. 21h · Quai 4",
+    cta: "Réserver",
+    tone: "night",
+    premium: true,
+    prompt:
+      "Vertical music poster 3:4. Night navy, warm stage gold. Photoreal singer mid-performance with a guitar, not a celebrity likeness, natural skin, motion in the lights. Title RIVE SESSION. Subtitle Live acoustique. Meta Ven. 21h · Quai 4. CTA Réserver. Small FLYERMINT badge. No real venue or label logos.",
+  },
+  {
+    id: "culture-01",
+    domaine: "Religion & Culture",
+    titre_original_catalogue: "Galerie — Culture (hors catalogue 27 fiches)",
+    titre_affiche_finale: "NUIT DES MASQUES",
+    sous_titre_affiche_finale: "Festival des arts",
+    meta: "12–14 août · Parc central",
+    cta: "Découvrir",
+    tone: "gold",
+    premium: true,
+    prompt:
+      "Vertical culture festival poster 3:4. Deep indigo, gold leaf, terracotta. Photoreal dancer or performer in original ceremonial attire, respectful, not a copied masquerade brand. Title NUIT DES MASQUES. Subtitle Festival des arts. Meta 12–14 août · Parc central. CTA Découvrir. Small FLYERMINT badge. No real cultural-institution logos.",
+  },
+  {
+    id: "services-01",
+    domaine: "Services divers",
+    titre_original_catalogue: "Galerie — Services (hors catalogue 27 fiches)",
+    titre_affiche_finale: "MAISON CLAIRE",
+    sous_titre_affiche_finale: "Entretien à domicile",
+    meta: "Sur rendez-vous",
+    cta: "Réserver",
+    tone: "clean",
+    premium: false,
+    prompt:
+      "Vertical home-services poster 3:4. Soft daylight, sage and linen. Photoreal technician or housekeeper at a real doorway, toolkit or cloth in hand, competent expression. Title MAISON CLAIRE. Subtitle Entretien à domicile. Meta Sur rendez-vous. CTA Réserver. Small FLYERMINT badge. No real cleaning-franchise logos.",
+  },
+];
+
+export const ALL_SHOWCASE_SHEETS = [...SHOWCASE_SHEETS, ...EXTRA_SHOWCASE_SHEETS];
+
 export function getShowcaseSheet(id: string) {
-  return SHOWCASE_SHEETS.find((sheet) => sheet.id === id);
+  return ALL_SHOWCASE_SHEETS.find((sheet) => sheet.id === id);
 }

@@ -6,7 +6,6 @@ import {
   selectVisualReferences,
 } from "./visual-references";
 import { DOMAINS } from "./domains";
-import { extractPaymentToken } from "@/server/payments";
 import { COOKIE_CONSENT_KEY } from "./cookie-consent";
 import { isCriticalQcFailure, parseQcReport, skippedQcReport } from "./quality-control";
 import { BRAND } from "./brand";
@@ -38,14 +37,6 @@ describe("visual reference library", () => {
   });
 });
 
-describe("payment token extraction", () => {
-  it("reads nested Money Fusion tokens", () => {
-    expect(extractPaymentToken({ data: { token: "abc" } })).toBe("abc");
-    expect(extractPaymentToken({ tokenPay: "xyz" })).toBe("xyz");
-    expect(extractPaymentToken({})).toBe("");
-  });
-});
-
 describe("cookie consent key", () => {
   it("uses a stable local storage key", () => {
     expect(COOKIE_CONSENT_KEY).toBe("fm-cookie-consent");
@@ -73,13 +64,56 @@ describe("quality gate", () => {
     );
     expect(isCriticalQcFailure(report)).toBe(true);
   });
+
+  it("rejects a generic AI poster even if a person is present", () => {
+    const report = parseQcReport(
+      JSON.stringify({
+        pass: false,
+        has_person: true,
+        person_natural: true,
+        readable_text: true,
+        text_matches_brief: true,
+        domain_fit: true,
+        looks_ai_generic: true,
+        format_ok: true,
+        composition_match: false,
+        margins_ok: true,
+        issues: ["generic AI"],
+      }),
+    );
+    expect(isCriticalQcFailure(report)).toBe(true);
+  });
+
+  it("fails closed when design laws or reference match fail", () => {
+    const report = parseQcReport(
+      JSON.stringify({
+        pass: true,
+        has_person: true,
+        person_natural: true,
+        readable_text: true,
+        text_matches_brief: true,
+        domain_fit: true,
+        looks_ai_generic: false,
+        format_ok: true,
+        composition_match: true,
+        margins_ok: true,
+        design_rules: false,
+        hierarchy: false,
+        contrast: true,
+        alignment: true,
+        issues: ["weak hierarchy"],
+      }),
+    );
+    expect(report.pass).toBe(false);
+    expect(isCriticalQcFailure(report)).toBe(true);
+  });
 });
 
 describe("brand palette", () => {
-  it("keeps mint as an accent on night and white", () => {
-    expect(BRAND.colors.night).toBe("#111827");
-    expect(BRAND.colors.mint).toBe("#20C997");
-    expect(BRAND.colors.mintWash).toBe("#DFFAF0");
+  it("keeps violet for art direction and mint for mints", () => {
+    expect(BRAND.colors.night).toBe("#1E293B");
+    expect(BRAND.colors.violet).toBe("#6D28D9");
+    expect(BRAND.colors.mint).toBe("#10B981");
     expect(BRAND.colors.white).toBe("#FFFFFF");
   });
 });

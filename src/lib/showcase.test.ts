@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
-import { buildShowcasePrompt, SHOWCASE_DESIGN } from "./showcase-design";
+import { EXTRA_SHOWCASE_SHEETS, SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
+import { buildShowcasePrompt, designFor, EXTRA_SHOWCASE_DESIGN, SHOWCASE_DESIGN, supabaseDomainForSheet } from "./showcase-design";
 
 describe("showcase catalogue alignment", () => {
   it("keeps 27 sheets in catalogue order", () => {
@@ -18,6 +18,33 @@ describe("showcase catalogue alignment", () => {
     expect(SHOWCASE_DESIGN.map((row) => row.id)).toEqual(SHOWCASE_ORDER);
   });
 
+  it("adds 8 extra gallery posters without changing the official catalogue", () => {
+    const extras = EXTRA_SHOWCASE_SHEETS;
+    expect(extras).toHaveLength(8);
+    expect(extras.map((sheet) => sheet.id)).toEqual([
+      "mariage-01",
+      "anniversaire-01",
+      "emploi-01",
+      "agriculture-01",
+      "automobile-01",
+      "musique-01",
+      "culture-01",
+      "services-01",
+    ]);
+    expect(EXTRA_SHOWCASE_DESIGN).toHaveLength(8);
+    expect(EXTRA_SHOWCASE_DESIGN.map((row) => row.id)).toEqual(extras.map((sheet) => sheet.id));
+    const banned = /zara|nexora|techpoint|hotels\.ng|godfactor|sendora|fulixgold/i;
+    for (const sheet of extras) {
+      expect(supabaseDomainForSheet(sheet.id)).toMatch(/^[a-z0-9-]+$/);
+      expect(designFor(sheet.id)?.id).toBe(sheet.id);
+      expect(sheet.prompt).toMatch(/photoreal/i);
+      expect(sheet.titre_affiche_finale).not.toMatch(banned);
+      expect(sheet.prompt).not.toMatch(banned);
+    }
+    expect(supabaseDomainForSheet("mariage-01")).toBe("mariage");
+    expect(supabaseDomainForSheet("culture-01")).toBe("religion-culture");
+  });
+
   it("marks 8 to 10 generated posters for the hero loop", () => {
     const manifest = JSON.parse(
       readFileSync("docs/inspirations/showcase-manifest.json", "utf8"),
@@ -31,12 +58,16 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("generates posters via official Rodium images API only", () => {
+  it("generates Gemini posters over chat completions to use the main RODI wallet", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
     expect(script).toContain('/images/generations');
+    expect(script).toContain('/chat/completions');
     expect(script).toContain('1024x1536');
     expect(script).toContain('"x-api-key"');
-    expect(script).not.toContain("/chat/completions");
+    expect(script).toContain("inspirations-source");
+    expect(script).toContain("previous.visual_ref_used");
+    expect(script).toContain("not 4K");
+    expect(script).toContain("extractGeneratedImageUrl");
     expect(script).not.toContain("1024x1792");
   });
 
@@ -76,6 +107,15 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
+  it("maps every catalogue sheet onto a Supabase inspiration domain", () => {
+    for (const sheet of SHOWCASE_SHEETS) {
+      expect(supabaseDomainForSheet(sheet.id)).toMatch(/^[a-z0-9-]+$/);
+    }
+    expect(supabaseDomainForSheet("restauration-03")).toBe("restauration");
+    expect(supabaseDomainForSheet("immobilier-business-04")).toBe("finance");
+    expect(supabaseDomainForSheet("sante-tourisme-associations-02")).toBe("tourisme");
+  });
+
   it("embeds concrete design laws in the Rodium prompt", () => {
     const samples = SHOWCASE_SHEETS.filter((sheet) =>
       ["evenementiel-01", "restauration-03", "immobilier-business-04"].includes(sheet.id),
@@ -87,7 +127,8 @@ describe("showcase catalogue alignment", () => {
       expect(prompt).toMatch(/Maximum 2 type families/i);
       expect(prompt).toMatch(/Clear hierarchy/i);
       expect(prompt).toMatch(/Strong contrast/i);
-      expect(prompt).toMatch(/Do NOT copy or near-copy/i);
+      expect(prompt).toMatch(/Do NOT copy logos, brand names/i);
+      expect(prompt).toMatch(/COMPOSITION MODEL/i);
       expect(buildShowcasePrompt(sheet, false)).toMatch(/Every visible word must be correctly spelled/i);
       expect(prompt).toContain(sheet.titre_affiche_finale);
       expect(prompt).toMatch(/photoreal human/i);
@@ -95,7 +136,7 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("requests max poster size and GPT Image for client-facing posters", () => {
+  it("requests max poster size, Gemini bitmap refs, and GPT Image only for already-liked posters", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
     expect(script).toContain('|| "openai/gpt-image-2"');
     expect(script).toContain("lanczos3");
@@ -103,7 +144,20 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("body.image");
     expect(script).toContain("storage/masters");
     expect(script).toContain("isGptImageModel");
-    expect(script).not.toContain("/chat/completions");
+    expect(script).toContain("fetchSupabaseReference");
+    expect(script).toContain("google/gemini-3.1-flash-lite-image");
+    expect(script).toContain("retry_text_only");
+    expect(script).toContain("allowBitmapAttach");
+    expect(script).toContain("image_url");
+    expect(script).toContain("EXTRA_SHOWCASE_SHEETS");
+    expect(script).toContain("RODIUM_API_KEY");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
+  });
+
+  it("retries Gemini without attaching the bitmap when the provided quota is empty", () => {
+    const rodium = readFileSync("src/server/rodium.ts", "utf8");
+    expect(rodium).toContain("postGeminiImage");
+    expect(rodium).toContain("isProvidedQuotaError");
+    expect(rodium).toContain("bitmapAttached");
   });
 });
