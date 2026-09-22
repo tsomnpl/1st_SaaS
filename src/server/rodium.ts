@@ -257,13 +257,14 @@ async function renderImage(params: {
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
-  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl;
-  const styleReference = params.styleReferenceDataUrl;
-  const attached =
-    canConsumeReferenceBitmap(params.model) &&
-    (clientReference?.startsWith("data:image/") || styleReference?.startsWith("data:image/"))
-      ? (clientReference?.startsWith("data:image/") ? clientReference : styleReference)
+  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl || "";
+  const styleReference = params.styleReferenceDataUrl ?? "";
+  const bitmap = clientReference.startsWith("data:image/")
+    ? clientReference
+    : styleReference.startsWith("data:image/")
+      ? styleReference
       : "";
+  const attached = canConsumeReferenceBitmap(params.model) ? bitmap : "";
 
   if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
     return postGeminiImage(params.model, params.prompt, attached);
