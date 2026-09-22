@@ -156,7 +156,7 @@
         "#1E293B"
       ],
       "ambiance": "soin",
-      "imageUrl": ""
+      "imageUrl": "/creations/beaute-01.webp"
     },
     {
       "id": "beaute-02",
@@ -169,7 +169,7 @@
         "#FDE68A"
       ],
       "ambiance": "chaleureux",
-      "imageUrl": ""
+      "imageUrl": "/creations/beaute-02.webp"
     },
     {
       "id": "beaute-03",
@@ -234,7 +234,7 @@
         "#3B82F6"
       ],
       "ambiance": "fiable",
-      "imageUrl": ""
+      "imageUrl": "/creations/immobilier-business-04.webp"
     },
     {
       "id": "immobilier-business-05",
@@ -247,7 +247,7 @@
         "#F8FAFC"
       ],
       "ambiance": "opportunité",
-      "imageUrl": ""
+      "imageUrl": "/creations/immobilier-business-05.webp"
     },
     {
       "id": "techno-education-01",
@@ -260,7 +260,7 @@
         "#F8FAFC"
       ],
       "ambiance": "net",
-      "imageUrl": ""
+      "imageUrl": "/creations/techno-education-01.webp"
     },
     {
       "id": "techno-education-02",
@@ -273,7 +273,7 @@
         "#0F172A"
       ],
       "ambiance": "ambition",
-      "imageUrl": ""
+      "imageUrl": "/creations/techno-education-02.webp"
     },
     {
       "id": "techno-education-03",
@@ -312,7 +312,7 @@
         "#F8FAFC"
       ],
       "ambiance": "smart",
-      "imageUrl": ""
+      "imageUrl": "/creations/sport-finance-02.webp"
     },
     {
       "id": "sante-tourisme-associations-01",
@@ -325,7 +325,7 @@
         "#1E293B"
       ],
       "ambiance": "espoir",
-      "imageUrl": ""
+      "imageUrl": "/creations/sante-tourisme-associations-01.webp"
     },
     {
       "id": "sante-tourisme-associations-02",
@@ -338,7 +338,7 @@
         "#FEF3C7"
       ],
       "ambiance": "envie",
-      "imageUrl": ""
+      "imageUrl": "/creations/sante-tourisme-associations-02.webp"
     },
     {
       "id": "sante-tourisme-associations-03",
@@ -351,7 +351,7 @@
         "#0F172A"
       ],
       "ambiance": "solidaire",
-      "imageUrl": ""
+      "imageUrl": "/creations/sante-tourisme-associations-03.webp"
     }
   ]
 }
