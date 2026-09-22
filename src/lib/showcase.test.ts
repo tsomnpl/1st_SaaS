@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
-import { SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
-import { buildShowcasePrompt, SHOWCASE_DESIGN, supabaseDomainForSheet } from "./showcase-design";
+import { EXTRA_SHOWCASE_SHEETS, SHOWCASE_ORDER, SHOWCASE_SHEETS } from "./showcase-sheets";
+import { buildShowcasePrompt, designFor, EXTRA_SHOWCASE_DESIGN, SHOWCASE_DESIGN, supabaseDomainForSheet } from "./showcase-design";
 
 describe("showcase catalogue alignment", () => {
   it("keeps 27 sheets in catalogue order", () => {
@@ -16,6 +16,33 @@ describe("showcase catalogue alignment", () => {
     expect(SHOWCASE_SHEETS[8].id).toBe("mode-01");
     expect(SHOWCASE_DESIGN).toHaveLength(27);
     expect(SHOWCASE_DESIGN.map((row) => row.id)).toEqual(SHOWCASE_ORDER);
+  });
+
+  it("adds 8 extra gallery posters without changing the official catalogue", () => {
+    const extras = EXTRA_SHOWCASE_SHEETS;
+    expect(extras).toHaveLength(8);
+    expect(extras.map((sheet) => sheet.id)).toEqual([
+      "mariage-01",
+      "anniversaire-01",
+      "emploi-01",
+      "agriculture-01",
+      "automobile-01",
+      "musique-01",
+      "culture-01",
+      "services-01",
+    ]);
+    expect(EXTRA_SHOWCASE_DESIGN).toHaveLength(8);
+    expect(EXTRA_SHOWCASE_DESIGN.map((row) => row.id)).toEqual(extras.map((sheet) => sheet.id));
+    const banned = /zara|nexora|techpoint|hotels\.ng|godfactor|sendora|fulixgold/i;
+    for (const sheet of extras) {
+      expect(supabaseDomainForSheet(sheet.id)).toMatch(/^[a-z0-9-]+$/);
+      expect(designFor(sheet.id)?.id).toBe(sheet.id);
+      expect(sheet.prompt).toMatch(/photoreal/i);
+      expect(sheet.titre_affiche_finale).not.toMatch(banned);
+      expect(sheet.prompt).not.toMatch(banned);
+    }
+    expect(supabaseDomainForSheet("mariage-01")).toBe("mariage");
+    expect(supabaseDomainForSheet("culture-01")).toBe("religion-culture");
   });
 
   it("marks 8 to 10 generated posters for the hero loop", () => {
@@ -122,6 +149,8 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("retry_text_only");
     expect(script).toContain("allowBitmapAttach");
     expect(script).toContain("image_url");
+    expect(script).toContain("EXTRA_SHOWCASE_SHEETS");
+    expect(script).toContain("RODIUM_API_KEY");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
   });
 

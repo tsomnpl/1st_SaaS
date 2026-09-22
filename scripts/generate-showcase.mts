@@ -1,6 +1,6 @@
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { SHOWCASE_SHEETS } from "../src/lib/showcase-sheets.ts";
+import { EXTRA_SHOWCASE_SHEETS, SHOWCASE_SHEETS } from "../src/lib/showcase-sheets.ts";
 import {
   buildShowcasePrompt,
   referenceCategorisation,
@@ -427,9 +427,9 @@ function shouldSkipPrevious(previous: Record<string, unknown> | undefined, sheet
 
 function catalogueOrder(fiches: Array<Record<string, unknown>>) {
   const byId = new Map(fiches.map((row) => [String(row.id), row]));
-  const ordered = SHOWCASE_SHEETS.map((sheet) => byId.get(sheet.id)).filter(
-    (row): row is Record<string, unknown> => Boolean(row),
-  );
+  const ordered = [...SHOWCASE_SHEETS, ...EXTRA_SHOWCASE_SHEETS]
+    .map((sheet) => byId.get(sheet.id))
+    .filter((row): row is Record<string, unknown> => Boolean(row));
   for (const row of fiches) {
     if (!byId.has(String(row.id))) continue;
     if (!ordered.includes(row)) ordered.push(row);
@@ -588,11 +588,11 @@ async function persistOutputs(
 async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
-  const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
+  const apiKey = process.env.RODIUM_API_KEY?.trim() || process.env.RODIUMAI_API_KEY?.trim() || "";
   const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
   const gemini = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
 
-  if (!apiKey) throw new Error("RODIUMAI_API_KEY_MISSING");
+  if (!apiKey) throw new Error("RODIUM_API_KEY_MISSING");
 
   const catalogue = JSON.parse(await readFile(CATALOGUE, "utf8")) as CatalogueFile;
   if (catalogue.fiches.length !== 27) throw new Error(`CATALOGUE_COUNT_${catalogue.fiches.length}`);
@@ -634,10 +634,14 @@ async function main() {
     existing = {};
   }
 
-  const queue = [
-    ...SHOWCASE_SHEETS.filter((sheet) => HERO_IDS.includes(sheet.id)),
-    ...SHOWCASE_SHEETS.filter((sheet) => !HERO_IDS.includes(sheet.id)),
-  ];
+  const extraOnly = process.env.SHOWCASE_EXTRA_ONLY === "1";
+  const queue = extraOnly
+    ? [...EXTRA_SHOWCASE_SHEETS]
+    : [
+        ...SHOWCASE_SHEETS.filter((sheet) => HERO_IDS.includes(sheet.id)),
+        ...SHOWCASE_SHEETS.filter((sheet) => !HERO_IDS.includes(sheet.id)),
+        ...EXTRA_SHOWCASE_SHEETS,
+      ];
 
   const fiches = [];
   let allowBitmapAttach = true;

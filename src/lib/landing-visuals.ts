@@ -43,6 +43,14 @@ const SHEET_ID_DOMAIN: Record<string, (typeof DOMAINS)[number]> = {
   "sante-tourisme-associations-01": "Sante & Clinique",
   "sante-tourisme-associations-02": "Tourisme & Voyage",
   "sante-tourisme-associations-03": "Associations",
+  "mariage-01": "Mariage",
+  "anniversaire-01": "Anniversaire",
+  "emploi-01": "Emploi & Recrutement",
+  "agriculture-01": "Agriculture",
+  "automobile-01": "Automobile",
+  "musique-01": "Musique",
+  "culture-01": "Religion & Culture",
+  "services-01": "Services divers",
 };
 
 function publicImageExists(src: string) {
