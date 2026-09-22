@@ -24,18 +24,18 @@ export default async function Home() {
   return (
     <div className="space-y-24 pb-8">
       <section className="relative overflow-hidden rounded-[2rem] border border-white/70 bg-white px-5 py-10 shadow-[0_30px_80px_rgba(15,23,42,0.08)] md:px-10 md:py-14">
-        <div className="pointer-events-none absolute -left-16 top-0 h-56 w-56 rounded-full bg-[#6D28D9]/10 blur-3xl" />
-        <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-[#10B981]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -left-16 top-0 h-56 w-56 rounded-full bg-violet/10 blur-3xl" />
+        <div className="pointer-events-none absolute -right-10 bottom-0 h-64 w-64 rounded-full bg-mint/10 blur-3xl" />
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <p className="inline-flex rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6D28D9]">
+            <p className="inline-flex rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet">
               Direction artistique incluse
             </p>
-            <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#1E293B] md:text-6xl">
+            <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-night md:text-6xl">
               Ton idée. Une affiche qui se remarque.
             </h1>
-            <p className="mt-4 text-lg font-medium text-[#6D28D9]">
+            <p className="mt-4 text-lg font-medium text-violet">
               Créez des visuels qui marquent.
             </p>
             <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 md:text-lg">
@@ -85,10 +85,10 @@ export default async function Home() {
       <section id="creations" className="space-y-6">
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet">Showcase</p>
             <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Des affiches, pas des cartes vides.</h2>
           </div>
-          <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
+          <Link href="/creations" className="text-sm font-semibold text-violet hover:underline">
             Toute la galerie
           </Link>
         </div>
@@ -97,7 +97,7 @@ export default async function Home() {
             <Link
               key={poster.id ?? poster.title}
               href={createPathForDomaine(poster.domaine ?? "Événementiel")}
-              className="block rounded-[1.5rem] transition hover:-translate-y-0.5 hover:shadow-lg"
+              className="block rounded-card transition hover:-translate-y-0.5 hover:shadow-lg"
             >
               <VisualPoster {...poster} />
             </Link>
@@ -107,7 +107,7 @@ export default async function Home() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="card p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">Avant / Après</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet">Avant / Après</p>
           <h3 className="mt-2 text-2xl font-extrabold">D’un message brut à un visuel qui vend</h3>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
@@ -131,7 +131,7 @@ export default async function Home() {
           </div>
         </article>
         <article className="card p-6">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-mint">Questionnaire</p>
           <h3 className="mt-2 text-2xl font-extrabold">Tu réponds. On compose.</h3>
           <p className="mt-2 text-sm text-slate-600">
             Trois infos suffisent pour ouvrir le brief. Le reste se pose ensuite, domaine par domaine.
@@ -150,7 +150,7 @@ export default async function Home() {
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {STEPS.map((item) => (
             <article key={item.n} className="card p-5">
-              <p className="text-xs font-bold text-[#6D28D9]">{item.n}</p>
+              <p className="text-xs font-bold text-violet">{item.n}</p>
               <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
               <p className="mt-1 text-sm text-slate-600">{item.text}</p>
             </article>
@@ -159,7 +159,7 @@ export default async function Home() {
       </section>
 
       <section className="card p-6 md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Direction artistique IA</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet">Direction artistique IA</p>
         <h2 className="mt-2 text-3xl font-extrabold">Un directeur artistique, pas un bouton magique</h2>
         <p className="mt-3 max-w-2xl text-slate-600">
           FlyerMint analyse le domaine, s’appuie sur des principes de design et une bibliothèque privée,
@@ -181,31 +181,20 @@ export default async function Home() {
       <section className="space-y-6">
         <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {DOMAINS.map((domain, index) => {
-            const match = posterForDomaine(generated, DOMAIN_LABELS[domain]) ?? posterForDomaine(generated, domain);
-            if (match) {
-              return (
-                <Link
-                  key={domain}
-                  href={`/create?domain=${encodeURIComponent(domain)}`}
-                  className="block rounded-[1.5rem] transition hover:-translate-y-0.5 hover:shadow-lg"
-                >
-                  <VisualPoster {...toPoster(match)} className="min-h-[180px]" />
-                </Link>
-              );
-            }
-            return (
+          {DOMAINS.flatMap((domain) => {
+            const match = posterForDomaine(generated, domain) ?? posterForDomaine(generated, DOMAIN_LABELS[domain]);
+            if (!match) return [];
+            const poster = toPoster(match);
+            return [
               <Link
                 key={domain}
-                href={`/create?domain=${encodeURIComponent(domain)}`}
-                className={`flex min-h-[180px] flex-col justify-end rounded-[1.5rem] bg-gradient-to-br p-4 text-white ${
-                  ["from-[#1E293B] to-[#6D28D9]", "from-[#0f766e] to-[#10B981]", "from-[#7c2d12] to-[#F59E0B]"][index % 3]
-                }`}
+                href={`/affiche/${match.id}`}
+                className="block rounded-card transition hover:-translate-y-0.5 hover:shadow-lg"
               >
-                <span className="text-sm font-bold">{DOMAIN_LABELS[domain]}</span>
-                <span className="text-xs text-white/80">Créer une affiche</span>
-              </Link>
-            );
+                <VisualPoster {...poster} className="min-h-[180px]" />
+                <p className="mt-2 text-center text-xs font-semibold text-night">{DOMAIN_LABELS[domain]}</p>
+              </Link>,
+            ];
           })}
         </div>
       </section>
@@ -213,7 +202,7 @@ export default async function Home() {
       <section id="tarifs" className="card p-6 md:p-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Tarifs</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet">Tarifs</p>
             <h2 className="mt-2 text-3xl font-extrabold">1 Mint = 1 affiche</h2>
             <p className="mt-2 text-slate-600">L’export ne consomme aucun Mint.</p>
           </div>
@@ -226,12 +215,12 @@ export default async function Home() {
             <Link
               key={plan.code}
               href={`/checkout?plan=${plan.code}`}
-              className={`rounded-2xl border p-5 transition hover:-translate-y-0.5 hover:shadow-md ${
-                plan.highlighted ? "border-violet-200 bg-violet-50/70" : "border-slate-200 bg-slate-50"
+              className={`rounded-card border p-5 transition hover:-translate-y-0.5 hover:shadow-md ${
+                plan.highlighted ? "border-violet/30 bg-violet/5" : "border-slate-200 bg-slate-50"
               }`}
             >
-              <p className="text-2xl font-extrabold text-[#1E293B]">{formatFcfa(plan.priceFcfa)}</p>
-              <p className="mt-1 font-semibold text-[#6D28D9]">
+              <p className="text-2xl font-extrabold text-night">{formatFcfa(plan.priceFcfa)}</p>
+              <p className="mt-1 font-semibold text-violet">
                 {plan.mintAmount} Mints
               </p>
               <p className="mt-2 text-sm text-slate-600">
@@ -244,7 +233,7 @@ export default async function Home() {
       </section>
 
       <section id="export-editable" className="card p-6 md:p-10">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#10B981]">Export éditable</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-mint">Export éditable</p>
         <h2 className="mt-2 text-3xl font-extrabold">Figma, Canva, Word — seulement sur les packs 20k et 25k</h2>
         <p className="mt-3 max-w-2xl text-slate-600">
           L’export éditable est proposé uniquement si le fichier est réellement disponible pour ta génération.
@@ -255,7 +244,7 @@ export default async function Home() {
         </Link>
       </section>
 
-      <section className="rounded-[1.8rem] bg-[#1E293B] px-8 py-12 text-center text-white md:px-12">
+      <section className="rounded-card bg-night px-8 py-12 text-center text-white md:px-12">
         <h2 className="text-3xl font-extrabold md:text-4xl">Prêt à lancer ta prochaine affiche ?</h2>
         <p className="mx-auto mt-3 max-w-xl text-white/70">
           Simple, rapide, premium. Tu n’as pas besoin de savoir designer.

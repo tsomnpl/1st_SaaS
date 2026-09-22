@@ -54,7 +54,7 @@ export default async function HistoryPage() {
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {generation.outputUrl ? (
-                      <a href={generation.outputUrl} download className="text-sm font-semibold text-[#6D28D9]">
+                      <a href={generation.outputUrl} download className="text-sm font-semibold text-violet">
                         Télécharger
                       </a>
                     ) : null}

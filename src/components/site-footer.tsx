@@ -12,25 +12,25 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-6 text-sm text-slate-600">
-          <Link href="/creations" className="hover:text-[#6D28D9]">
+          <Link href="/creations" className="hover:text-violet">
             Créations
           </Link>
-          <Link href="/pricing" className="hover:text-[#6D28D9]">
+          <Link href="/pricing" className="hover:text-violet">
             Tarifs
           </Link>
-          <Link href="/create" className="hover:text-[#6D28D9]">
+          <Link href="/create" className="hover:text-violet">
             Créer une affiche
           </Link>
-          <Link href="/sign-in" className="hover:text-[#6D28D9]">
+          <Link href="/sign-in" className="hover:text-violet">
             Connexion
           </Link>
-          <Link href="/sign-up" className="hover:text-[#6D28D9]">
+          <Link href="/sign-up" className="hover:text-violet">
             Inscription
           </Link>
-          <Link href="/privacy" className="hover:text-[#6D28D9]">
+          <Link href="/privacy" className="hover:text-violet">
             Confidentialité
           </Link>
-          <Link href="/terms" className="hover:text-[#6D28D9]">
+          <Link href="/terms" className="hover:text-violet">
             CGU
           </Link>
         </div>

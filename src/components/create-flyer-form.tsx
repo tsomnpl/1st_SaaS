@@ -134,7 +134,7 @@ export function CreateFlyerForm({
             type="button"
             onClick={() => setStep(index)}
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              index === step ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-500"
+              index === step ? "bg-violet text-white" : "bg-slate-100 text-slate-500"
             }`}
           >
             {index + 1}. {label}
@@ -143,7 +143,7 @@ export function CreateFlyerForm({
       </div>
 
       <div className="card p-5">
-        <p className="text-sm font-medium text-[#6D28D9]">Cette création utilisera 1 Mint.</p>
+        <p className="text-sm font-medium text-violet">Cette création utilisera 1 Mint.</p>
         <h2 className="mt-1 text-xl font-bold">Questionnaire intelligent</h2>
         <p className="mt-1 text-sm text-slate-500">Pas de prompt à écrire. Réponds simplement.</p>
       </div>
@@ -229,7 +229,7 @@ export function CreateFlyerForm({
         </label>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Logo (optionnel — mémorisé si tu coches le kit de marque)</span>
-          {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
+          {logoImage ? <p className="text-xs text-mint">Logo prêt. Tu peux le remplacer.</p> : null}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
@@ -269,7 +269,7 @@ export function CreateFlyerForm({
       {mintBalance <= 0 ? (
         <p className="text-sm text-amber-700">
           Solde insuffisant.{" "}
-          <Link href="/pricing" className="font-semibold text-[#6D28D9] underline">
+          <Link href="/pricing" className="font-semibold text-violet underline">
             Acheter des Mints
           </Link>
         </p>
@@ -296,7 +296,7 @@ export function CreateFlyerForm({
 
       {result ? (
         <div className="card space-y-3 p-5">
-          <p className="font-semibold text-[#10B981]">Ton affiche est prête.</p>
+          <p className="font-semibold text-mint">Ton affiche est prête.</p>
           {result.repaired ? (
             <p className="text-sm text-slate-600">La première version a été corrigée (personne / texte / composition).</p>
           ) : null}
@@ -360,7 +360,7 @@ function Input({
         required={required}
         placeholder={placeholder}
         defaultValue={defaultValue}
-        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none ring-violet focus:ring-2"
       />
     </label>
   );

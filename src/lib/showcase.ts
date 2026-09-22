@@ -34,11 +34,40 @@ export function pickAfterPoster(generated: ShowcaseManifestEntry[]) {
 }
 
 export function posterForDomaine(generated: ShowcaseManifestEntry[], domaine: string) {
-  const needle = domaine.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-  return generated.find((entry) => {
-    const hay = entry.domaine.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
-    return hay.includes(needle) || needle.includes(hay.split(/[&/]/)[0].trim());
+  const matches = postersForDomaine(generated, domaine);
+  if (matches.length === 0) return undefined;
+  const needle = fold(domaine);
+  const index = [...needle].reduce((sum, char) => sum + char.charCodeAt(0), 0) % matches.length;
+  return matches[index];
+}
+
+const GROUP_ALIASES: Array<{ keys: string[]; hay: string }> = [
+  { keys: ["immobilier", "entreprise", "business"], hay: "immobilier & business" },
+  { keys: ["technologie", "formation", "education"], hay: "technologie & education" },
+  { keys: ["sport", "finance", "fintech"], hay: "sport & finance" },
+  { keys: ["sante", "tourisme", "voyage", "associations", "association"], hay: "sante/tourisme/associations" },
+  { keys: ["mode", "accessoires"], hay: "mode & accessoires" },
+  { keys: ["beaute", "soins"], hay: "beaute & soins" },
+  { keys: ["evenementiel"], hay: "evenementiel" },
+  { keys: ["restauration"], hay: "restauration" },
+];
+
+function fold(value: string) {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+export function postersForDomaine(generated: ShowcaseManifestEntry[], domaine: string) {
+  const needle = fold(domaine);
+  const alias = GROUP_ALIASES.find((group) => group.keys.some((key) => needle === key || needle.includes(key)));
+  return generated.filter((entry) => {
+    const hay = fold(entry.domaine);
+    if (hay.includes(needle) || needle.includes(hay.split(/[&/]/)[0].trim())) return true;
+    return Boolean(alias && hay === alias.hay);
   });
+}
+
+export function isVerified4k(entry: { master_width?: number; master_height?: number }) {
+  return Math.max(entry.master_width ?? 0, entry.master_height ?? 0) >= 3840;
 }
 
 export function toPoster(entry: ShowcaseManifestEntry, hero = false) {

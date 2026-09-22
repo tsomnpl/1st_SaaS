@@ -132,6 +132,7 @@ export async function generateWithRodium(input: { prompt: string; brief: CreateB
     imageModel,
     imageUrl: render.imageUrl,
     rawText: render.rawText,
+    visualRefSent: render.visualRefSent,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -159,8 +160,11 @@ async function renderImage(params: {
     size: sizeForFormat(params.brief.format),
   };
   const reference = params.brief.mainImageUrl || params.brief.logoUrl;
-  if (reference?.startsWith("data:image/") && params.model.toLowerCase().includes("gemini")) {
+  const acceptsBitmap = !params.model.toLowerCase().includes("gpt-image");
+  let visualRefSent = false;
+  if (reference?.startsWith("data:image/") && acceptsBitmap) {
     body.image = reference;
+    visualRefSent = true;
   }
 
   const response = await fetch(endpoint, {
@@ -179,7 +183,7 @@ async function renderImage(params: {
       ? `data:image/png;base64,${first.b64_json}`
       : "";
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  return { imageUrl, rawText: JSON.stringify({ model: data.model, visualRefSent }), usage: data.usage, visualRefSent };
 }
 
 export function sizeForFormat(format: string) {

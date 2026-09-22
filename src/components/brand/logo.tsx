@@ -34,8 +34,8 @@ export function BrandLogo({
       />
       <span className="leading-tight">
         <span className={`block font-extrabold tracking-tight ${dim.text}`}>
-          <span className={onDark ? "text-white" : "text-[#1E293B]"}>Flyer</span>
-          <span className="bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] bg-clip-text text-transparent">
+          <span className={onDark ? "text-white" : "text-night"}>Flyer</span>
+          <span className="bg-gradient-to-r from-violet to-blue bg-clip-text text-transparent">
             Mint
           </span>
         </span>

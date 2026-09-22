@@ -22,14 +22,14 @@ export type VisualPosterProps = {
 };
 
 const tones: Record<PosterTone, string> = {
-  night: "from-[#0f172a] via-[#312e81] to-[#6D28D9]",
-  warm: "from-[#7c2d12] via-[#c2410c] to-[#F59E0B]",
-  gold: "from-[#1E293B] via-[#334155] to-[#d4b483]",
-  clean: "from-[#0f766e] via-[#3B82F6] to-[#e0f2fe]",
-  sport: "from-[#1E293B] via-[#b91c1c] to-[#F59E0B]",
+  night: "from-[#0f172a] via-[#312e81] to-violet",
+  warm: "from-[#7c2d12] via-[#c2410c] to-orange",
+  gold: "from-night via-[#334155] to-[#d4b483]",
+  clean: "from-[#0f766e] via-blue to-[#e0f2fe]",
+  sport: "from-night via-[#b91c1c] to-orange",
   soft: "from-[#4c1d95] via-[#9d174d] to-[#f9a8d4]",
-  dark: "from-[#020617] via-[#1E293B] to-[#10B981]",
-  fresh: "from-[#064e3b] via-[#10B981] to-[#d1fae5]",
+  dark: "from-[#020617] via-night to-mint",
+  fresh: "from-[#064e3b] via-mint to-[#d1fae5]",
   rose: "from-[#4c0519] via-[#be123c] to-[#fda4af]",
   earth: "from-[#1c1917] via-[#3f6212] to-[#a3e635]",
 };
@@ -46,7 +46,7 @@ export function VisualPoster({
 }: VisualPosterProps) {
   return (
     <article
-      className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-[1.5rem] bg-gradient-to-br p-5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.18)] ${tones[tone]} ${className}`}
+      className={`relative flex aspect-[3/4] flex-col overflow-hidden rounded-card bg-gradient-to-br p-5 text-white shadow-[0_24px_50px_rgba(15,23,42,0.18)] ${tones[tone]} ${className}`}
     >
       {imageSrc ? (
         <img
@@ -58,7 +58,7 @@ export function VisualPoster({
         />
       ) : null}
       {imageSrc ? (
-        <span className="relative z-10 ml-auto rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-[#1E293B]">
+        <span className="relative z-10 ml-auto rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-night">
           {kicker}
         </span>
       ) : (
@@ -75,7 +75,7 @@ export function VisualPoster({
             {meta ? (
               <p className="max-w-[20ch] text-xs font-medium text-white/75">{meta}</p>
             ) : null}
-            <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-[#1E293B]">
+            <span className="inline-flex rounded-full bg-white px-3 py-1.5 text-[11px] font-bold text-night">
               {cta}
             </span>
           </div>

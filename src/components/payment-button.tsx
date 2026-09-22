@@ -58,7 +58,7 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
         <input
           value={nomclient}
           onChange={(e) => setNomclient(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-violet focus:ring-2"
         />
       </label>
       <label className="block text-sm">
@@ -66,7 +66,7 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
         <input
           value={numeroSend}
           onChange={(e) => setNumeroSend(e.target.value)}
-          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-[#6D28D9] focus:ring-2"
+          className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 outline-none ring-violet focus:ring-2"
           inputMode="tel"
           autoComplete="tel"
         />
