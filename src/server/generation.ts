@@ -13,7 +13,10 @@ import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
-import { loadDomainInspirationAnalyses } from "@/lib/inspiration-source";
+import {
+  loadDomainInspirationAnalyses,
+  loadVisualReferenceForDomain,
+} from "@/lib/inspiration-source";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -33,9 +36,25 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     }
   }
 
-  const library = await loadDomainInspirationAnalyses(brief.domain, 3);
+  const [library, visualReference] = await Promise.all([
+    loadDomainInspirationAnalyses(brief.domain, 3),
+    loadVisualReferenceForDomain(brief.domain),
+  ]);
   const artDirection = buildArtDirection(brief, library);
-  let prompt = buildPrompt(brief, artDirection);
+  if (visualReference) {
+    artDirection.reference_ids = [`insp-${visualReference.id}`, ...artDirection.reference_ids];
+    artDirection.composition = `${visualReference.creativeDna.composition}. ${artDirection.composition}`;
+    artDirection.background = visualReference.creativeDna.background || artDirection.background;
+    if (visualReference.creativeDna.colorPalette.length >= 2) {
+      artDirection.color_palette = visualReference.creativeDna.colorPalette.slice(0, 3);
+    }
+  }
+
+  const hasVisualRef = Boolean(visualReference?.dataUrl);
+  let prompt = buildPrompt(brief, artDirection, {
+    hasVisualRef,
+    creativeDna: visualReference?.creativeDna ?? null,
+  });
   const qualityScores = scoreQuality(brief, prompt);
 
   const generation = await prisma.$transaction(async (tx) => {
@@ -59,7 +78,11 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
-    const first = await generateWithRodium({ prompt, brief });
+    const first = await generateWithRodium({
+      prompt,
+      brief,
+      styleReferenceDataUrl: visualReference?.dataUrl,
+    });
     if (!first.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
 
     let imageUrl = first.imageUrl;
@@ -67,6 +90,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     let rodiCost = first.rodiCostEstimate;
     let qc = skippedQcReport();
     let repaired = false;
+    let visualRefUsed = first.visualRefSent === true;
 
     const qcRaw = await reviewPosterQuality({
       imageUrl,
@@ -76,12 +100,17 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       qc = parseQcReport(qcRaw);
       if (shouldRepair(qc)) {
         prompt = applyRepair(prompt, qc);
-        const second = await generateWithRodium({ prompt, brief });
+        const second = await generateWithRodium({
+          prompt,
+          brief,
+          styleReferenceDataUrl: visualReference?.dataUrl,
+        });
         if (second.imageUrl) {
           imageUrl = second.imageUrl;
           model = `${first.model}+repair:${second.model}`;
           rodiCost = Number((first.rodiCostEstimate + second.rodiCostEstimate).toFixed(3));
           repaired = true;
+          visualRefUsed = visualRefUsed || second.visualRefSent === true;
           const secondQc = await reviewPosterQuality({
             imageUrl,
             prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
@@ -110,8 +139,12 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           ...qualityScores,
           qc,
           repaired,
+          visual_ref_used: visualRefUsed,
+          reference_id: visualReference?.id ?? null,
+          reference_storage_path: visualReference?.storagePath ?? null,
+          creative_dna: visualReference?.creativeDna ?? null,
           durationMs: Date.now() - generation.createdAt.getTime(),
-          checks: ["human_required", "art_direction", "qc_vision"],
+          checks: ["human_required", "art_direction", "qc_vision", "visual_reference"],
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },

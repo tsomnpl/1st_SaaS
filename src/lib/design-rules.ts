@@ -25,16 +25,17 @@ export const GLOBAL_DESIGN_PROMPT = [
 ].join(" ");
 
 export const STYLE_REFERENCE_PROMPT = [
-  "A style-reference image is attached (Gemini image-to-image only).",
-  "Inspire composition, palette, layout and typographic treatment from it.",
-  "Do NOT copy or near-copy the reference.",
-  "Do NOT reproduce any logo, brand name, celebrity likeness, or identifiable real-company text visible on the reference.",
-  "Generate an ORIGINAL poster in that style, with the new generic titles given below.",
+  "A style-reference bitmap is attached to this request.",
+  "Treat it as the visual model for structure, not as a vague theme hint.",
+  "Reproduce as closely as useful: composition, subject placement, scale, text zones, hierarchy, CTA position, negative space, contrast, and photographic treatment.",
+  "Replace every commercial fact with the NEW titles, prices, dates and contacts given below.",
+  "Do NOT copy logos, brand names, celebrity likenesses, or identifiable source text from the reference.",
+  "Keep at least one photoreal human whose role matches the domain and the reference staging.",
 ].join(" ");
 
 export const STYLE_INSPIRATION_TEXT = [
   "Inspire from the written professional-poster style notes (composition, palette, layout, type).",
-  "OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief.",
+  "No bitmap reference was attached to this request — follow the written Creative DNA strictly.",
   "Do NOT copy any real brand, logo, or celebrity.",
   "Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.",
 ].join(" ");

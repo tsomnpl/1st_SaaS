@@ -38,7 +38,7 @@ export function CreationGrid({ posters }: { posters: GalleryPoster[] }) {
                 setOpenId(poster.id);
               }}
             >
-              <VisualPoster {...poster} />
+              <VisualPoster {...poster} requireImage />
             </Link>
             <p className="text-xs text-slate-500">{poster.domaine}</p>
           </div>

@@ -45,7 +45,12 @@ export function isLikelyImageModel(modelId: string) {
   return IMAGE_MODEL_HINTS.some((hint) => id.includes(hint));
 }
 
-export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, available: string[] = []) {
+export function selectImageModel(
+  brief: CreateBriefInput,
+  finalPrompt: string,
+  available: string[] = [],
+  options: { prefersBitmap?: boolean } = {},
+) {
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();
   const textHeavyFields = [
@@ -61,7 +66,7 @@ export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, a
   ].filter(Boolean).length;
 
   const preferred = (() => {
-    if (brief.mainImageUrl || brief.logoUrl) {
+    if (options.prefersBitmap || brief.mainImageUrl || brief.logoUrl) {
       return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
     }
     if (textHeavyFields >= 6) {
@@ -112,17 +117,23 @@ function rodiumHeaders() {
   };
 }
 
-export async function generateWithRodium(input: { prompt: string; brief: CreateBriefInput }) {
+export async function generateWithRodium(input: {
+  prompt: string;
+  brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
+}) {
   if (!env.RODIUMAI_API_KEY) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
   const available = await listRodiumImageModels();
-  const imageModel = selectImageModel(input.brief, input.prompt, available);
+  const prefersBitmap = Boolean(input.styleReferenceDataUrl || input.brief.mainImageUrl || input.brief.logoUrl);
+  const imageModel = selectImageModel(input.brief, input.prompt, available, { prefersBitmap });
   const render = await renderImage({
     model: imageModel,
     prompt: input.prompt,
     brief: input.brief,
+    styleReferenceDataUrl: input.styleReferenceDataUrl,
   });
 
   const totalTokens = render.usage?.total_tokens ?? 0;
@@ -151,6 +162,7 @@ async function renderImage(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
 }) {
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
@@ -159,12 +171,14 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const reference = params.brief.mainImageUrl || params.brief.logoUrl;
   const acceptsBitmap = !params.model.toLowerCase().includes("gpt-image");
   let visualRefSent = false;
+  const styleRef = params.styleReferenceDataUrl;
+  const clientRef = params.brief.mainImageUrl || params.brief.logoUrl;
+  const reference = styleRef || clientRef;
   if (reference?.startsWith("data:image/") && acceptsBitmap) {
     body.image = reference;
-    visualRefSent = true;
+    visualRefSent = Boolean(styleRef);
   }
 
   const response = await fetch(endpoint, {

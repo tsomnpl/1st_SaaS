@@ -16,7 +16,7 @@ export default async function CreationsPage() {
   const { generated } = await getGeneratedShowcase();
   const posters = SHOWCASE_SHEETS.map((sheet) => {
     const entry = generated.find((item) => item.id === sheet.id);
-    return entry
+    return entry?.fichier_image
       ? { ...toPoster(entry), fourK: isVerified4k(entry) }
       : {
           id: sheet.id,
@@ -29,8 +29,8 @@ export default async function CreationsPage() {
           domaine: sheet.domaine,
           fourK: false,
         };
-  });
-  const realImages = posters.filter((poster) => poster.imageSrc).length;
+  }).filter((poster) => poster.imageSrc);
+  const realImages = posters.length;
 
   return (
     <div className="page-canvas space-y-8">

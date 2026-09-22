@@ -101,6 +101,135 @@ export async function loadInspirationCoverage() {
   };
 }
 
+export type CreativeDna = {
+  referenceId: string;
+  domain: string;
+  background: string;
+  composition: string;
+  layout: string;
+  humanPlacement: string;
+  typographyHierarchy: string;
+  colorPalette: string[];
+  mood: string;
+  imageTreatment: string;
+};
+
+export type VisualReference = {
+  id: string;
+  domaine: string;
+  storagePath: string;
+  dataUrl: string;
+  analysis?: InspirationAnalysis;
+  creativeDna: CreativeDna;
+  visualBytesSent: boolean;
+};
+
+function creativeDnaFromAnalysis(row: { id: string; domaine: string; storage_path?: string }, analysis?: InspirationAnalysis): CreativeDna {
+  return {
+    referenceId: row.id,
+    domain: row.domaine,
+    background: analysis?.arriere_plan || "unknown",
+    composition: analysis?.visuel || "unknown",
+    layout: analysis?.textes || "unknown",
+    humanPlacement: analysis?.visuel || "domain-relevant human in scene",
+    typographyHierarchy: analysis?.textes || "title dominant, facts grouped",
+    colorPalette: analysis?.palette_dominante?.length ? analysis.palette_dominante : ["#1E293B", "#6D28D9", "#FFFFFF"],
+    mood: analysis?.style_general || "professional",
+    imageTreatment: analysis?.style_general || "photographic",
+  };
+}
+
+async function downloadStorageObject(path: string) {
+  const config = supabaseConfig();
+  if (!config) return null;
+  const response = await fetch(`${config.url}/storage/v1/object/${BUCKET}/${path}`, {
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
+    },
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  const mime = response.headers.get("content-type") || "image/jpeg";
+  const buffer = Buffer.from(await response.arrayBuffer());
+  if (buffer.length < 32 || buffer.length > 1_800_000) return null;
+  return `data:${mime};base64,${buffer.toString("base64")}`;
+}
+
+export async function countInspirationSourceRows() {
+  const config = supabaseConfig();
+  if (!config) return 0;
+  const response = await fetch(`${config.url}/rest/v1/inspiration_source?select=id`, {
+    headers: {
+      apikey: config.key,
+      Authorization: `Bearer ${config.key}`,
+      Prefer: "count=exact",
+      Range: "0-0",
+    },
+    cache: "no-store",
+  });
+  const range = response.headers.get("content-range") || "";
+  const total = Number(range.split("/")[1] || 0);
+  return Number.isFinite(total) ? total : 0;
+}
+
+/** Fetch one real Supabase bitmap for a domain and mark it usable for Rodium image models. */
+export async function loadVisualReferenceForDomain(domain: string): Promise<VisualReference | null> {
+  const config = supabaseConfig();
+  const slug = slugForDomain(domain);
+  if (!config || !slug) return null;
+
+  const analyses = await loadDomainIndex(slug);
+  const response = await fetch(
+    `${config.url}/rest/v1/inspiration_source?domaine=eq.${encodeURIComponent(slug)}&select=id,domaine,storage_path&limit=12`,
+    {
+      headers: {
+        apikey: config.key,
+        Authorization: `Bearer ${config.key}`,
+      },
+      cache: "no-store",
+    },
+  );
+  if (!response.ok) return null;
+  const rows = (await response.json()) as Array<{ id: string; domaine: string; storage_path: string }>;
+  if (!Array.isArray(rows) || rows.length === 0) return null;
+
+  const preferred = analyses[0] ? rows.find((row) => row.id === analyses[0].id) : null;
+  const ordered = preferred ? [preferred, ...rows.filter((row) => row.id !== preferred.id)] : rows;
+
+  for (const row of ordered) {
+    const dataUrl = await downloadStorageObject(row.storage_path);
+    if (!dataUrl) continue;
+    const analysis = analyses.find((item) => item.id === row.id);
+    return {
+      id: row.id,
+      domaine: row.domaine,
+      storagePath: row.storage_path,
+      dataUrl,
+      analysis,
+      creativeDna: creativeDnaFromAnalysis(row, analysis),
+      visualBytesSent: false,
+    };
+  }
+  return null;
+}
+
+export function formatCreativeDnaForPrompt(dna: CreativeDna) {
+  return [
+    "Creative DNA from the attached visual reference (follow structure, replace commercial facts):",
+    `referenceId=${dna.referenceId}`,
+    `domain=${dna.domain}`,
+    `background=${dna.background}`,
+    `composition=${dna.composition}`,
+    `layout=${dna.layout}`,
+    `humanPlacement=${dna.humanPlacement}`,
+    `typography=${dna.typographyHierarchy}`,
+    `palette=${dna.colorPalette.join(", ")}`,
+    `mood=${dna.mood}`,
+    `imageTreatment=${dna.imageTreatment}`,
+  ].join("\n");
+}
+
 export function publicArtDirection(artDirection: {
   differentiators: string[];
   reference_ids: string[];

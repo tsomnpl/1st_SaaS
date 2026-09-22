@@ -88,7 +88,7 @@ describe("showcase catalogue alignment", () => {
       expect(prompt).toMatch(/Maximum 2 type families/i);
       expect(prompt).toMatch(/Clear hierarchy/i);
       expect(prompt).toMatch(/Strong contrast/i);
-      expect(prompt).toMatch(/Do NOT copy or near-copy/i);
+      expect(prompt).toMatch(/Do NOT copy logos|Do NOT copy or near-copy/i);
       expect(buildShowcasePrompt(sheet, false)).toMatch(/Every visible word must be correctly spelled/i);
       expect(prompt).toContain(sheet.titre_affiche_finale);
       expect(prompt).toMatch(/photoreal human/i);

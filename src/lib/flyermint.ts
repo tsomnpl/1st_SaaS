@@ -1,11 +1,13 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 import { catalogueStyleNotesFor } from "@/lib/catalogue-refs";
 import {
+  formatCreativeDnaForPrompt,
   formatInspirationForPrompt,
+  type CreativeDna,
   type InspirationAnalysis,
 } from "@/lib/inspiration-source";
 
@@ -166,7 +168,11 @@ export function buildArtDirection(
   };
 }
 
-export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
+export function buildPrompt(
+  input: CreateBriefInput,
+  ad: ArtDirection,
+  options: { hasVisualRef?: boolean; creativeDna?: CreativeDna | null } = {},
+) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
     input.description && `Offer copy: ${input.description}`,
@@ -187,7 +193,8 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
-    STYLE_INSPIRATION_TEXT,
+    options.hasVisualRef ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
+    options.creativeDna ? formatCreativeDnaForPrompt(options.creativeDna) : "",
     GLOBAL_DESIGN_PROMPT,
     `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
     `HUMAN SUBJECT (non-negotiable): at least one photoreal person. Role: ${ad.human.role}. Action: ${ad.human.action}. Framing: ${ad.human.framing}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,

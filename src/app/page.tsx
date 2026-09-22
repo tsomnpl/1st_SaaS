@@ -1,23 +1,26 @@
 import Link from "next/link";
 import { STEPS } from "@/lib/brand";
-import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
 import { LandingBriefTeaser } from "@/components/landing/brief-teaser";
+import { DomainPosterGrid } from "@/components/landing/domain-poster-grid";
 import {
   getGeneratedShowcase,
   pickAfterPoster,
   pickLandingShowcase,
-  posterForDomaine,
   toPoster,
 } from "@/lib/showcase";
-import { createPathForDomaine } from "@/lib/catalogue-refs";
 
 export default async function Home() {
   const { generated } = await getGeneratedShowcase();
-  const heroPosters = generated.filter((entry) => entry.hero_loop).map((entry) => toPoster(entry, true));
-  const landingShowcase = pickLandingShowcase(generated).map((entry) => toPoster(entry));
+  const heroPosters = generated
+    .filter((entry) => entry.hero_loop)
+    .map((entry) => toPoster(entry, true))
+    .filter((poster) => poster.imageSrc);
+  const landingShowcase = pickLandingShowcase(generated)
+    .map((entry) => toPoster(entry))
+    .filter((poster) => poster.imageSrc);
   const after = pickAfterPoster(generated);
   const afterPoster = after ? toPoster(after) : null;
 
@@ -60,23 +63,10 @@ export default async function Home() {
           {heroPosters.length >= 3 ? (
             <HeroPosterLoop posters={heroPosters} />
           ) : (
-            <div className="relative mx-auto h-[440px] w-full max-w-[440px]">
-              <VisualPoster
-                title="FESTIVAL LIVE"
-                subtitle="Une nuit, une scène"
-                meta="Samedi 21h · Zone 4"
-                cta="Prends ta place"
-                tone="night"
-                className="absolute left-8 top-0 z-20 w-[58%] rotate-[-7deg] animate-float"
-              />
-              <VisualPoster
-                title="BEAUTY WEEK"
-                subtitle="-30% soins"
-                meta="Cette semaine seulement"
-                cta="Réserver"
-                tone="soft"
-                className="absolute right-0 top-10 z-10 w-[46%] rotate-[9deg] animate-float-delayed"
-              />
+            <div className="relative mx-auto flex h-[440px] w-full max-w-[440px] items-center justify-center rounded-card border border-dashed border-slate-200 bg-slate-50 p-6 text-center">
+              <p className="text-sm text-slate-500">
+                Les affiches du hero se chargent dès que trois créations générées sont disponibles.
+              </p>
             </div>
           )}
         </div>
@@ -93,15 +83,21 @@ export default async function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {landingShowcase.map((poster) => (
-            <Link
-              key={poster.id ?? poster.title}
-              href={createPathForDomaine(poster.domaine ?? "Événementiel")}
-              className="block rounded-card transition hover:-translate-y-0.5 hover:shadow-lg"
-            >
-              <VisualPoster {...poster} />
-            </Link>
-          ))}
+          {landingShowcase.length === 0 ? (
+            <p className="col-span-full rounded-card border border-dashed border-slate-200 bg-slate-50 p-6 text-sm text-slate-500">
+              Aucune création disponible pour le moment.
+            </p>
+          ) : (
+            landingShowcase.map((poster) => (
+              <Link
+                key={poster.id ?? poster.title}
+                href={`/affiche/${poster.id}`}
+                className="block rounded-card transition hover:-translate-y-0.5 hover:shadow-lg"
+              >
+                <VisualPoster {...poster} requireImage />
+              </Link>
+            ))
+          )}
         </div>
       </section>
 
@@ -116,17 +112,12 @@ export default async function Home() {
                 Promo ce weekend, burger + boisson, 5000 FCFA, appelle ce numero.
               </p>
             </div>
-            {afterPoster ? (
-              <VisualPoster {...afterPoster} className="min-h-[220px]" />
+            {afterPoster?.imageSrc ? (
+              <VisualPoster {...afterPoster} className="min-h-[220px]" requireImage />
             ) : (
-              <VisualPoster
-                title="MENU DU SOIR"
-                subtitle="Burger + boisson"
-                meta="5 000 FCFA"
-                cta="Appeler"
-                tone="warm"
-                className="min-h-[220px]"
-              />
+              <div className="flex min-h-[220px] items-center justify-center rounded-card border border-dashed border-slate-200 bg-slate-50 p-4 text-center text-sm text-slate-500">
+                Aucune création disponible pour l’exemple Après.
+              </div>
             )}
           </div>
         </article>
@@ -178,26 +169,7 @@ export default async function Home() {
         </div>
       </section>
 
-      <section className="space-y-6">
-        <h2 className="text-3xl font-extrabold tracking-tight">Tous les univers, un même niveau d’exigence</h2>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {DOMAINS.flatMap((domain) => {
-            const match = posterForDomaine(generated, domain) ?? posterForDomaine(generated, DOMAIN_LABELS[domain]);
-            if (!match) return [];
-            const poster = toPoster(match);
-            return [
-              <Link
-                key={domain}
-                href={`/affiche/${match.id}`}
-                className="block rounded-card transition hover:-translate-y-0.5 hover:shadow-lg"
-              >
-                <VisualPoster {...poster} className="min-h-[180px]" />
-                <p className="mt-2 text-center text-xs font-semibold text-night">{DOMAIN_LABELS[domain]}</p>
-              </Link>,
-            ];
-          })}
-        </div>
-      </section>
+      <DomainPosterGrid generated={generated} />
 
       <section id="tarifs" className="card p-6 md:p-10">
         <div className="flex flex-wrap items-end justify-between gap-4">
