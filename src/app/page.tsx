@@ -113,7 +113,7 @@ export default async function Home() {
               <VisualPoster
                 title={visuals.afterPoster.title}
                 imageSrc={visuals.afterPoster.imageSrc}
-                overlayLabel={visuals.afterPoster.title}
+                overlayLabel="Après"
                 className="min-h-[220px]"
               />
             ) : (

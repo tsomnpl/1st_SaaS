@@ -17,6 +17,23 @@ describe("landing visuals", () => {
       expect(poster.imageSrc.startsWith("/creations/")).toBe(true);
       expect(existsSync(path.join(process.cwd(), "public", poster.imageSrc.replace(/^\//, "")))).toBe(true);
     }
+    expect(visuals.afterPoster?.id).toMatch(/^restauration-(burger|03)$/);
+    expect(visuals.afterPoster?.id).not.toBe("restauration-01");
+    expect(visuals.realPosters.map((poster) => poster.id).slice(0, 3)).toEqual(
+      ["restauration-burger", "restauration-03", "mode-03"].filter((id) =>
+        visuals.realPosters.some((poster) => poster.id === id),
+      ),
+    );
+    expect(visuals.realPosters.some((poster) => poster.id === "restauration-03")).toBe(true);
+    expect(visuals.realPosters.some((poster) => poster.id === "mode-03")).toBe(true);
+    expect(visuals.showcase.map((poster) => poster.id)).toEqual(
+      visuals.showcase.map((poster) => poster.id).filter((id, index, all) => all.indexOf(id) === index),
+    );
+    expect(visuals.heroPosters.map((poster) => poster.id)).toEqual(
+      ["evenementiel-01", "evenementiel-02", "restauration-03", "mode-03", "beaute-03", "immobilier-business-01", "immobilier-business-03", "techno-education-03", "sport-finance-01", "sante-tourisme-associations-02"].filter(
+        (id) => visuals.realPosters.some((poster) => poster.id === id),
+      ),
+    );
     expect(visuals.domains.length).toBeGreaterThan(0);
     expect(visuals.domains.length).toBeLessThanOrEqual(DOMAINS.length);
     expect(visuals.domains.every((item) => Boolean(item.poster))).toBe(true);
