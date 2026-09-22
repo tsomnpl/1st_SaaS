@@ -31,14 +31,16 @@ describe("showcase catalogue alignment", () => {
     }
   });
 
-  it("generates posters via official Rodium images API and analyzes references over chat", () => {
+  it("generates Gemini posters over chat completions to use the main RODI wallet", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
     expect(script).toContain('/images/generations');
+    expect(script).toContain('/chat/completions');
     expect(script).toContain('1024x1536');
     expect(script).toContain('"x-api-key"');
     expect(script).toContain("inspirations-source");
     expect(script).toContain("previous.visual_ref_used");
     expect(script).toContain("not 4K");
+    expect(script).toContain("extractGeneratedImageUrl");
     expect(script).not.toContain("1024x1792");
   });
 
@@ -117,6 +119,7 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("isGptImageModel");
     expect(script).toContain("fetchSupabaseReference");
     expect(script).toContain("google/gemini-3.1-flash-image");
+    expect(script).toContain("image_url");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
   });
 });

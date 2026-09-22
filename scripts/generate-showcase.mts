@@ -58,8 +58,113 @@ type ImageResponse = {
   model?: string;
 };
 type ChatResponse = {
-  choices?: Array<{ message?: { content?: string | Array<{ text?: string }> } }>;
+  choices?: Array<{
+    message?: {
+      content?: string | Array<{ text?: string; image_url?: { url?: string } }>;
+      images?: Array<{ image_url?: { url?: string }; url?: string }>;
+    };
+  }>;
+  usage?: { total_tokens?: number };
+  model?: string;
 };
+
+function extractGeneratedImageUrl(data: ImageResponse & ChatResponse) {
+  const first = data.data?.[0];
+  if (first?.url) return first.url;
+  if (first?.b64_json) return `data:image/png;base64,${first.b64_json}`;
+  const message = data.choices?.[0]?.message;
+  const fromList = message?.images?.[0]?.image_url?.url || message?.images?.[0]?.url;
+  if (fromList) return fromList;
+  const content = message?.content;
+  if (Array.isArray(content)) {
+    for (const part of content) {
+      if (part.image_url?.url) return part.image_url.url;
+    }
+  }
+  return "";
+}
+
+async function callRodium(params: {
+  baseUrl: string;
+  apiKey: string;
+  model: string;
+  prompt: string;
+  referenceDataUrl: string;
+  size: string;
+}) {
+  const headers = rodiumHeaders(params.apiKey);
+  const gemini = params.model.toLowerCase().includes("gemini");
+
+  if (gemini) {
+    const content: Array<Record<string, unknown>> = [{ type: "text", text: params.prompt }];
+    if (params.referenceDataUrl) {
+      content.push({ type: "image_url", image_url: { url: params.referenceDataUrl } });
+    }
+    let lastError = "RODIUM_CHAT_IMAGE_FAILED";
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const response = await fetch(`${params.baseUrl}/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: params.model,
+          messages: [{ role: "user", content }],
+          temperature: 0.4,
+        }),
+      });
+      const raw = await response.text();
+      if (response.ok) {
+        const data = JSON.parse(raw) as ChatResponse;
+        const url = extractGeneratedImageUrl(data);
+        if (!url) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+        return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? params.model };
+      }
+      lastError = `RODIUM_CHAT_IMAGE_${response.status}_${shortErrorBody(raw)}`;
+      if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
+        throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
+      }
+      if (response.status < 500 && response.status !== 429) break;
+      await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+    }
+    throw new Error(lastError);
+  }
+
+  const body: Record<string, unknown> = {
+    model: params.model,
+    prompt: params.prompt,
+    n: 1,
+    size: params.size,
+  };
+  if (params.referenceDataUrl) {
+    body.image = params.referenceDataUrl;
+  }
+
+  let lastError = "RODIUM_IMAGES_FAILED";
+  for (let attempt = 0; attempt < 4; attempt += 1) {
+    const response = await fetch(`${params.baseUrl}/images/generations`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(body),
+    });
+    const raw = await response.text();
+    if (response.ok) {
+      const data = JSON.parse(raw) as ImageResponse;
+      const url = extractGeneratedImageUrl(data);
+      if (!url) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+      return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? params.model };
+    }
+    lastError = `RODIUM_IMAGES_${response.status}_${shortErrorBody(raw)}`;
+    if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
+      throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
+    }
+    if (response.status === 400 && params.size !== FALLBACK_SIZE) {
+      body.size = FALLBACK_SIZE;
+      continue;
+    }
+    if (response.status < 500 && response.status !== 429) break;
+    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
+  }
+  throw new Error(lastError);
+}
 
 type VisualRef = {
   id: string;
@@ -253,55 +358,6 @@ async function reviewQc(params: {
     images: [params.imageUrl, params.referenceImageUrl ?? ""],
   });
   return raw ? parseQcReport(raw) : parseQcReport("");
-}
-
-async function callRodium(params: {
-  baseUrl: string;
-  apiKey: string;
-  model: string;
-  prompt: string;
-  referenceDataUrl: string;
-  size: string;
-}) {
-  const headers = rodiumHeaders(params.apiKey);
-  const body: Record<string, unknown> = {
-    model: params.model,
-    prompt: params.prompt,
-    n: 1,
-    size: params.size,
-  };
-  const gemini = params.model.toLowerCase().includes("gemini");
-  if (gemini && params.referenceDataUrl) {
-    body.image = params.referenceDataUrl;
-  }
-
-  let lastError = "RODIUM_IMAGES_FAILED";
-  for (let attempt = 0; attempt < 4; attempt += 1) {
-    const response = await fetch(`${params.baseUrl}/images/generations`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify(body),
-    });
-    const raw = await response.text();
-    if (response.ok) {
-      const data = JSON.parse(raw) as ImageResponse;
-      const first = data.data?.[0];
-      const url = first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : "");
-      if (!url) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-      return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? params.model };
-    }
-    lastError = `RODIUM_IMAGES_${response.status}_${shortErrorBody(raw)}`;
-    if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
-      throw new Error(`RODIUM_INSUFFICIENT_BALANCE_${shortErrorBody(raw)}`);
-    }
-    if (response.status === 400 && params.size !== FALLBACK_SIZE) {
-      body.size = FALLBACK_SIZE;
-      continue;
-    }
-    if (response.status < 500 && response.status !== 429) break;
-    await new Promise((resolve) => setTimeout(resolve, 1500 * (attempt + 1)));
-  }
-  throw new Error(lastError);
 }
 
 async function loadImageBuffer(url: string) {

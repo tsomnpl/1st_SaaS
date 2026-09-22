@@ -4,7 +4,12 @@ import { env, getAllowedImageModels } from "@/lib/env";
 type RodiumResponse = {
   id?: string;
   model?: string;
-  choices?: Array<{ message?: { content?: string | Array<{ type?: string; text?: string; image_url?: { url?: string } }> } }>;
+  choices?: Array<{
+    message?: {
+      content?: string | Array<{ type?: string; text?: string; image_url?: { url?: string } }>;
+      images?: Array<{ image_url?: { url?: string }; url?: string }>;
+    };
+  }>;
   data?: Array<{ url?: string; b64_json?: string }>;
   usage?: {
     prompt_tokens?: number;
@@ -183,12 +188,59 @@ export function estimateRodiCost(model: string, totalTokens: number) {
   return Number(((totalTokens / 1000) * perThousandTokens).toFixed(3));
 }
 
+function extractGeneratedImageUrl(data: RodiumResponse) {
+  const first = data.data?.[0];
+  if (first?.url) return first.url;
+  if (first?.b64_json) return `data:image/png;base64,${first.b64_json}`;
+  const message = data.choices?.[0]?.message;
+  const fromList = message?.images?.[0]?.image_url?.url || message?.images?.[0]?.url;
+  if (fromList) return fromList;
+  const content = message?.content;
+  if (Array.isArray(content)) {
+    for (const part of content) {
+      if (part.image_url?.url) return part.image_url.url;
+    }
+  }
+  return "";
+}
+
 async function renderImage(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
+  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl;
+  const styleReference = params.styleReferenceDataUrl;
+  const attached =
+    canConsumeReferenceBitmap(params.model) &&
+    (clientReference?.startsWith("data:image/") || styleReference?.startsWith("data:image/"))
+      ? (clientReference?.startsWith("data:image/") ? clientReference : styleReference)
+      : "";
+
+  if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
+    const content: Array<Record<string, unknown>> = [{ type: "text", text: params.prompt }];
+    if (attached) {
+      content.push({ type: "image_url", image_url: { url: attached } });
+    }
+    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: rodiumHeaders(),
+      body: JSON.stringify({
+        model: params.model,
+        messages: [{ role: "user", content }],
+        temperature: 0.4,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
+    }
+    const data = (await response.json()) as RodiumResponse;
+    const imageUrl = extractGeneratedImageUrl(data);
+    if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+    return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  }
+
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
     model: params.model,
@@ -196,15 +248,7 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl;
-  const styleReference = params.styleReferenceDataUrl;
-  if (canConsumeReferenceBitmap(params.model)) {
-    if (clientReference?.startsWith("data:image/")) {
-      body.image = clientReference;
-    } else if (styleReference?.startsWith("data:image/")) {
-      body.image = styleReference;
-    }
-  }
+  if (attached) body.image = attached;
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -215,12 +259,7 @@ async function renderImage(params: {
     throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
   }
   const data = (await response.json()) as RodiumResponse;
-  const first = data.data?.[0];
-  const imageUrl = first?.url
-    ? first.url
-    : first?.b64_json
-      ? `data:image/png;base64,${first.b64_json}`
-      : "";
+  const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
   return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
 }
