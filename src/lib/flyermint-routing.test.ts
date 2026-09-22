@@ -58,6 +58,13 @@ describe("image model routing", () => {
     expect(() =>
       selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2"], { hasStyleReference: true }),
     ).toThrow("RODIUM_NO_IMAGE_EDIT_MODEL");
+    expect(
+      selectImageModel(
+        { ...brief, personalReferenceUrl: "data:image/png;base64,aaa" } as CreateBriefInput,
+        "personal composition",
+        ["openai/gpt-image-2", "google/gemini-3.1-flash-image"],
+      ),
+    ).toBe("google/gemini-3.1-flash-image");
   });
 });
 

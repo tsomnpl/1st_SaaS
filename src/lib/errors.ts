@@ -25,6 +25,10 @@ const MESSAGES: Record<string, string> = {
   INVALID_EMAIL: "L’e-mail n’est pas valide.",
   RATE_LIMITED: "Trop de tentatives. Réessaie dans un instant.",
   EXPORT_LOCKED: "L’export éditable n’est pas inclus dans tes offres.",
+  PERSONAL_REFERENCE_PREMIUM:
+    "Cette fonctionnalité est disponible avec les packs 20 000 FCFA et 25 000 FCFA. Vous pouvez toutefois continuer avec la génération standard de FlyerMint.",
+  PERSONAL_REFERENCE_REQUIRED:
+    "Ajoutez une affiche de référence pour reproduire sa composition, ou choisissez un autre mode de création.",
   NOT_FOUND: "Ressource introuvable.",
 };
 
@@ -44,7 +48,9 @@ export function generationFailurePayload(error: unknown) {
       ? 401
       : code === "INSUFFICIENT_MINTS" || code === "RODIUM_INSUFFICIENT_BALANCE"
         ? 402
-        : 400;
+        : code === "PERSONAL_REFERENCE_PREMIUM"
+          ? 403
+          : 400;
   return {
     status,
     body: {

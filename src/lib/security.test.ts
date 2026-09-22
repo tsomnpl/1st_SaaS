@@ -40,6 +40,11 @@ describe("security helpers", () => {
       body: { ok: false, error: "RODIUM_INSUFFICIENT_BALANCE" },
     });
     expect(generationFailurePayload(new Error("GENERATION_FAILED")).status).toBe(400);
+    expect(generationFailurePayload(new Error("PERSONAL_REFERENCE_PREMIUM"))).toMatchObject({
+      status: 403,
+      body: { ok: false, error: "PERSONAL_REFERENCE_PREMIUM" },
+    });
+    expect(publicErrorMessage(new Error("PERSONAL_REFERENCE_PREMIUM"))).toMatch(/génération standard/);
   });
 
   it("rejects mint balance overwrite payloads", () => {
@@ -62,6 +67,17 @@ describe("security helpers", () => {
         title: "Promo",
         format: "carre",
         mainImageUrl: "javascript:alert(1)",
+      }),
+    ).toThrow();
+    expect(() =>
+      createBriefSchema.parse({
+        visualType: "Affiche",
+        domain: "Technologie",
+        objective: "Vendre",
+        targetAudience: "PME",
+        title: "Promo",
+        format: "carre",
+        personalReferenceUrl: "javascript:alert(1)",
       }),
     ).toThrow();
   });

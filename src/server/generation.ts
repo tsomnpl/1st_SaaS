@@ -19,9 +19,18 @@ import {
   skippedQcReport,
 } from "@/lib/quality-control";
 import { dnaSummaryLine } from "@/lib/creative-dna";
+import {
+  applyPersonalReferenceAccess,
+  classifyGenerationAssets,
+  enrichArtDirectionWithPersonalReference,
+  parsePersonalReferenceAnalysis,
+  personalReferenceSummary,
+  PERSONAL_REFERENCE_PLAN_CODES,
+  type PersonalReferenceAnalysis,
+} from "@/lib/personal-reference";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
-import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
+import { analyzePersonalReference, generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 import { resolveVisualLibrary } from "@/server/visual-library";
 
@@ -42,6 +51,10 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       }
     }
   }
+
+  const entitled = await userHasPersonalReference(user.id);
+  const access = applyPersonalReferenceAccess(brief, entitled);
+  brief = access.brief;
 
   const baseDirection = buildArtDirection(brief);
   const qualityScores = scoreQuality(brief, buildPrompt(brief, baseDirection));
@@ -68,10 +81,21 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
 
   try {
     const visual = await resolveVisualLibrary(brief, baseDirection.visual_reference_paths);
-    const artDirection = applyVisualLibrary(baseDirection, visual, brief.colors);
+    let personalAnalysis: PersonalReferenceAnalysis | null = null;
+    if (brief.personalReferenceUrl) {
+      const rawAnalysis = await analyzePersonalReference(brief.personalReferenceUrl);
+      personalAnalysis = parsePersonalReferenceAnalysis(rawAnalysis);
+    }
+    const artDirection = enrichArtDirectionWithPersonalReference(
+      applyVisualLibrary(baseDirection, visual, brief.colors),
+      personalAnalysis,
+    );
+    const dnaSummary = dnaSummaryLine(visual.dna);
+    const personalGrammar = personalReferenceSummary(personalAnalysis);
     let prompt = buildPrompt(brief, artDirection, {
-      hasVisualReferenceImage: Boolean(visual.dataUrl),
+      hasVisualReferenceImage: Boolean(visual.dataUrl) || Boolean(brief.personalReferenceUrl),
       dna: visual.dna,
+      personalReference: personalAnalysis,
     });
     let imageUrl = "";
     let model = "pending";
@@ -79,7 +103,6 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     let qc = skippedQcReport();
     let repaired = false;
     const modelsUsed: string[] = [];
-    const dnaSummary = dnaSummaryLine(visual.dna);
     let bitmapAttached = false;
 
     for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
@@ -97,8 +120,15 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
 
       const qcRaw = await reviewPosterQuality({
         imageUrl,
-        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format, dnaSummary),
-        referenceImageUrl: visual.dataUrl || undefined,
+        prompt: qcPrompt(
+          brief.title,
+          brief.domain,
+          factsForQc(brief),
+          brief.format,
+          dnaSummary,
+          personalGrammar || undefined,
+        ),
+        referenceImageUrl: brief.personalReferenceUrl || visual.dataUrl || undefined,
       });
       qc = qcRaw ? parseQcReport(qcRaw) : skippedQcReport();
       if (!shouldRepair(qc)) break;
@@ -139,6 +169,11 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           bitmapAttached,
           creativeDna: visual.dna,
           visualReferenceIds: artDirection.visual_reference_ids,
+          creationMode: brief.creationMode,
+          personalReferenceUsed: Boolean(brief.personalReferenceUrl),
+          personalReferenceDenied: access.personalReferenceDenied,
+          personalReferenceAnalysis: personalAnalysis,
+          assetRoles: classifyGenerationAssets(brief),
           durationMs: Date.now() - generation.createdAt.getTime(),
           checks: [
             "human_required",
@@ -148,7 +183,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
             "qc_vision",
             "composition_match",
             "format",
-          ],
+            brief.personalReferenceUrl ? "personal_reference_grammar" : "",
+          ].filter(Boolean),
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },
@@ -160,6 +196,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       quality: qualityScores,
       artDirection,
       repaired,
+      personalReferenceDenied: access.personalReferenceDenied,
+      personalReferenceUsed: Boolean(brief.personalReferenceUrl),
       visualReference: {
         source: visual.source,
         id: visual.referenceId,
@@ -196,6 +234,17 @@ export async function userHasEditableExport(userId: string) {
       userId,
       status: "COMPLETED",
       plan: { editableExport: true },
+    },
+  });
+  return Boolean(paid);
+}
+
+export async function userHasPersonalReference(userId: string) {
+  const paid = await prisma.payment.findFirst({
+    where: {
+      userId,
+      status: "COMPLETED",
+      plan: { code: { in: [...PERSONAL_REFERENCE_PLAN_CODES] } },
     },
   });
   return Boolean(paid);
