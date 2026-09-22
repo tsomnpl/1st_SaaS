@@ -1,5 +1,9 @@
 import { CreditTransactionType, PaymentStatus, Prisma } from "@prisma/client";
 import { env, getAppUrl } from "@/lib/env";
+import {
+  resolveMoneyFusionPaymentEndpoint,
+  resolveMoneyFusionWebhookUrl,
+} from "@/lib/moneyfusion";
 import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
@@ -61,10 +65,13 @@ export async function initMoneyFusionPayment(params: {
     nomclient: params.nomclient,
     personal_Info: payment.orderId,
     return_url: `${appUrl}/payment/success`,
-    webhook_url: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
+    webhook_url: resolveMoneyFusionWebhookUrl({
+      appUrl,
+      configured: env.MONEY_FUSION_WEBHOOK_URL,
+    }),
   };
 
-  const endpoint = `${env.MONEY_FUSION_API_URL}/paiement`;
+  const endpoint = resolveMoneyFusionPaymentEndpoint(env.MONEY_FUSION_API_URL!);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },

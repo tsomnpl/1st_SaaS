@@ -1,5 +1,6 @@
 import { CreateBriefInput } from "@/lib/flyermint";
 import { DOMAINS } from "@/lib/domains";
+import { exemplarForDomain } from "@/lib/approved-exemplars";
 
 export type InspirationReference = {
   id: string;
@@ -297,6 +298,11 @@ export function selectInspirationReferences(input: CreateBriefInput) {
             `Typo: ${playbook.typography}`,
             `Image: ${playbook.imageTreatment}`,
             `Densite: ${playbook.density} | mood: ${playbook.mood}`,
+          ]
+        : []),
+      ...(playbook && exemplarForDomain(playbook.domain)
+        ? [
+            `Exemplaire validé ${exemplarForDomain(playbook.domain)!.id}: ${exemplarForDomain(playbook.domain)!.visualNotes} Fichier: ${exemplarForDomain(playbook.domain)!.publicSrc}. S'en inspirer pour la composition, ne pas recopier le texte ni les contacts.`,
           ]
         : []),
     ],

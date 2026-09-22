@@ -17,17 +17,7 @@ const plans = [
 async function seedShowcaseReferences() {
   try {
     const file = path.join(process.cwd(), "docs/inspirations/references-catalog.json");
-    const catalog = JSON.parse(await readFile(file, "utf8")) as {
-      items?: Array<{
-        id: string;
-        domaine: string;
-        style: string;
-        composition: string;
-        palette: string[];
-        ambiance: string;
-        imageUrl?: string;
-      }>;
-    };
+    const catalog = JSON.parse(await readFile(file, "utf8"));
     for (const item of catalog.items ?? []) {
       await prisma.reference.upsert({
         where: { id: `showcase-${item.id}` },

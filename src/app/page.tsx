@@ -5,17 +5,18 @@ import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
 import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
+import { APPROVED_EXEMPLARS } from "@/lib/approved-exemplars";
 
-const SHOWCASE = [
-  { title: "NIGHT WAVE", subtitle: "Concert live", meta: "Sam. 21h · Plateau", tone: "night" as const, cta: "Prends ta place" },
-  { title: "MENU DU SOIR", subtitle: "Burger + boisson", meta: "5 000 FCFA", tone: "warm" as const, cta: "Commander" },
-  { title: "NOUVELLE COLLECTION", subtitle: "Lookbook été", meta: "Édition limitée", tone: "gold" as const, cta: "Découvrir" },
-  { title: "VILLA VUE MER", subtitle: "Cocody", meta: "Visite ce week-end", tone: "clean" as const, cta: "Prendre RDV" },
-  { title: "GLOW STUDIO", subtitle: "Soins visage", meta: "-30% cette semaine", tone: "soft" as const, cta: "Réserver" },
-  { title: "OPEN DAY", subtitle: "Formation pro", meta: "Places limitées", tone: "fresh" as const, cta: "S’inscrire" },
-  { title: "FLASH SALE", subtitle: "Boutique en ligne", meta: "24h seulement", tone: "sport" as const, cta: "Acheter" },
-  { title: "YES I DO", subtitle: "Save the date", meta: "12 décembre", tone: "rose" as const, cta: "RSVP" },
-];
+const EXEMPLAR_CARDS = APPROVED_EXEMPLARS.map((item) => ({
+  id: item.id,
+  title: item.title,
+  subtitle: item.subtitle,
+  meta: item.meta,
+  tone: item.tone,
+  cta: item.cta,
+  imageSrc: item.publicSrc,
+  domaine: item.domain,
+}));
 
 const DOMAIN_TONES = [
   "night", "warm", "gold", "soft", "clean", "dark", "fresh", "clean", "sport", "dark",
@@ -26,6 +27,10 @@ const DOMAIN_TONES = [
 export default async function Home() {
   const { generated } = await getGeneratedShowcase();
   const heroPosters = generated.filter((entry) => entry.hero_loop).map((entry) => toPoster(entry, true));
+  const showcase = [
+    ...EXEMPLAR_CARDS,
+    ...generated.slice(0, 5).map((entry) => toPoster(entry)),
+  ];
 
   return (
     <div className="space-y-24 pb-8">
@@ -99,8 +104,8 @@ export default async function Home() {
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {SHOWCASE.map((poster) => (
-            <VisualPoster key={poster.title} {...poster} />
+          {showcase.map((poster) => (
+            <VisualPoster key={poster.id ?? poster.title} {...poster} />
           ))}
         </div>
       </section>
@@ -120,8 +125,9 @@ export default async function Home() {
               title="MENU DU SOIR"
               subtitle="Burger + boisson"
               meta="5 000 FCFA"
-              cta="Appeler"
+              cta="Commander"
               tone="warm"
+              imageSrc="/creations/exemplars/restauration-menu-du-soir.webp"
               className="min-h-[220px]"
             />
           </div>
