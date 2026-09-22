@@ -110,10 +110,10 @@ describe("quality gate", () => {
 });
 
 describe("brand palette", () => {
-  it("keeps mint as an accent on night and white", () => {
-    expect(BRAND.colors.night).toBe("#111827");
-    expect(BRAND.colors.mint).toBe("#20C997");
-    expect(BRAND.colors.mintWash).toBe("#DFFAF0");
+  it("keeps violet for art direction and mint for mints", () => {
+    expect(BRAND.colors.night).toBe("#1E293B");
+    expect(BRAND.colors.violet).toBe("#6D28D9");
+    expect(BRAND.colors.mint).toBe("#10B981");
     expect(BRAND.colors.white).toBe("#FFFFFF");
   });
 });

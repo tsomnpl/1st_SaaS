@@ -44,8 +44,8 @@ export const dynamic = "force-dynamic";
 
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#20C997",
-    colorText: "#111827",
+    colorPrimary: "#6D28D9",
+    colorText: "#1E293B",
     colorBackground: "#FFFFFF",
     borderRadius: "0.9rem",
     fontFamily: "Plus Jakarta Sans, sans-serif",

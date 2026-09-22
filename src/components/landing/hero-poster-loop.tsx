@@ -26,13 +26,13 @@ export function HeroPosterLoop({ posters }: { posters: HeroPoster[] }) {
           />
         ))}
       </div>
-      <div className="glass absolute bottom-8 right-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
+      <div className="absolute bottom-8 right-2 z-40 rounded-2xl bg-[#6D28D9] px-3 py-2 text-xs text-white shadow-[0_10px_24px_rgba(109,40,217,0.28)]">
         Direction artistique
-        <p className="text-sm font-semibold text-[#20C997]">Hiérarchie · CTA · Safe zone</p>
+        <p className="text-sm font-semibold">Hiérarchie · CTA · Safe zone</p>
       </div>
-      <div className="glass absolute right-4 top-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
+      <div className="absolute right-4 top-2 z-40 rounded-2xl bg-[#10B981] px-3 py-2 text-xs text-white shadow-[0_10px_24px_rgba(16,185,129,0.22)]">
         Mints
-        <p className="text-lg font-bold text-[#20C997]">1 affiche offerte</p>
+        <p className="text-lg font-bold">1 affiche offerte</p>
       </div>
     </div>
   );

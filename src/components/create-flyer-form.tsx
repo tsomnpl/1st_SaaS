@@ -144,7 +144,7 @@ export function CreateFlyerForm({
             onClick={() => setStep(index)}
             aria-current={index === step ? "step" : undefined}
             className={`rounded-full px-3 py-1 text-xs font-semibold ${
-              index === step ? "bg-[#20C997] text-[#111827]" : "bg-slate-100 text-slate-600"
+              index === step ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"
             }`}
           >
             {index + 1}. {label}
@@ -153,7 +153,7 @@ export function CreateFlyerForm({
       </div>
 
       <div className="card p-5">
-        <p className="text-sm font-medium text-[#20C997]">Cette création utilisera 1 Mint.</p>
+        <p className="text-sm font-medium text-[#10B981]">Cette création utilisera 1 Mint.</p>
         <h2 className="mt-1 text-xl font-bold">Questionnaire intelligent</h2>
         <p className="mt-1 text-sm text-slate-500">Pas de prompt à écrire. Réponds simplement.</p>
       </div>

@@ -2,9 +2,11 @@ export const BRAND = {
   name: "FlyerMint",
   slogan: "Créez des visuels qui marquent.",
   colors: {
-    night: "#111827",
-    mint: "#20C997",
-    mintWash: "#DFFAF0",
+    night: "#1E293B",
+    violet: "#6D28D9",
+    blue: "#3B82F6",
+    mint: "#10B981",
+    orange: "#F59E0B",
     white: "#FFFFFF",
   },
 } as const;
