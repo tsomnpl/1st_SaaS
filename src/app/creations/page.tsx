@@ -5,6 +5,7 @@ import { VisualPoster } from "@/components/landing/visual-poster";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { SHOWCASE_SHEETS } from "@/lib/showcase-sheets";
 import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
+import { APPROVED_EXEMPLARS } from "@/lib/approved-exemplars";
 
 export const metadata: Metadata = {
   title: pageTitle("Créations"),
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default async function CreationsPage() {
-  const { generated, manifest } = await getGeneratedShowcase();
+  const { generated } = await getGeneratedShowcase();
   const posters = SHOWCASE_SHEETS.map((sheet) => {
     const entry = generated.find((item) => item.id === sheet.id);
     return entry
@@ -46,6 +47,24 @@ export default async function CreationsPage() {
           Créer une affiche
         </Link>
       </div>
+      <section className="space-y-3">
+        <h2 className="text-lg font-extrabold">Exemplaires validés</h2>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+          {APPROVED_EXEMPLARS.map((item) => (
+            <div key={item.id} className="space-y-2">
+              <VisualPoster
+                title={item.title}
+                subtitle={item.subtitle}
+                meta={item.meta}
+                cta={item.cta}
+                tone={item.tone}
+                imageSrc={item.publicSrc}
+              />
+              <p className="text-xs text-slate-500">{item.domain}</p>
+            </div>
+          ))}
+        </div>
+      </section>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {posters.map((poster) => (
           <div key={poster.id} className="space-y-2">
@@ -54,9 +73,6 @@ export default async function CreationsPage() {
           </div>
         ))}
       </div>
-      <p className="text-xs text-slate-400">
-        Manifeste : {manifest?.count ?? 0} entrées · RODI {manifest?.rodi_total ?? 0}
-      </p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {DOMAINS.map((domain) => (
           <Link key={domain} href="/create" className="rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center text-sm font-semibold hover:border-violet-200 hover:text-[#6D28D9]">
