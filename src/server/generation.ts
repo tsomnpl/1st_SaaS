@@ -80,6 +80,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     let repaired = false;
     const modelsUsed: string[] = [];
     const dnaSummary = dnaSummaryLine(visual.dna);
+    let bitmapAttached = false;
 
     for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
       const rendered = await generateWithRodium({
@@ -89,6 +90,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       });
       if (!rendered.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       imageUrl = rendered.imageUrl;
+      bitmapAttached = rendered.bitmapAttached;
       modelsUsed.push(rendered.model);
       rodiCost = Number((rodiCost + rendered.rodiCostEstimate).toFixed(3));
       model = modelsUsed.join("+repair:");
@@ -134,7 +136,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           visualReferenceId: visual.referenceId || null,
           visualReferencePath: visual.storagePath || null,
           visualReferenceBytes: visual.bytes,
-          bitmapAttached: Boolean(visual.dataUrl),
+          bitmapAttached,
           creativeDna: visual.dna,
           visualReferenceIds: artDirection.visual_reference_ids,
           durationMs: Date.now() - generation.createdAt.getTime(),

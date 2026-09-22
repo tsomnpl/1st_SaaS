@@ -33,6 +33,8 @@ export type ShowcaseManifestEntry = {
   resize?: string;
   page_reference_pdf?: number | null;
   visual_ref_used?: boolean;
+  bitmap_attached?: boolean;
+  reference_analyzed?: boolean;
   reference_id?: string;
   reference_image?: string;
   reference_source?: string;

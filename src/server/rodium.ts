@@ -174,6 +174,7 @@ export async function generateWithRodium(input: {
     imageModel,
     imageUrl: render.imageUrl,
     rawText: render.rawText,
+    bitmapAttached: render.bitmapAttached,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -186,6 +187,51 @@ export async function generateWithRodium(input: {
 export function estimateRodiCost(model: string, totalTokens: number) {
   const perThousandTokens = model.toLowerCase().includes("gpt") ? 3.5 : 4.2;
   return Number(((totalTokens / 1000) * perThousandTokens).toFixed(3));
+}
+
+function isProvidedQuotaError(text: string) {
+  return (
+    text.includes("insufficient_balance") ||
+    text.includes("insufficient_quota") ||
+    text.includes("provided")
+  );
+}
+
+async function postGeminiImage(model: string, prompt: string, attached: string): Promise<{
+  imageUrl: string;
+  rawText: string;
+  usage: RodiumResponse["usage"];
+  bitmapAttached: boolean;
+}> {
+  const content: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
+  if (attached) {
+    content.push({ type: "image_url", image_url: { url: attached } });
+  }
+  const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+    method: "POST",
+    headers: rodiumHeaders(),
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "user", content }],
+      temperature: 0.4,
+    }),
+  });
+  const raw = await response.text();
+  if (!response.ok) {
+    if (attached && isProvidedQuotaError(raw)) {
+      return postGeminiImage(model, prompt, "");
+    }
+    throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
+  }
+  const data = JSON.parse(raw) as RodiumResponse;
+  const imageUrl = extractGeneratedImageUrl(data);
+  if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+  return {
+    imageUrl,
+    rawText: JSON.stringify({ model: data.model, bitmap_attached: Boolean(attached) }),
+    usage: data.usage,
+    bitmapAttached: Boolean(attached),
+  };
 }
 
 function extractGeneratedImageUrl(data: RodiumResponse) {
@@ -219,26 +265,7 @@ async function renderImage(params: {
       : "";
 
   if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
-    const content: Array<Record<string, unknown>> = [{ type: "text", text: params.prompt }];
-    if (attached) {
-      content.push({ type: "image_url", image_url: { url: attached } });
-    }
-    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: rodiumHeaders(),
-      body: JSON.stringify({
-        model: params.model,
-        messages: [{ role: "user", content }],
-        temperature: 0.4,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
-    }
-    const data = (await response.json()) as RodiumResponse;
-    const imageUrl = extractGeneratedImageUrl(data);
-    if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-    return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+    return postGeminiImage(params.model, params.prompt, attached);
   }
 
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
@@ -261,7 +288,7 @@ async function renderImage(params: {
   const data = (await response.json()) as RodiumResponse;
   const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage, bitmapAttached: false };
 }
 
 export function sizeForFormat(format: string) {

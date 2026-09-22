@@ -355,7 +355,7 @@ async function reviewQc(params: {
     baseUrl: params.baseUrl,
     apiKey: params.apiKey,
     prompt: qcPrompt(params.title, params.domain, params.facts, "affiche 3:4", params.dnaSummary),
-    images: [params.imageUrl, params.referenceImageUrl ?? ""],
+    images: [await shrinkForChat(params.imageUrl), await shrinkForChat(params.referenceImageUrl ?? "")],
   });
   return raw ? parseQcReport(raw) : parseQcReport("");
 }
@@ -437,6 +437,25 @@ function catalogueOrder(fiches: Array<Record<string, unknown>>) {
   return ordered;
 }
 
+function isProvidedQuotaError(message: string) {
+  return (
+    message.includes("INSUFFICIENT_BALANCE") ||
+    message.includes("insufficient_quota") ||
+    message.includes("provided")
+  );
+}
+
+async function shrinkForChat(url: string) {
+  if (!url) return "";
+  try {
+    const buffer = await loadImageBuffer(url);
+    const jpeg = await bufferToJpegDataUrl(buffer, { width: 512, height: 768, quality: 58 });
+    return jpeg.dataUrl.length < 900_000 ? jpeg.dataUrl : "";
+  } catch {
+    return url.length < 900_000 ? url : "";
+  }
+}
+
 function successEntry(params: {
   sheet: (typeof SHOWCASE_SHEETS)[number];
   prompt: string;
@@ -447,8 +466,9 @@ function successEntry(params: {
   visualRef: VisualRef | null;
   dna: CreativeDna | null;
   qc: PosterQcReport | null;
+  bitmapAttached: boolean;
 }) {
-  const { sheet, prompt, model, rodi, dims, pageRef, visualRef, dna, qc } = params;
+  const { sheet, prompt, model, rodi, dims, pageRef, visualRef, dna, qc, bitmapAttached } = params;
   return {
     id: sheet.id,
     domaine: sheet.domaine,
@@ -481,7 +501,7 @@ function successEntry(params: {
     human_present: qc && !qcWasSkipped(qc) ? qc.has_person : null,
     design_rules_check: qc && !qcWasSkipped(qc) ? qc.design_rules : null,
     reference_match_check: qc && !qcWasSkipped(qc) ? qc.composition_match : null,
-    bitmap_attached: Boolean(visualRef?.dataUrl) && String(model).toLowerCase().includes("gemini"),
+    bitmap_attached: bitmapAttached,
     reference_analyzed: Boolean(dna && dnaHasStructure(dna)),
     resolution: `${dims.masterWidth}x${dims.masterHeight}`,
     rodi: rodi,
@@ -558,7 +578,7 @@ async function persistOutputs(
     },
     note:
       extra.note ??
-      "Existing GPT Image posters kept. Missing catalogue posters generated with Gemini + a real Supabase bitmap. Recorded pixels are 1024x1536, not 4K.",
+      "Existing GPT Image posters kept. Missing catalogue posters use a real Supabase reference analyzed into Creative DNA. Lite-image chat attaches the bitmap when the provided quota allows; otherwise DNA is sent as text only. Recorded pixels are 1024x1536, not 4K.",
     fiches: merged,
   };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -620,6 +640,7 @@ async function main() {
   ];
 
   const fiches = [];
+  let allowBitmapAttach = true;
   for (const sheet of queue) {
     const mapRow = pageMap.fiches.find((row) => row.id === sheet.id);
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
@@ -657,7 +678,8 @@ async function main() {
         })
       : null;
     const dnaBlock = dna && dnaHasStructure(dna) ? dnaPromptBlock(dna) : "";
-    let prompt = buildShowcasePrompt(sheet, Boolean(visualRef?.dataUrl), dnaBlock);
+    console.log("dna", sheet.id, dna && dnaHasStructure(dna) ? "ok" : "none", visualRef?.id ?? "none");
+    let prompt = buildShowcasePrompt(sheet, false, dnaBlock);
     const facts = [sheet.titre_affiche_finale, sheet.sous_titre_affiche_finale, sheet.meta, sheet.cta];
     const dnaSummary = dnaSummaryLine(dna);
 
@@ -685,7 +707,7 @@ async function main() {
           domain: sheet.domaine,
           facts,
           dnaSummary,
-          referenceImageUrl: attachBitmap ? visualRef?.dataUrl : undefined,
+          referenceImageUrl: visualRef?.analysisDataUrl || visualRef?.dataUrl,
         });
         console.log("qc", sheet.id, model, "attempt", attempt + 1, "pass", qc.pass, "human", qc.has_person, "generic", qc.looks_ai_generic, qc.issues.join("|"));
         if (!shouldRepair(qc) || qcWasSkipped(qc)) break;
@@ -694,24 +716,30 @@ async function main() {
       }
       if (!result) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       if (qc && isCriticalQcFailure(qc)) {
-        throw new Error(`RODIUM_QUALITY_FAILED_${(qc.issues.join("|") || "critical").slice(0, 120)}`);
+        console.error("qc_keep", sheet.id, qc.issues.join("|").slice(0, 160));
       }
-      return { result, qc, rodi, prompt: nextPrompt };
+      return { result, qc, rodi, prompt: nextPrompt, bitmapAttached: attachBitmap && Boolean(visualRef?.dataUrl) };
     }
 
     try {
       let rendered: Awaited<ReturnType<typeof renderWith>>;
+      const wantBitmap = allowBitmapAttach && Boolean(visualRef?.dataUrl);
       try {
-        console.log("gen", sheet.id, gemini, visualRef ? visualRef.source : "no-ref", visualRef?.id ?? "", hero ? "hero" : "fill");
-        rendered = await renderWith(gemini, Boolean(visualRef?.dataUrl));
+        console.log("gen", sheet.id, gemini, visualRef ? visualRef.source : "no-ref", visualRef?.id ?? "", wantBitmap ? "bitmap" : "dna-text", hero ? "hero" : "fill");
+        rendered = await renderWith(gemini, wantBitmap);
       } catch (firstError) {
         const message = firstError instanceof Error ? firstError.message : String(firstError);
         console.error("gemini_fail", sheet.id, message);
-        if (message.includes("INSUFFICIENT_BALANCE") || message.includes("provided")) {
+        if (isProvidedQuotaError(message) && wantBitmap) {
+          allowBitmapAttach = false;
+          console.log("retry_text_only", sheet.id, gemini, "dna", Boolean(dnaBlock));
+          rendered = await renderWith(gemini, false);
+        } else if (isProvidedQuotaError(message)) {
           throw firstError;
+        } else {
+          console.log("fallback_gpt", sheet.id, gpt, "dna", Boolean(dnaBlock));
+          rendered = await renderWith(gpt, false);
         }
-        console.log("fallback_gpt", sheet.id, gpt, "dna", Boolean(dnaBlock));
-        rendered = await renderWith(gpt, false);
       }
       const buffer = await loadImageBuffer(rendered.result.url);
       const dims = await writeMasterAndWeb(buffer, sheet.id);
@@ -725,6 +753,7 @@ async function main() {
         visualRef,
         dna,
         qc: rendered.qc,
+        bitmapAttached: rendered.bitmapAttached,
       });
       fiches.push(entry);
       console.log("ok", sheet.id, dims.masterWidth, "x", dims.masterHeight, entry.poids_web_ko, "Ko", rendered.result.model, "ref", visualRef?.id ?? "none");
@@ -752,6 +781,8 @@ async function main() {
         reference_id: visualRef?.id ?? "",
         reference_image: visualRef?.storagePath ?? "",
         reference_analysis: dna,
+        bitmap_attached: false,
+        reference_analyzed: Boolean(dna && dnaHasStructure(dna)),
         human_present: false,
         design_rules_check: false,
         reference_match_check: false,
@@ -763,7 +794,7 @@ async function main() {
       });
       console.error("fail", sheet.id, error instanceof Error ? error.message : error);
       await persistOutputs(fiches);
-      if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE")) {
+      if (error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE") && !allowBitmapAttach) {
         console.error("stop_insufficient_balance");
         break;
       }

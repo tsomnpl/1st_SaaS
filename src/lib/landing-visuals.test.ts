@@ -20,7 +20,7 @@ describe("landing visuals", () => {
     const withImage = visuals.domains.filter((item) => item.poster);
     const empty = visuals.domains.filter((item) => !item.poster);
     expect(withImage.length).toBeGreaterThan(0);
-    expect(empty.length).toBeGreaterThan(0);
+    expect(withImage.length + empty.length).toBe(DOMAINS.length);
   });
 });
 

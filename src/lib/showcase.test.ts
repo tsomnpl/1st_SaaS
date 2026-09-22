@@ -119,7 +119,16 @@ describe("showcase catalogue alignment", () => {
     expect(script).toContain("isGptImageModel");
     expect(script).toContain("fetchSupabaseReference");
     expect(script).toContain("google/gemini-3.1-flash-lite-image");
+    expect(script).toContain("retry_text_only");
+    expect(script).toContain("allowBitmapAttach");
     expect(script).toContain("image_url");
     expect(script).not.toContain('|| "openai/gpt-image-1"');
+  });
+
+  it("retries Gemini without attaching the bitmap when the provided quota is empty", () => {
+    const rodium = readFileSync("src/server/rodium.ts", "utf8");
+    expect(rodium).toContain("postGeminiImage");
+    expect(rodium).toContain("isProvidedQuotaError");
+    expect(rodium).toContain("bitmapAttached");
   });
 });
