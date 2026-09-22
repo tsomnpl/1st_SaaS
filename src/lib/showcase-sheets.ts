@@ -147,13 +147,13 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     domaine: "Mode & Accessoires",
     titre_original_catalogue: "Edith Closet",
     titre_affiche_finale: "ATELIER CLOSET",
-    sous_titre_affiche_finale: "Braced in beauty",
+    sous_titre_affiche_finale: "Élégance assumée",
     meta: "Vêtements · sacs · bijoux",
     cta: "Découvrir",
     tone: "rose",
     premium: false,
     prompt:
-      "Vertical fashion poster 3:4. Powder pink and soft white. A real photographed model belongs in the scene: she wears a look and holds a bag or jewelry, boutique setting. Not a product grid without a person. Title ATELIER CLOSET, line Braced in beauty. Clothes, shoes, bags, jewelry as supporting props around her. FLYERMINT badge. No real boutique name.",
+      "Vertical fashion poster 3:4. Powder pink and soft white. A real photographed model belongs in the scene: she wears a look and holds a bag or jewelry, boutique setting. Not a product grid without a person. Title ATELIER CLOSET, line Élégance assumée. Clothes, shoes, bags, jewelry as supporting props around her. FLYERMINT badge. No real boutique name.",
   },
   {
     id: "beaute-01",

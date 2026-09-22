@@ -32,6 +32,7 @@ export type ShowcaseManifestEntry = {
   web_height?: number;
   resize?: string;
   page_reference_pdf?: number | null;
+  is_4k?: boolean;
   visual_ref_used?: boolean;
   reference_categorisation?: ShowcaseReferenceCategorisation;
   statut: ShowcaseStatus;
