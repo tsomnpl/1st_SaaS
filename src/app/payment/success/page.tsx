@@ -19,12 +19,15 @@ export default async function PaymentSuccessPage({
       {params.orderId || params.token ? (
         <p className="text-sm text-slate-400">Référence : {params.orderId ?? params.token}</p>
       ) : null}
-      <div className="flex gap-3">
+      <div className="flex flex-wrap gap-3">
         <Link href="/dashboard" className="btn-primary">
           Tableau de bord
         </Link>
         <Link href="/create" className="btn-secondary">
           Créer une affiche
+        </Link>
+        <Link href="/support/new?subject=Paiement%20non%20cr%C3%A9dit%C3%A9" className="btn-secondary">
+          Signaler un paiement
         </Link>
       </div>
     </div>

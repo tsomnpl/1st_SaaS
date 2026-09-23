@@ -57,6 +57,16 @@ model User {
   generations        Generation[]
   brandKit           BrandKit?
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
+  tickets            Ticket[]            @relation("TicketOwner")
+  ticketMessages     TicketMessage[]
+  ticketAttachments  TicketAttachment[]
+  ticketAssignments  TicketAssignment[]  @relation("TicketAssignee")
+  notifications      Notification[]
+  notificationPreference NotificationPreference?
+  feedbacks          GenerationFeedback[]
+  suggestions        Suggestion[]
+  suggestionVotes    SuggestionVote[]
+  incidents          Incident[]
 }
 
 model Plan {
@@ -91,6 +101,7 @@ model Payment {
   updatedAt      DateTime      @updatedAt
   plan           Plan          @relation(fields: [planId], references: [id])
   user           User          @relation(fields: [userId], references: [id])
+  tickets        Ticket[]
 }
 
 model CreditAccount {
@@ -158,6 +169,9 @@ model Generation {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   user           User             @relation(fields: [userId], references: [id])
+  tickets        Ticket[]
+  feedback       GenerationFeedback?
+  incidents      Incident[]
 }
 
 model Reference {
@@ -196,4 +210,282 @@ model WebhookEvent {
   createdAt DateTime @default(now())
 
   @@index([provider, createdAt])
+}
+
+enum TicketStatus {
+  NEW
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum TicketCategory {
+  GENERATION
+  PAYMENT
+  MINTS
+  ACCOUNT
+  EXPORT
+  PERSONAL_REFERENCE
+  BUG
+  FEATURE_REQUEST
+  OTHER
+}
+
+enum SupportQueue {
+  SUPPORT
+  BILLING
+  TECHNICAL
+  ADMIN
+}
+
+enum MessageVisibility {
+  PUBLIC
+  INTERNAL
+}
+
+enum IncidentStatus {
+  OPEN
+  INVESTIGATING
+  MITIGATED
+  RESOLVED
+  CLOSED
+}
+
+enum IncidentSeverity {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum SuggestionCategory {
+  FEATURE
+  DESIGN
+  GENERATION
+  EXPORT
+  SUPPORT
+  OTHER
+}
+
+enum SuggestionStatus {
+  NEW
+  REVIEWING
+  PLANNED
+  IN_PROGRESS
+  RELEASED
+  DECLINED
+}
+
+enum EmailStatus {
+  QUEUED
+  SENT
+  FAILED
+  SKIPPED
+}
+
+model Ticket {
+  id              String         @id @default(cuid())
+  publicId        String         @unique
+  userId          String
+  subject         String
+  category        TicketCategory
+  priority        TicketPriority @default(NORMAL)
+  status          TicketStatus   @default(NEW)
+  generationId    String?
+  paymentId       String?
+  contextPublic   Json?
+  contextInternal Json?
+  firstResponseAt DateTime?
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  user            User           @relation("TicketOwner", fields: [userId], references: [id])
+  generation      Generation?    @relation(fields: [generationId], references: [id])
+  payment         Payment?       @relation(fields: [paymentId], references: [id])
+  messages        TicketMessage[]
+  attachments     TicketAttachment[]
+  assignments     TicketAssignment[]
+  events          TicketEvent[]
+
+  @@index([userId, createdAt])
+  @@index([status, priority, createdAt])
+  @@index([category, createdAt])
+  @@index([generationId])
+  @@index([paymentId])
+}
+
+model TicketMessage {
+  id           String            @id @default(cuid())
+  ticketId     String
+  authorUserId String
+  body         String
+  visibility   MessageVisibility @default(PUBLIC)
+  createdAt    DateTime          @default(now())
+  ticket       Ticket            @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  author       User              @relation(fields: [authorUserId], references: [id])
+
+  @@index([ticketId, createdAt])
+  @@index([visibility])
+}
+
+model TicketAttachment {
+  id               String   @id @default(cuid())
+  ticketId         String
+  uploadedByUserId String
+  storageKey       String
+  fileName         String
+  mimeType         String
+  sizeBytes        Int
+  createdAt        DateTime @default(now())
+  ticket           Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  uploadedBy       User     @relation(fields: [uploadedByUserId], references: [id])
+
+  @@index([ticketId])
+}
+
+model TicketAssignment {
+  id             String       @id @default(cuid())
+  ticketId       String
+  queue          SupportQueue
+  assigneeUserId String?
+  createdAt      DateTime     @default(now())
+  ticket         Ticket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  assignee       User?        @relation("TicketAssignee", fields: [assigneeUserId], references: [id])
+
+  @@index([ticketId])
+  @@index([queue])
+  @@index([assigneeUserId])
+}
+
+model TicketEvent {
+  id          String   @id @default(cuid())
+  ticketId    String
+  type        String
+  actorUserId String?
+  payload     Json?
+  createdAt   DateTime @default(now())
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  dedupeKey String?
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
+}
+
+model NotificationPreference {
+  id               String  @id @default(cuid())
+  userId           String  @unique
+  emailTickets     Boolean @default(true)
+  emailGenerations Boolean @default(true)
+  emailPayments    Boolean @default(true)
+  emailMints       Boolean @default(true)
+  user             User    @relation(fields: [userId], references: [id])
+}
+
+model GenerationFeedback {
+  id           String   @id @default(cuid())
+  generationId String   @unique
+  userId       String
+  rating       Int?
+  comment      String?
+  dismissed    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  generation   Generation @relation(fields: [generationId], references: [id])
+  user         User     @relation(fields: [userId], references: [id])
+
+  @@index([userId, createdAt])
+}
+
+model Suggestion {
+  id        String             @id @default(cuid())
+  userId    String
+  category  SuggestionCategory
+  title     String
+  body      String
+  status    SuggestionStatus   @default(NEW)
+  createdAt DateTime           @default(now())
+  updatedAt DateTime           @updatedAt
+  user      User               @relation(fields: [userId], references: [id])
+  votes     SuggestionVote[]
+
+  @@index([status, createdAt])
+  @@index([userId, createdAt])
+  @@index([category])
+}
+
+model SuggestionVote {
+  id           String     @id @default(cuid())
+  suggestionId String
+  userId       String
+  createdAt    DateTime   @default(now())
+  suggestion   Suggestion @relation(fields: [suggestionId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id])
+
+  @@unique([suggestionId, userId])
+}
+
+model Incident {
+  id           String           @id @default(cuid())
+  publicId     String           @unique
+  type         String
+  severity     IncidentSeverity @default(NORMAL)
+  status       IncidentStatus   @default(OPEN)
+  service      String
+  summary      String
+  detail       String?
+  userId       String?
+  generationId String?
+  paymentId    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  resolvedAt   DateTime?
+  user         User?            @relation(fields: [userId], references: [id])
+  generation   Generation?      @relation(fields: [generationId], references: [id])
+
+  @@index([status, severity, createdAt])
+  @@index([type, createdAt])
+  @@index([generationId])
+  @@index([userId])
+}
+
+model EmailOutbox {
+  id             String      @id @default(cuid())
+  idempotencyKey String      @unique
+  template       String
+  toAddress      String
+  subject        String
+  payload        Json
+  status         EmailStatus @default(QUEUED)
+  attempts       Int         @default(0)
+  lastError      String?
+  nextAttemptAt  DateTime    @default(now())
+  sentAt         DateTime?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@index([status, nextAttemptAt])
 }

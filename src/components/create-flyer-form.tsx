@@ -2,6 +2,7 @@
 
 import { FormEvent, useMemo, useState } from "react";
 import Link from "next/link";
+import { FeedbackBox } from "@/components/support/feedback-box";
 import {
   ADAPTIVE_FIELDS,
   DOMAINS,
@@ -365,7 +366,11 @@ export function CreateFlyerForm({
                 <Link href="/history" className="btn-secondary">
                   Voir l’historique
                 </Link>
+                <Link href={`/support/new?generationId=${result.generationId}&subject=${encodeURIComponent("Cette affiche ne respecte pas ma demande.")}`} className="btn-secondary">
+                  Signaler un problème
+                </Link>
               </div>
+              <FeedbackBox generationId={result.generationId} />
               <p className="text-xs text-slate-500">Même concept, autre format — 1 Mint chacun :</p>
               <div className="flex flex-wrap gap-2">
                 {FORMATS.map((item) => (

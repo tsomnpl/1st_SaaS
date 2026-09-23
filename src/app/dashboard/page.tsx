@@ -38,6 +38,9 @@ export default async function DashboardPage() {
           <Link href="/pricing" className="btn-secondary">
             Acheter des Mints
           </Link>
+          <Link href="/support" className="btn-secondary">
+            Centre d’aide
+          </Link>
         </div>
       </section>
 

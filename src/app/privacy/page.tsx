@@ -24,6 +24,7 @@ export default function PrivacyPage() {
         <li>Paiements Money Fusion : montant, offre, orderId, token, statut, payload webhook (sans secrets).</li>
         <li>Logs d’actions administrateur (action, cible, motif, résultat — jamais de clés).</li>
         <li>Préférence de cookies stockée localement dans le navigateur.</li>
+        <li>Tickets de support, messages, pièces jointes privées, notifications, avis sur une affiche et suggestions.</li>
       </ul>
       <h2 className="mt-10 text-2xl font-bold">Finalités</h2>
       <p className="mt-3 text-slate-700">

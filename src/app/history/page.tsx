@@ -9,6 +9,8 @@ export const metadata: Metadata = {
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { userHasEditableExport } from "@/server/generation";
+import { FeedbackBox } from "@/components/support/feedback-box";
+import { ReportProblemLink } from "@/components/support/report-problem";
 
 export default async function HistoryPage() {
   const user = await requireActiveCurrentUser();
@@ -17,6 +19,7 @@ export default async function HistoryPage() {
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: 40,
+    include: { feedback: true },
   });
 
   return (
@@ -74,7 +77,11 @@ export default async function HistoryPage() {
                         Décliner en statut WhatsApp
                       </Link>
                     ) : null}
+                    <ReportProblemLink generationId={generation.id} />
                   </div>
+                  {generation.status === "COMPLETED" ? (
+                    <FeedbackBox generationId={generation.id} alreadyRated={Boolean(generation.feedback?.rating)} />
+                  ) : null}
                 </div>
               </article>
             );

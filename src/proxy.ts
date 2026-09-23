@@ -13,6 +13,7 @@ const PUBLIC_EXACT = new Set([
   "/payment/success",
   "/privacy",
   "/terms",
+  "/help",
   "/forbidden",
   "/post-auth",
 ]);
@@ -25,6 +26,7 @@ const PUBLIC_PREFIXES = [
   "/api/webhooks/moneyfusion",
   "/api/payments/webhook",
   "/api/health",
+  "/api/cron/",
 ];
 
 function isPublicPath(pathname: string) {
@@ -55,6 +57,9 @@ function isProtectedPath(pathname: string) {
     "/create",
     "/history",
     "/profile",
+    "/support",
+    "/notifications",
+    "/suggestions",
     "/checkout",
     "/admin",
     "/api/",
@@ -87,6 +92,9 @@ function applySensitiveRateLimit(req: NextRequest) {
     { match: (path) => path === "/api/me/bootstrap", limit: 20, windowMs: 60_000, name: "bootstrap" },
     { match: (path) => path === "/api/me/brand-kit", limit: 20, windowMs: 60_000, name: "brand-kit" },
     { match: (path) => path === "/api/mints/balance", limit: 40, windowMs: 60_000, name: "balance" },
+    { match: (path) => path.startsWith("/api/support/tickets"), limit: 20, windowMs: 60_000, name: "tickets" },
+    { match: (path) => path === "/api/support/assistant", limit: 30, windowMs: 60_000, name: "assistant" },
+    { match: (path) => path === "/api/feedback", limit: 20, windowMs: 60_000, name: "feedback" },
   ];
   for (const rule of rules) {
     if (!rule.match(pathname)) continue;

@@ -13,6 +13,7 @@ import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
+import { onGenerationSettled } from "@/server/support-hooks";
 import {
   loadDomainInspirationAnalyses,
   loadVisualReferenceForDomain,
@@ -153,6 +154,12 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       },
     });
 
+    await onGenerationSettled({
+      userId: user.id,
+      generationId: updated.id,
+      status: GenerationStatus.COMPLETED,
+    });
+
     return {
       generationId: updated.id,
       outputUrl: updated.outputUrl,
@@ -178,6 +185,13 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         },
         null,
       );
+    });
+
+    await onGenerationSettled({
+      userId: user.id,
+      generationId: generation.id,
+      status: GenerationStatus.FAILED,
+      errorCode: error instanceof Error ? error.message : "GENERATION_FAILED",
     });
 
     throw error;

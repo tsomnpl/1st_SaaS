@@ -3,6 +3,7 @@ import { env, getAppUrl } from "@/lib/env";
 import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
+import { onPaymentSettled } from "@/server/support-hooks";
 import { ensureOfficialPlans } from "@/server/plans";
 
 type MoneyFusionInitPayload = {
@@ -165,7 +166,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   }
 
   if (classified !== PaymentStatus.COMPLETED) {
-    await prisma.payment.update({
+    const updated = await prisma.payment.update({
       where: { id: payment.id },
       data: {
         status: classified === PaymentStatus.PENDING ? payment.status : classified,
@@ -174,9 +175,18 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
         webhookState: classified,
       },
     });
-    return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+    if (classified === PaymentStatus.FAILED || classified === PaymentStatus.CANCELLED) {
+      await onPaymentSettled({
+        userId: payment.userId,
+        paymentId: payment.id,
+        status: classified,
+        credited: false,
+      });
+    }
+    return updated;
   }
 
+  let credited = false;
   await prisma.$transaction(async (tx) => {
     const claimed = await tx.payment.updateMany({
       where: {
@@ -219,9 +229,19 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
         ? new Date(Date.now() + payment.plan.durationDays * 86400000)
         : null,
     );
+    credited = true;
   });
 
-  return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+  const settled = await prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+  if (credited) {
+    await onPaymentSettled({
+      userId: payment.userId,
+      paymentId: payment.id,
+      status: PaymentStatus.COMPLETED,
+      credited: true,
+    });
+  }
+  return settled;
 }
 
 function getStringField(payload: Record<string, unknown> | undefined, keys: string[]) {

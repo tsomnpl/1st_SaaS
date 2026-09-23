@@ -52,6 +52,9 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
             <Link href="/history" className="transition hover:text-violet">
               Historique
             </Link>
+            <Link href="/support" className="transition hover:text-violet">
+              Aide
+            </Link>
             <Link href="/profile" className="transition hover:text-violet">
               Profil
             </Link>
@@ -118,6 +121,9 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
               </Link>
               <Link href="/history" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
                 Historique
+              </Link>
+              <Link href="/support" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
+                Aide
               </Link>
               <Link href="/profile" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
                 Profil
