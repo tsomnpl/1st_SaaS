@@ -1,6 +1,14 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { DOMAINS, DOMAIN_LABELS, type DOMAINS as DomainTuple } from "@/lib/domains";
+import {
+  AFTER_POSTER_FALLBACK_ID,
+  AFTER_POSTER_ID,
+  CREATIONS_PINNED_IDS,
+  HERO_POSTER_IDS,
+  LANDING_SHOWCASE_IDS,
+  PINNED_BURGER_POSTER,
+} from "@/lib/landing-posters";
 import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
 import type { ShowcaseManifestEntry } from "@/lib/showcase-manifest";
 
@@ -79,10 +87,21 @@ export async function getLandingVisuals() {
   const real = generated
     .map((entry) => toLandingPoster(entry, false))
     .filter((poster): poster is LandingPoster => Boolean(poster));
-  const hero = generated
-    .filter((entry) => entry.hero_loop)
-    .map((entry) => toLandingPoster(entry, true))
-    .filter((poster): poster is LandingPoster => Boolean(poster));
+  const burger = pinnedBurgerPoster();
+  if (burger && !real.some((poster) => poster.id === burger.id)) {
+    real.unshift(burger);
+  }
+  const pinnedIds = new Set<string>(CREATIONS_PINNED_IDS);
+  const pinned = pickByIds(real, CREATIONS_PINNED_IDS);
+  const rest = real.filter((poster) => !pinnedIds.has(poster.id));
+  real.splice(0, real.length, ...pinned, ...rest);
+
+  const hero = pickByIds(
+    generated
+      .map((entry) => toLandingPoster(entry, true))
+      .filter((poster): poster is LandingPoster => Boolean(poster)),
+    HERO_POSTER_IDS,
+  );
 
   const byDomain = new Map<(typeof DOMAINS)[number], LandingPoster>();
   for (const poster of real) {
@@ -100,40 +119,30 @@ export async function getLandingVisuals() {
   );
 
   const afterPoster =
-    real.find((poster) => poster.domainKey === "Restauration") ?? real[0] ?? null;
+    real.find((poster) => poster.id === AFTER_POSTER_ID) ??
+    real.find((poster) => poster.id === AFTER_POSTER_FALLBACK_ID) ??
+    null;
 
   return {
     source: "docs/inspirations/showcase-manifest.json + public/creations",
     generatedCount: generated.length,
     realPosters: real,
-    heroPosters: hero.length ? hero : real.slice(0, 10),
-    showcase: pickDiverse(real, 12),
+    heroPosters: hero.length ? hero : pickByIds(real, HERO_POSTER_IDS),
+    showcase: pickByIds(real, LANDING_SHOWCASE_IDS),
     domains,
     afterPoster,
     manifestCount: manifest?.count ?? 0,
   };
 }
 
-function pickDiverse(posters: LandingPoster[], limit: number) {
-  const seen = new Set<string>();
-  const picked: LandingPoster[] = [];
-  for (const poster of posters) {
-    const key = poster.domainKey ?? poster.domaine;
-    if (seen.has(key) && picked.length + (posters.length - picked.length) > limit) {
-      continue;
-    }
-    seen.add(key);
-    picked.push(poster);
-    if (picked.length >= limit) break;
-  }
-  if (picked.length < Math.min(limit, posters.length)) {
-    for (const poster of posters) {
-      if (picked.some((item) => item.id === poster.id)) continue;
-      picked.push(poster);
-      if (picked.length >= limit) break;
-    }
-  }
-  return picked;
+function pinnedBurgerPoster(): LandingPoster | null {
+  if (!publicImageExists(PINNED_BURGER_POSTER.imageSrc)) return null;
+  return { ...PINNED_BURGER_POSTER };
+}
+
+function pickByIds(posters: LandingPoster[], ids: readonly string[]) {
+  const byId = new Map(posters.map((poster) => [poster.id, poster]));
+  return ids.map((id) => byId.get(id)).filter((poster): poster is LandingPoster => Boolean(poster));
 }
 
 export async function getLandingVisualsSafe() {
