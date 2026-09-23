@@ -32,10 +32,10 @@ export const HERO_POSTER_IDS = [
 
 export const PINNED_BURGER_POSTER = {
   id: AFTER_POSTER_ID,
-  title: "MENU DU SOIR",
+  title: "PROMO CE WEEKEND",
   subtitle: "Burger + boisson",
   meta: "5 000 FCFA",
-  cta: "Commander",
+  cta: "Appelle",
   imageSrc: "/creations/restauration-burger.webp",
   domaine: "Restauration",
   domainKey: "Restauration" as const,

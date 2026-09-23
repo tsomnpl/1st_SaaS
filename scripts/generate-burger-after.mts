@@ -33,10 +33,10 @@ const PROMPT = [
   "LEFT FOREGROUND: the same blurred red chili pepper as the model.",
   "Palette limited to #DC2626, #FFFFFF, #F97316, with warm restaurant lights in the background.",
   "CLIENT FACTS ONLY, exact spelling, no extra letters:",
-  "TITLE: MENU DU SOIR",
+  "TITLE: PROMO CE WEEKEND",
   "SUBTITLE: Burger + boisson",
   "PRICE: 5 000 FCFA",
-  "CTA: Commander",
+  "CTA: Appelle",
   "Small FLYERMINT badge only. No other brand. No phone number. No Ghana High. No copied logos.",
   "Do not invent a dark kitchen photo. Do not drop the red field. Do not drop the chili.",
 ].join(" ");
