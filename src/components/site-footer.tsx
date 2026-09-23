@@ -27,6 +27,9 @@ export function SiteFooter() {
           <Link href="/sign-up" className="hover:text-violet">
             Inscription
           </Link>
+          <Link href="/help" className="hover:text-violet">
+            Aide
+          </Link>
           <Link href="/privacy" className="hover:text-violet">
             Confidentialité
           </Link>

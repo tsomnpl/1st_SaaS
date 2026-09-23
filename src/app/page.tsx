@@ -32,8 +32,8 @@ export default async function Home() {
 
         <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
-            <p className="inline-flex rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-violet">
-              Direction artistique incluse
+            <p className="inline-flex items-center justify-center rounded-full border border-violet/20 bg-violet/10 px-3.5 py-1 text-[11px] font-semibold uppercase tracking-[0.18em] text-violet">
+              DIRECTION ARTISTIQUE INCLUSE
             </p>
             <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-night md:text-6xl">
               Ton idée. Une affiche qui se remarque.

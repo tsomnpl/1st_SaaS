@@ -22,23 +22,12 @@ export function VisualPoster({
   subtitle,
   imageSrc,
   className = "",
-  domainLabel,
   requireImage = true,
 }: VisualPosterProps) {
   const [failed, setFailed] = useState(false);
   const showImage = Boolean(imageSrc) && !failed;
 
-  if (!showImage && requireImage) {
-    return (
-      <article
-        className={`relative flex aspect-[3/4] flex-col items-center justify-center overflow-hidden rounded-card border border-dashed border-slate-200 bg-slate-50 p-5 text-center ${className}`}
-      >
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">FlyerMint</p>
-        <p className="mt-3 text-sm font-semibold text-night">{domainLabel || title}</p>
-        <p className="mt-2 text-xs text-slate-500">Aucune création disponible pour cette catégorie.</p>
-      </article>
-    );
-  }
+  if (!showImage && requireImage) return null;
 
   if (!showImage) {
     return (
@@ -63,11 +52,6 @@ export function VisualPoster({
         decoding="async"
         onError={() => setFailed(true)}
       />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 bg-gradient-to-t from-black/70 via-black/20 to-transparent p-3 pt-10">
-        {domainLabel ? (
-          <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-white">{domainLabel}</p>
-        ) : null}
-      </div>
       <span className="relative z-10 ml-auto mt-3 mr-3 rounded-full bg-white/90 px-2.5 py-1 text-[9px] font-bold uppercase tracking-[0.16em] text-night">
         {kicker}
       </span>

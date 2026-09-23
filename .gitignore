@@ -38,6 +38,9 @@ yarn-error.log*
 
 # typescript
 *.tsbuildinfo
+
+# private support attachments
+/storage
 next-env.d.ts
 
 # inspiration binaries (principles live in src/lib/inspiration.ts)

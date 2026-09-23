@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { extractMoneyFusionToken } from "@/lib/money-fusion";
 import { confirmPaymentByToken } from "@/server/payments";
 import { safeJsonError } from "@/lib/safe-api";
+import { recordIncident } from "@/server/incidents";
+import { IncidentSeverity } from "@prisma/client";
 
 export async function POST(request: Request) {
   try {
@@ -18,6 +20,17 @@ export async function POST(request: Request) {
       status: payment.status,
     });
   } catch (error) {
+    try {
+      await recordIncident({
+        type: "WEBHOOK_FAILED",
+        severity: IncidentSeverity.HIGH,
+        service: "payments",
+        summary: "Webhook Money Fusion en erreur.",
+        detail: error instanceof Error ? error.message.slice(0, 180) : undefined,
+      });
+    } catch {
+      /* incident logging must not hide the webhook response */
+    }
     return safeJsonError(error);
   }
 }
