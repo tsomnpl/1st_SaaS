@@ -3,10 +3,11 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { pageTitle } from "@/lib/seo";
 import { currentUserIsAdmin } from "@/lib/auth";
-import { CATEGORY_LABEL, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/support-policy";
+import { canAnswerCsat, CATEGORY_LABEL, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/support-policy";
 import { requireActiveCurrentUser } from "@/server/users";
 import { getTicketForActor } from "@/server/support";
 import { TicketThread } from "@/components/support/ticket-thread";
+import { CsatForm } from "@/components/support/csat-form";
 
 export const metadata: Metadata = { title: pageTitle("Demande"), robots: { index: false, follow: false } };
 
@@ -65,6 +66,8 @@ export default async function TicketPage({ params }: { params: Promise<{ id: str
           ))}
         </ul>
       ) : null}
+      {ticket.userId === user.id && canAnswerCsat(ticket) ? <CsatForm ticketId={ticket.id} /> : null}
+      {ticket.csatScore !== null ? <p className="text-sm text-slate-500">Ta note : {ticket.csatScore}/5</p> : null}
       <TicketThread ticketId={ticket.id} canClose={ticket.status !== "CLOSED"} />
     </div>
   );

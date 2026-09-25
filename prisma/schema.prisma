@@ -307,6 +307,10 @@ model Ticket {
   firstResponseAt DateTime?
   resolvedAt      DateTime?
   closedAt        DateTime?
+  csatScore       Int?
+  csatComment     String?
+  csatAskedAt     DateTime?
+  csatAnsweredAt  DateTime?
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
   user            User           @relation("TicketOwner", fields: [userId], references: [id])

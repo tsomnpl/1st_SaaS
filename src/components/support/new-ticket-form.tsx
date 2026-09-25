@@ -2,7 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CATEGORY_LABEL, PRIORITY_LABEL, TICKET_CATEGORIES, TICKET_PRIORITIES } from "@/lib/support-policy";
+import { CATEGORY_LABEL, TICKET_CATEGORIES } from "@/lib/support-policy";
 
 export function NewTicketForm({
   generationId = "",
@@ -32,7 +32,6 @@ export function NewTicketForm({
         subject: String(form.get("subject") ?? ""),
         description: String(form.get("description") ?? ""),
         category: String(form.get("category") ?? "OTHER"),
-        priority: String(form.get("priority") ?? "NORMAL"),
         generationId: generationId || undefined,
         paymentId: paymentId || undefined,
       }),
@@ -54,28 +53,16 @@ export function NewTicketForm({
         Sujet
         <input name="subject" required defaultValue={defaultSubject} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" />
       </label>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block text-sm font-medium">
-          Catégorie
-          <select name="category" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2">
-            {TICKET_CATEGORIES.map((item) => (
-              <option key={item} value={item}>
-                {CATEGORY_LABEL[item]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label className="block text-sm font-medium">
-          Priorité
-          <select name="priority" defaultValue="NORMAL" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2">
-            {TICKET_PRIORITIES.map((item) => (
-              <option key={item} value={item}>
-                {PRIORITY_LABEL[item]}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <label className="block text-sm font-medium">
+        Catégorie
+        <select name="category" className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2">
+          {TICKET_CATEGORIES.map((item) => (
+            <option key={item} value={item}>
+              {CATEGORY_LABEL[item]}
+            </option>
+          ))}
+        </select>
+      </label>
       <label className="block text-sm font-medium">
         Description
         <textarea name="description" required rows={5} defaultValue={defaultDescription} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2" />

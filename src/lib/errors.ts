@@ -24,6 +24,8 @@ const MESSAGES: Record<string, string> = {
   INVALID_PHONE: "Le numéro de téléphone n’est pas valide.",
   INVALID_EMAIL: "L’e-mail n’est pas valide.",
   RATE_LIMITED: "Trop de tentatives. Réessaie dans un instant.",
+  CSAT_ALREADY_ANSWERED: "Tu as déjà noté cette demande. Merci !",
+  CSAT_NOT_AVAILABLE: "La note est disponible une fois la demande résolue.",
   EXPORT_LOCKED: "L’export éditable n’est pas inclus dans tes offres.",
   NOT_FOUND: "Ressource introuvable.",
 };

@@ -1,4 +1,5 @@
 import { getAppUrl } from "@/lib/env";
+import { whatsappLink } from "@/lib/support-policy";
 
 export type EmailTemplate =
   | "TicketCreated"
@@ -26,6 +27,8 @@ function layout(input: { title: string; body: string; ctaLabel?: string; ctaUrl?
     ? `<p style="margin:24px 0"><a href="${input.ctaUrl}" style="background:#6D28D9;color:#fff;text-decoration:none;padding:12px 18px;border-radius:999px;font-weight:700">${input.ctaLabel}</a></p>`
     : "";
   const ticket = input.ticketId ? `<p style="color:#6D28D9;font-weight:700">Ticket ${input.ticketId}</p>` : "";
+  const whatsapp = whatsappLink(process.env.SUPPORT_WHATSAPP_NUMBER);
+  const whatsappLine = whatsapp ? `<br/>WhatsApp support : <a href="${whatsapp}" style="color:#6D28D9">${whatsapp.replace("https://", "")}</a>` : "";
   const html = `<!doctype html><html><body style="margin:0;background:#f7f8fb;color:#1E293B;font-family:Arial,sans-serif">
   <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:28px 12px">
   <table width="560" style="background:#fff;border-radius:20px;padding:28px">
@@ -35,9 +38,9 @@ function layout(input: { title: string; body: string; ctaLabel?: string; ctaUrl?
   ${ticket}
   <div style="font-size:15px;line-height:1.5">${input.body}</div>
   ${cta}
-  <p style="margin-top:28px;font-size:12px;color:#64748b">FlyerMint — ${app}<br/>Cet e-mail ne contient ni clé, ni prompt interne, ni journal technique.</p>
+  <p style="margin-top:28px;font-size:12px;color:#64748b">FlyerMint — ${app}${whatsappLine}<br/>Cet e-mail ne contient ni clé, ni prompt interne, ni journal technique.</p>
   </td></tr></table></td></tr></table></body></html>`;
-  const text = [input.title, input.ticketId ? `Ticket ${input.ticketId}` : "", input.body.replace(/<[^>]+>/g, " "), input.ctaUrl ?? ""]
+  const text = [input.title, input.ticketId ? `Ticket ${input.ticketId}` : "", input.body.replace(/<[^>]+>/g, " "), input.ctaUrl ?? "", whatsapp ? `WhatsApp support : ${whatsapp}` : ""]
     .filter(Boolean)
     .join("\n");
   return { html, text };
@@ -75,8 +78,10 @@ export function renderEmail(template: EmailTemplate, payload: Record<string, str
         ...layout({
           title: "Ta demande est résolue.",
           ticketId: payload.publicId,
-          body: "<p>Tu peux la rouvrir en répondant si quelque chose manque.</p>",
-          ctaLabel: "Voir le ticket",
+          body: payload.askCsat
+            ? "<p>Tu peux la rouvrir en répondant si quelque chose manque.</p><p>Note ton expérience de 1 à 5 sur la page du ticket (une seule fois, 10 secondes).</p>"
+            : "<p>Tu peux la rouvrir en répondant si quelque chose manque.</p>",
+          ctaLabel: payload.askCsat ? "Noter le support" : "Voir le ticket",
           ctaUrl: payload.href || `${app}/support`,
         }),
       };

@@ -77,9 +77,9 @@ async function deliver(row: { id: string; toAddress: string; subject: string; te
     }
     return { ok: true as const };
   }
-  // outbox / console: recorded delivery without a provider. Retry stays idempotent.
-  console.info(`[email:${settings.provider}] ${row.template} -> ${row.toAddress} :: ${rendered.subject}`);
-  return { ok: true as const };
+  // Without a real provider nothing leaves the server, so the row must not claim SENT.
+  console.info(`[email:${settings.provider}] SKIPPED ${row.template} -> ${row.toAddress} :: ${rendered.subject}`);
+  return { ok: false as const, error: "EMAIL_PROVIDER_NOT_CONFIGURED" };
 }
 
 export async function dispatchEmail(id: string) {
@@ -89,7 +89,7 @@ export async function dispatchEmail(id: string) {
   try {
     const result = await deliver(row);
     if (!result.ok) {
-      const missing = result.error === "EMAIL_FROM_MISSING";
+      const missing = result.error === "EMAIL_FROM_MISSING" || result.error === "EMAIL_PROVIDER_NOT_CONFIGURED";
       return prisma.emailOutbox.update({
         where: { id },
         data: {

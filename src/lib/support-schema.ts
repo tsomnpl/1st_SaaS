@@ -5,7 +5,6 @@ export const createTicketSchema = z.object({
   subject: z.string().min(3).max(160),
   description: z.string().min(5).max(4000),
   category: z.enum(TICKET_CATEGORIES).optional(),
-  priority: z.enum(TICKET_PRIORITIES).optional(),
   generationId: z.string().min(3).max(80).optional(),
   paymentId: z.string().min(3).max(80).optional(),
 });
@@ -29,6 +28,13 @@ export const feedbackSchema = z.object({
   rating: z.number().int().min(1).max(5).optional(),
   comment: z.string().max(1000).optional(),
   dismissed: z.boolean().optional(),
+});
+
+export const generationFeedbackSchema = feedbackSchema.omit({ generationId: true });
+
+export const csatSchema = z.object({
+  score: z.number().int().min(1).max(5),
+  comment: z.string().max(1000).optional(),
 });
 
 export const suggestionSchema = z.object({

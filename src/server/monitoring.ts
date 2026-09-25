@@ -9,10 +9,10 @@ function numberEnv(name: string, fallback: number) {
 
 export function monitoringThresholds() {
   return {
-    minSample: numberEnv("MONITOR_MIN_SAMPLE", 5),
-    failureRate: numberEnv("MONITOR_GEN_FAILURE_RATE", 0.4),
+    minSample: numberEnv("MONITOR_MIN_SAMPLE", 20),
+    failureRate: numberEnv("MONITOR_GEN_FAILURE_RATE", 0.15),
     webhookFailures: numberEnv("MONITOR_WEBHOOK_FAILURES", 5),
-    slowGenerationMs: numberEnv("MONITOR_SLOW_GENERATION_MS", 120_000),
+    slowGenerationMs: numberEnv("MONITOR_SLOW_GENERATION_MS", 60_000),
   };
 }
 

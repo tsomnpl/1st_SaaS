@@ -2,17 +2,23 @@ import { describe, expect, it } from "vitest";
 import {
   answerSupportQuestion,
   assertTicketAccess,
+  canAnswerCsat,
   canReadTicket,
   classifySupportText,
   detectAllowedMime,
   emailIdempotencyKey,
+  emailProofLabel,
   failureRateMetric,
+  generationTypeForTicket,
+  priorityBoostFromPlan,
   publicTicketView,
   resolveTicketClassification,
   safeStorageKey,
   subjectsLookSimilar,
   validateAttachment,
+  whatsappLink,
 } from "./support-policy";
+import { createTicketSchema } from "./support-schema";
 
 describe("support policy", () => {
   it("classifies a paid-but-no-mints message as billing high", () => {
@@ -27,7 +33,6 @@ describe("support policy", () => {
       subject: "Paiement",
       description: "J'ai payé mais pas de mints",
       category: "PAYMENT",
-      priority: "NORMAL",
     });
     expect(result.category).toBe("PAYMENT");
     expect(result.priority).toBe("HIGH");
@@ -89,5 +94,43 @@ describe("support policy", () => {
     expect(emailIdempotencyKey("TicketCreated", "abc")).toBe("TicketCreated:abc");
     expect(subjectsLookSimilar("Affiche floue", "Affiche floue")).toBe(true);
     expect(subjectsLookSimilar("Court", "Court")).toBe(false);
+  });
+
+  it("boosts 20k/25k plans to HIGH from payments, never from request input", () => {
+    expect(priorityBoostFromPlan(["PACK_20K"])).toBe("HIGH");
+    expect(priorityBoostFromPlan(["STARTER", "PACK_25K"])).toBe("HIGH");
+    expect(priorityBoostFromPlan(["STARTER"])).toBeNull();
+    const premium = resolveTicketClassification({ subject: "Question", description: "Comment ça marche ?", priorityBoost: "HIGH" });
+    expect(premium.priority).toBe("HIGH");
+    const urgent = resolveTicketClassification({ subject: "Payé", description: "J'ai payé mais pas reçu mes Mints", priorityBoost: null });
+    expect(urgent.priority).toBe("HIGH");
+    const parsed = createTicketSchema.parse({ subject: "Question", description: "Comment ça marche ?", priority: "URGENT" });
+    expect(parsed).not.toHaveProperty("priority");
+  });
+
+  it("asks CSAT only once, after resolution", () => {
+    expect(canAnswerCsat({ status: "RESOLVED", csatScore: null })).toBe(true);
+    expect(canAnswerCsat({ status: "CLOSED", csatScore: null })).toBe(true);
+    expect(canAnswerCsat({ status: "RESOLVED", csatScore: 4 })).toBe(false);
+    expect(canAnswerCsat({ status: "OPEN", csatScore: null })).toBe(false);
+  });
+
+  it("builds a wa.me link only from a real number", () => {
+    expect(whatsappLink("+229 90 00 00 00")).toBe("https://wa.me/22990000000");
+    expect(whatsappLink("")).toBeNull();
+    expect(whatsappLink("123")).toBeNull();
+  });
+
+  it("tags premium personal-reference tickets and never claims unverified delivery", () => {
+    expect(generationTypeForTicket({ premium: true, personalReferenceUsed: true })).toBe("reproduction_reference");
+    expect(generationTypeForTicket({ premium: false, personalReferenceUsed: true })).toBe("standard");
+    expect(emailProofLabel("SENT")).toBe("Non vérifié — email envoyé selon les logs, réception non confirmée.");
+    expect(emailProofLabel("SKIPPED")).toMatch(/SKIPPED/);
+  });
+
+  it("classifies three real support messages", () => {
+    expect(classifySupportText("Mon affiche est floue après génération")).toMatchObject({ category: "GENERATION", queue: "TECHNICAL" });
+    expect(classifySupportText("J'ai payé 5000 FCFA mais je n'ai pas reçu mes Mints")).toMatchObject({ category: "MINTS", priority: "HIGH", queue: "BILLING" });
+    expect(classifySupportText("Je n'arrive pas à me connecter à mon compte")).toMatchObject({ category: "ACCOUNT", queue: "SUPPORT" });
   });
 });

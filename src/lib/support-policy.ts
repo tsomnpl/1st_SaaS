@@ -74,21 +74,47 @@ export function classifySupportText(text: string): {
   return { category: "OTHER", priority: "NORMAL", queue: "SUPPORT" };
 }
 
+export const PREMIUM_PLAN_CODES = ["PACK_20K", "PACK_25K"] as const;
+
+const PRIORITY_RANK: Record<TicketPriority, number> = { LOW: 0, NORMAL: 1, HIGH: 2, URGENT: 3 };
+
+/** Server-side only: derived from completed payments, never from request input. */
+export function priorityBoostFromPlan(paidPlanCodes: string[]): TicketPriority | null {
+  return paidPlanCodes.some((code) => (PREMIUM_PLAN_CODES as readonly string[]).includes(code)) ? "HIGH" : null;
+}
+
 export function resolveTicketClassification(input: {
   subject: string;
   description: string;
   category?: TicketCategory | null;
-  priority?: TicketPriority | null;
+  priorityBoost?: TicketPriority | null;
 }) {
   const detected = classifySupportText(`${input.subject}\n${input.description}`);
   const category = input.category && input.category !== "OTHER" ? input.category : detected.category;
-  const priority =
-    input.priority && input.priority !== "NORMAL"
-      ? input.priority
-      : detected.priority === "HIGH" || detected.priority === "URGENT"
-        ? detected.priority
-        : input.priority ?? detected.priority;
+  const boost = input.priorityBoost;
+  const priority = boost && PRIORITY_RANK[boost] > PRIORITY_RANK[detected.priority] ? boost : detected.priority;
   return { category, priority, queue: queueForCategory(category) };
+}
+
+export function canAnswerCsat(ticket: { status: string; csatScore: number | null }) {
+  return (ticket.status === "RESOLVED" || ticket.status === "CLOSED") && ticket.csatScore === null;
+}
+
+export function whatsappLink(number: string | undefined | null, text?: string) {
+  const digits = (number ?? "").replace(/\D/g, "");
+  if (digits.length < 8) return null;
+  return `https://wa.me/${digits}${text ? `?text=${encodeURIComponent(text)}` : ""}`;
+}
+
+export function generationTypeForTicket(input: { premium: boolean; personalReferenceUsed: boolean }) {
+  return input.premium && input.personalReferenceUsed ? "reproduction_reference" : "standard";
+}
+
+export function emailProofLabel(status: string) {
+  if (status === "SENT") return "Non vérifié — email envoyé selon les logs, réception non confirmée.";
+  if (status === "SKIPPED") return "Non envoyé — fournisseur email non configuré (SKIPPED), rien n'est bloqué.";
+  if (status === "FAILED") return "Échec d'envoi — voir l'erreur dans les logs.";
+  return "En file d'attente — pas encore envoyé.";
 }
 
 export function formatSequenceId(prefix: "FM" | "INC", year: number, sequence: number) {

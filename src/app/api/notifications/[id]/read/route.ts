@@ -5,7 +5,7 @@ import { markNotificationRead } from "@/server/notifications";
 
 type Params = Promise<{ id: string }>;
 
-export async function POST(_: Request, { params }: { params: Params }) {
+export async function PATCH(_: Request, { params }: { params: Params }) {
   try {
     const user = await requireActiveCurrentUser();
     const { id } = await params;
@@ -15,3 +15,5 @@ export async function POST(_: Request, { params }: { params: Params }) {
     return safeJsonError(error);
   }
 }
+
+export const POST = PATCH;

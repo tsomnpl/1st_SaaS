@@ -13,7 +13,10 @@ import { prisma } from "@/lib/prisma";
 import {
   assertTicketAccess,
   CATEGORY_LABEL,
+  canAnswerCsat,
   formatSequenceId,
+  generationTypeForTicket,
+  priorityBoostFromPlan,
   publicTicketView,
   resolveTicketClassification,
   safeStorageKey,
@@ -46,7 +49,6 @@ export async function createTicket(input: {
   subject: string;
   description: string;
   category?: TicketCategory | null;
-  priority?: TicketPriority | null;
   generationId?: string | null;
   paymentId?: string | null;
 }) {
@@ -59,11 +61,19 @@ export async function createTicket(input: {
   });
   if (recent >= 8) throw new Error("RATE_LIMITED");
 
+  const paidPlans = await prisma.payment.findMany({
+    where: { userId: input.userId, status: "COMPLETED" },
+    select: { plan: { select: { code: true } } },
+  });
+  const paidPlanCodes = paidPlans.map((payment) => payment.plan.code);
+  const priorityBoost = priorityBoostFromPlan(paidPlanCodes);
+  const premium = priorityBoost !== null;
+
   const classified = resolveTicketClassification({
     subject,
     description,
     category: input.category,
-    priority: input.priority,
+    priorityBoost,
   });
 
   let generationId: string | null = null;
@@ -79,6 +89,9 @@ export async function createTicket(input: {
     generationId = generation.id;
     const quality = (generation.qualityDetails ?? {}) as Record<string, unknown>;
     const brief = stripSensitiveBrief(generation.brief);
+    const personalReferenceUsed = Boolean(
+      (brief as { clientImageAttached?: boolean }).clientImageAttached || (brief as { logoAttached?: boolean }).logoAttached,
+    );
     contextPublic = {
       generationId: generation.id,
       status: generation.status,
@@ -91,7 +104,9 @@ export async function createTicket(input: {
       rodiCost: generation.rodiCost,
       status: generation.status,
       visualRefUsed: Boolean(quality.visual_ref_used),
-      personalReferenceUsed: Boolean((brief as { clientImageAttached?: boolean }).clientImageAttached || (brief as { logoAttached?: boolean }).logoAttached),
+      personalReferenceUsed,
+      type_generation: generationTypeForTicket({ premium, personalReferenceUsed }),
+      attachmentsSent: quality.attachmentsSent ?? null,
       brief,
       artDirection: stripSensitiveBrief(generation.artDirection),
       qualityScore: generation.qualityScore,
@@ -118,6 +133,13 @@ export async function createTicket(input: {
       amountFcfa: payment.amountFcfa,
     } as Prisma.InputJsonValue;
   }
+
+  contextInternal = {
+    ...(typeof contextInternal === "object" && contextInternal ? contextInternal : {}),
+    premium,
+    paidPlanCodes: [...new Set(paidPlanCodes)],
+    priorityBoostFromPlan: priorityBoost,
+  } as Prisma.InputJsonValue;
 
   const similar = await prisma.ticket.findFirst({
     where: { userId: input.userId, createdAt: { gte: new Date(Date.now() - 15 * 60 * 1000) } },
@@ -314,6 +336,7 @@ export async function updateTicketByAdmin(input: {
   if (input.status) {
     data.status = input.status;
     if (input.status === TicketStatus.RESOLVED) data.resolvedAt = new Date();
+    if (input.status === TicketStatus.RESOLVED && !ticket.csatAskedAt) data.csatAskedAt = new Date();
     if (input.status === TicketStatus.CLOSED) data.closedAt = new Date();
   }
   if (input.priority) data.priority = input.priority;
@@ -342,12 +365,18 @@ export async function updateTicketByAdmin(input: {
     targetId: ticket.id,
     metadata: { status: input.status, priority: input.priority, queue: input.queue },
   });
+  const askCsat = input.status === TicketStatus.RESOLVED && !ticket.csatAskedAt;
   if (input.status === TicketStatus.RESOLVED || input.status === TicketStatus.CLOSED) {
     await notifyUser({
       userId: ticket.userId,
       type: input.status === TicketStatus.RESOLVED ? "TICKET_RESOLVED" : "TICKET_CLOSED",
       title: ticket.publicId,
-      body: input.status === TicketStatus.RESOLVED ? "Ta demande est résolue." : "Ta demande est fermée.",
+      body:
+        input.status === TicketStatus.RESOLVED
+          ? askCsat
+            ? "Ta demande est résolue. Note ton expérience de 1 à 5."
+            : "Ta demande est résolue."
+          : "Ta demande est fermée.",
       href: `/support/${ticket.id}`,
       dedupeKey: `${input.status}:${ticket.id}`,
     });
@@ -357,11 +386,31 @@ export async function updateTicketByAdmin(input: {
         template: input.status === TicketStatus.RESOLVED ? "TicketResolved" : "TicketClosed",
         to: owner.email,
         entityId: `${input.status}:${ticket.id}`,
-        payload: { publicId: ticket.publicId, href: `${getAppUrl()}/support/${ticket.id}`, ticketRef: ticket.id },
+        payload: {
+          publicId: ticket.publicId,
+          href: `${getAppUrl()}/support/${ticket.id}`,
+          ticketRef: ticket.id,
+          askCsat: askCsat ? "1" : "",
+        },
       });
     }
   }
   return updated;
+}
+
+export async function submitTicketCsat(input: { userId: string; ticketId: string; score: number; comment?: string }) {
+  const ticket = await prisma.ticket.findFirst({ where: { id: input.ticketId, userId: input.userId } });
+  if (!ticket) throw new Error("NOT_FOUND");
+  if (!canAnswerCsat(ticket)) throw new Error(ticket.csatScore === null ? "CSAT_NOT_AVAILABLE" : "CSAT_ALREADY_ANSWERED");
+  const updated = await prisma.ticket.updateMany({
+    where: { id: ticket.id, csatScore: null },
+    data: { csatScore: input.score, csatComment: input.comment?.trim().slice(0, 1000) || null, csatAnsweredAt: new Date() },
+  });
+  if (updated.count === 0) throw new Error("CSAT_ALREADY_ANSWERED");
+  await prisma.ticketEvent.create({
+    data: { ticketId: ticket.id, type: "CSAT", actorUserId: input.userId, payload: { score: input.score } },
+  });
+  return { score: input.score };
 }
 
 export async function closeOwnTicket(userId: string, ticketId: string) {

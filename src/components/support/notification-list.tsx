@@ -9,7 +9,7 @@ export function NotificationList({ items }: { items: Item[] }) {
   const [rows, setRows] = useState(items);
 
   async function mark(id: string) {
-    const response = await fetch(`/api/notifications/${id}/read`, { method: "POST" });
+    const response = await fetch(`/api/notifications/${id}/read`, { method: "PATCH" });
     if (!response.ok) return;
     setRows((current) => current.map((row) => (row.id === id ? { ...row, read: true } : row)));
   }

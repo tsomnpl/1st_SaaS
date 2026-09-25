@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { pageTitle } from "@/lib/seo";
-import { CATEGORY_LABEL, STATUS_LABEL } from "@/lib/support-policy";
+import { CATEGORY_LABEL, STATUS_LABEL, whatsappLink } from "@/lib/support-policy";
 import { requireActiveCurrentUser } from "@/server/users";
 import { listOwnTickets } from "@/server/support";
 import { AssistantPanel } from "@/components/support/assistant-panel";
@@ -18,6 +18,7 @@ export default async function SupportPage() {
     throw error;
   }
   const { items } = await listOwnTickets(user.id);
+  const whatsapp = whatsappLink(process.env.SUPPORT_WHATSAPP_NUMBER, "Bonjour FlyerMint, j’ai besoin d’aide.");
 
   return (
     <div className="page-canvas space-y-6">
@@ -36,6 +37,11 @@ export default async function SupportPage() {
           <Link href="/help" className="btn-secondary">
             FAQ
           </Link>
+          {whatsapp ? (
+            <a href={whatsapp} target="_blank" rel="noopener noreferrer" className="btn-secondary">
+              WhatsApp
+            </a>
+          ) : null}
         </div>
       </div>
       <AssistantPanel />

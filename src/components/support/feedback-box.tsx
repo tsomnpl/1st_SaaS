@@ -13,11 +13,10 @@ export function FeedbackBox({ generationId, alreadyRated }: { generationId: stri
 
   async function send(dismissed = false) {
     setError(null);
-    const response = await fetch("/api/feedback", {
+    const response = await fetch(`/api/generations/${generationId}/feedback`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        generationId,
         rating: dismissed ? undefined : rating || undefined,
         comment: dismissed ? undefined : comment,
         dismissed,

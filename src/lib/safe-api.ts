@@ -9,6 +9,8 @@ const STATUS_BY_CODE: Record<string, number> = {
   USER_NOT_FOUND: 404,
   PAYMENT_NOT_FOUND: 404,
   NOT_FOUND: 404,
+  CSAT_ALREADY_ANSWERED: 409,
+  CSAT_NOT_AVAILABLE: 409,
 };
 
 export function errorCode(error: unknown) {

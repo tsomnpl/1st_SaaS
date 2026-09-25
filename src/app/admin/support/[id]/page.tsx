@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CATEGORY_LABEL, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/support-policy";
+import { CATEGORY_LABEL, emailProofLabel, PRIORITY_LABEL, STATUS_LABEL } from "@/lib/support-policy";
 import { prisma } from "@/lib/prisma";
 import { AdminTicketActions } from "@/components/admin/support-actions";
 
@@ -19,6 +19,11 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
     },
   });
   if (!ticket) notFound();
+  const emails = await prisma.emailOutbox.findMany({
+    where: { idempotencyKey: { contains: ticket.id } },
+    orderBy: { createdAt: "asc" },
+    select: { id: true, template: true, status: true, lastError: true, createdAt: true },
+  });
 
   return (
     <div className="space-y-5">
@@ -83,6 +88,19 @@ export default async function AdminTicketPage({ params }: { params: Promise<{ id
           ))}
         </ul>
         <p className="mt-2">File : {ticket.assignments[0]?.queue ?? "SUPPORT"}</p>
+        {ticket.csatScore !== null ? <p className="mt-2">CSAT : {ticket.csatScore}/5{ticket.csatComment ? ` — ${ticket.csatComment}` : ""}</p> : null}
+      </section>
+      <section className="text-xs text-slate-500">
+        <h2 className="font-bold text-slate-700">E-mails</h2>
+        <ul className="mt-2 space-y-1">
+          {emails.length === 0 ? <li>Aucun e-mail pour ce ticket.</li> : null}
+          {emails.map((email) => (
+            <li key={email.id}>
+              {email.template} · {email.status} · {emailProofLabel(email.status)}
+              {email.lastError ? ` (${email.lastError})` : ""}
+            </li>
+          ))}
+        </ul>
       </section>
       <AdminTicketActions ticketId={ticket.id} />
     </div>
