@@ -1,5 +1,6 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { env, getAllowedImageModels, getRodiumApiKey } from "@/lib/env";
+import { REFERENCE_ANALYSIS_KEYS } from "@/lib/reference-selection";
 
 type RodiumResponse = {
   id?: string;
@@ -168,6 +169,7 @@ export async function generateWithRodium(input: {
   prompt: string;
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
+  secondaryReferenceDataUrl?: string;
 }) {
   if (!getRodiumApiKey()) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
@@ -179,15 +181,23 @@ export async function generateWithRodium(input: {
   }
 
   const available = await listRodiumImageModels();
-  const imageModel = selectImageModel(input.brief, input.prompt, available, {
-    hasStyleReference: Boolean(input.styleReferenceDataUrl),
-  });
+  const exactCopy = Boolean(input.styleReferenceDataUrl) && input.brief.referenceMode === "exact_copy";
+  if (exactCopy && available.length && !available.includes(EXACT_COPY_MODEL)) {
+    throw new Error("RODIUM_NO_IMAGE_EDIT_MODEL");
+  }
+  const imageModel = exactCopy
+    ? EXACT_COPY_MODEL
+    : selectImageModel(input.brief, input.prompt, available, {
+        hasStyleReference: Boolean(input.styleReferenceDataUrl),
+      });
   const render = await renderImage({
     model: imageModel,
     prompt: input.prompt,
     brief: input.brief,
     styleReferenceDataUrl: input.styleReferenceDataUrl,
+    secondaryReferenceDataUrl: input.secondaryReferenceDataUrl,
   });
+  if (exactCopy && render.modelSent !== EXACT_COPY_MODEL) throw new Error("RODIUM_NO_IMAGE_EDIT_MODEL");
 
   const totalTokens = render.usage?.total_tokens ?? 0;
 
@@ -198,6 +208,8 @@ export async function generateWithRodium(input: {
     rawText: render.rawText,
     bitmapAttached: render.bitmapAttached,
     attachmentsSent: render.attachmentsSent,
+    modelSent: render.modelSent,
+    modelReturned: render.modelReturned,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -220,26 +232,54 @@ function isProvidedQuotaError(text: string) {
   );
 }
 
-export type ImageAttachment = { role: "reference" | "photo" | "logo"; url: string };
+export type ImageAttachment = { role: "reference" | "reference_secondary" | "photo" | "logo"; url: string };
 
-const ATTACHMENT_LABELS: Record<ImageAttachment["role"], string> = {
-  reference: "IMAGE — REFERENCE POSTER: the poster to copy (layout, fonts, boxes, colors, background, people poses).",
-  photo: "IMAGE — CLIENT PHOTO: put this exact person/product in place of the main subject of the reference.",
-  logo: "IMAGE — CLIENT LOGO: place this exact logo in the logo spot of the reference, small and sharp. Do not redraw it.",
+/** The only model allowed for EXACT_COPY; the request body is checked against it before sending. */
+export const EXACT_COPY_MODEL = "google/gemini-3-pro-image";
+
+const ATTACHMENT_LABELS: Record<CreateBriefInput["referenceMode"], Record<ImageAttachment["role"], string>> = {
+  exact_copy: {
+    reference: "IMAGE — REFERENCE POSTER: the poster to edit (keep layout, fonts, boxes, colors, background, people poses).",
+    reference_secondary: "IMAGE — SECONDARY STYLE HINT: do not copy its layout.",
+    photo: "IMAGE — CLIENT PHOTO: put this exact person/product in place of the main subject of the reference.",
+    logo: "IMAGE — CLIENT LOGO (brand asset): place this exact logo in the logo spot of the reference, small and sharp. Do not redraw it.",
+  },
+  composition: {
+    reference: "IMAGE — REFERENCE POSTER: follow its structure (zones, proportions, hierarchy). Do not copy its content.",
+    reference_secondary: "IMAGE — FLYERMINT LIBRARY REFERENCE for this domain: style and domain codes only, the first reference keeps priority for the structure.",
+    photo: "IMAGE — CLIENT PHOTO: the main subject, placed where the reference subject is.",
+    logo: "IMAGE — CLIENT LOGO (brand asset): place this exact logo in the brand area of the reference. Do not redraw it.",
+  },
+  inspiration: {
+    reference: "IMAGE — INSPIRATION POSTER: mood, palette, general composition. Do not copy its content.",
+    reference_secondary: "IMAGE — FLYERMINT LIBRARY REFERENCE for this domain: style and domain codes only.",
+    photo: "IMAGE — CLIENT PHOTO: the main subject of the poster.",
+    logo: "IMAGE — CLIENT LOGO (brand asset): use this exact logo, small and sharp. Do not redraw it.",
+  },
 };
 
-export function collectImageAttachments(brief: CreateBriefInput, styleReferenceDataUrl?: string): ImageAttachment[] {
+export function collectImageAttachments(
+  brief: CreateBriefInput,
+  styleReferenceDataUrl?: string,
+  secondaryReferenceDataUrl?: string,
+): ImageAttachment[] {
   const list: ImageAttachment[] = [];
   if (styleReferenceDataUrl?.startsWith("data:image/")) list.push({ role: "reference", url: styleReferenceDataUrl });
+  if (secondaryReferenceDataUrl?.startsWith("data:image/")) list.push({ role: "reference_secondary", url: secondaryReferenceDataUrl });
   if (brief.mainImageUrl && /^(data:image\/|https:\/\/)/.test(brief.mainImageUrl)) list.push({ role: "photo", url: brief.mainImageUrl });
   if (brief.logoUrl && /^(data:image\/|https:\/\/)/.test(brief.logoUrl)) list.push({ role: "logo", url: brief.logoUrl });
   return list;
 }
 
-export function geminiImageRequestBody(model: string, prompt: string, attachments: ImageAttachment[]) {
+export function geminiImageRequestBody(
+  model: string,
+  prompt: string,
+  attachments: ImageAttachment[],
+  mode: CreateBriefInput["referenceMode"] = "exact_copy",
+) {
   const content: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
   for (const attachment of attachments) {
-    content.push({ type: "text", text: ATTACHMENT_LABELS[attachment.role] });
+    content.push({ type: "text", text: ATTACHMENT_LABELS[mode][attachment.role] });
     content.push({ type: "image_url", image_url: { url: attachment.url } });
   }
   return {
@@ -249,17 +289,25 @@ export function geminiImageRequestBody(model: string, prompt: string, attachment
   };
 }
 
-async function postGeminiImage(model: string, prompt: string, attachments: ImageAttachment[]): Promise<{
+async function postGeminiImage(
+  model: string,
+  prompt: string,
+  attachments: ImageAttachment[],
+  mode: CreateBriefInput["referenceMode"] = "exact_copy",
+): Promise<{
   imageUrl: string;
   rawText: string;
   usage: RodiumResponse["usage"];
   bitmapAttached: boolean;
   attachmentsSent: ImageAttachment["role"][];
+  modelSent: string;
+  modelReturned: string;
 }> {
+  const body = geminiImageRequestBody(model, prompt, attachments, mode);
   const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: rodiumHeaders(),
-    body: JSON.stringify(geminiImageRequestBody(model, prompt, attachments)),
+    body: JSON.stringify(body),
   });
   const raw = await response.text();
   // No silent retry without the images: a text-only poster would ignore the reference.
@@ -274,6 +322,8 @@ async function postGeminiImage(model: string, prompt: string, attachments: Image
     usage: data.usage,
     bitmapAttached: attachmentsSent.includes("reference"),
     attachmentsSent,
+    modelSent: body.model,
+    modelReturned: String(data.model ?? ""),
   };
 }
 
@@ -298,11 +348,12 @@ async function renderImage(params: {
   prompt: string;
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
+  secondaryReferenceDataUrl?: string;
 }) {
-  const attachments = collectImageAttachments(params.brief, params.styleReferenceDataUrl);
+  const attachments = collectImageAttachments(params.brief, params.styleReferenceDataUrl, params.secondaryReferenceDataUrl);
 
   if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
-    return postGeminiImage(params.model, params.prompt, attachments);
+    return postGeminiImage(params.model, params.prompt, attachments, params.brief.referenceMode);
   }
   if (attachments.length > 0) throw new Error("RODIUM_NO_IMAGE_EDIT_MODEL");
 
@@ -322,7 +373,7 @@ async function renderImage(params: {
     const raw = await response.text();
     if (response.status === 402 || isProvidedQuotaError(raw)) {
       const fallback = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
-      return postGeminiImage(fallback, params.prompt, []);
+      return postGeminiImage(fallback, params.prompt, [], params.brief.referenceMode);
     }
     throwRodiumHttpError(response.status, raw);
   }
@@ -335,6 +386,8 @@ async function renderImage(params: {
     usage: data.usage,
     bitmapAttached: false,
     attachmentsSent: [] as ImageAttachment["role"][],
+    modelSent: params.model,
+    modelReturned: String(data.model ?? ""),
   };
 }
 
@@ -378,6 +431,25 @@ export async function getRodiumWallet() {
   return (await response.json()) as Record<string, unknown>;
 }
 
+const DEFAULT_VISION_MODEL = "google/gemini-3.5-flash";
+
+export function visionModel() {
+  return env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || DEFAULT_VISION_MODEL;
+}
+
+/** Vision/text call; a configured model unknown to Rodium (404) falls back to the default vision model instead of failing silently. */
+async function chatVision(body: Record<string, unknown>) {
+  const post = (payload: Record<string, unknown>) =>
+    fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, { method: "POST", headers: rodiumHeaders(), body: JSON.stringify(payload) });
+  let response = await post(body);
+  let model = String(body.model);
+  if (response.status === 404 && model !== DEFAULT_VISION_MODEL) {
+    model = DEFAULT_VISION_MODEL;
+    response = await post({ ...body, model });
+  }
+  return { response, model };
+}
+
 function textFromChat(data: RodiumResponse) {
   const content = data.choices?.[0]?.message?.content;
   if (typeof content === "string") return content;
@@ -393,31 +465,52 @@ export async function reviewPosterQuality(input: {
   referenceImageUrl?: string;
 }) {
   if (!getRodiumApiKey()) return "";
-  const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const model = visionModel();
   const content: Array<Record<string, unknown>> = [
     { type: "text", text: input.prompt },
     { type: "image_url", image_url: { url: input.imageUrl } },
   ];
-  if (input.referenceImageUrl && input.referenceImageUrl.length < 900_000) {
+  if (input.referenceImageUrl && input.referenceImageUrl.length < 3_000_000) {
     content.push({
       type: "image_url",
       image_url: { url: input.referenceImageUrl },
     });
   }
   try {
-    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: rodiumHeaders(),
-      body: JSON.stringify({
+    const { response } = await chatVision({
         model,
         messages: [{ role: "user", content }],
         temperature: 0,
         max_tokens: 3000,
-      }),
-    });
+      });
     if (!response.ok) return "";
     const data = (await response.json()) as RodiumResponse;
     return textFromChat(data).trim();
+  } catch {
+    return "";
+  }
+}
+
+/** One vision pass per library image: creative DNA + selection metadata + zones + original text (server-side only). */
+export async function analyzeReferenceFull(input: { imageUrl: string; domain: string; referenceId: string }) {
+  if (!getRodiumApiKey() || !input.imageUrl) return "";
+  const model = visionModel();
+  const prompt = [
+    "You are FlyerMint's art director. Analyze this poster precisely: it will be used as a composition model and must be matched to client briefs.",
+    `Library folder: ${input.domain}. Reference id: ${input.referenceId}.`,
+    "Return ONE JSON object only, no markdown, with these keys:",
+    "background, composition, layout, humanPlacement, subjectScale, textPosition, titleHierarchy, humanRole, imageTreatment, typographyHierarchy, colorPalette (string[] 2-4 descriptive swatches), contrast, spacing, whiteSpace, margins, safeZone, ctaPosition, pricePosition, mood, visualDensity,",
+    REFERENCE_ANALYSIS_KEYS + ".",
+  ].join(" ");
+  try {
+    const { response } = await chatVision({
+        model,
+        messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: input.imageUrl } }] }],
+        temperature: 0,
+        max_tokens: 8000,
+      });
+    if (!response.ok) return "";
+    return textFromChat((await response.json()) as RodiumResponse).trim();
   } catch {
     return "";
   }
@@ -429,7 +522,7 @@ export async function analyzeStyleReference(input: {
   referenceId: string;
 }) {
   if (!getRodiumApiKey() || !input.imageUrl) return "";
-  const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const model = visionModel();
   const prompt = [
     "You are FlyerMint's art director. Analyze this poster as a COMPOSITION MODEL.",
     `Domain: ${input.domain}. Reference id: ${input.referenceId}.`,
@@ -440,10 +533,7 @@ export async function analyzeStyleReference(input: {
     "contrast, spacing, whiteSpace, margins, safeZone, ctaPosition, pricePosition, mood, visualDensity, aspectRatio.",
   ].join(" ");
   try {
-    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
-      method: "POST",
-      headers: rodiumHeaders(),
-      body: JSON.stringify({
+    const { response } = await chatVision({
         model,
         messages: [
           {
@@ -456,8 +546,7 @@ export async function analyzeStyleReference(input: {
         ],
         temperature: 0,
         max_tokens: 2500,
-      }),
-    });
+      });
     if (!response.ok) return "";
     const data = (await response.json()) as RodiumResponse;
     return textFromChat(data).trim();

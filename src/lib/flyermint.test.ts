@@ -102,7 +102,8 @@ describe("flyermint core", () => {
     const prompt = buildPrompt(brief, ad, { hasVisualReferenceImage: true, dna });
     expect(prompt).toMatch(/EDIT THE ATTACHED REFERENCE POSTER/);
     expect(prompt).toMatch(/every font/);
-    expect(prompt).toContain("Title: Menu du soir");
+    expect(prompt).toContain('Title slot → "Menu du soir"');
+    expect(prompt).toMatch(/Modify the reference poster provided/);
     expect(prompt).toContain("5 000 FCFA");
     expect(prompt).not.toMatch(/Maximum 2-3 main colors|Keep STRUCTURE only|WIPE every original letter/);
   });

@@ -1,3 +1,5 @@
+import { findLeftovers } from "@/lib/reference-selection";
+
 export type PosterQcReport = {
   pass: boolean;
   has_person: boolean;
@@ -24,6 +26,8 @@ export type PosterQcReport = {
   repair_prompt: string;
   visible_text?: string[];
   typos?: Array<{ found: string; expected: string }>;
+  structure_score?: number;
+  leftovers?: string[];
 };
 
 const EMPTY: PosterQcReport = {
@@ -98,10 +102,20 @@ export function qcPrompt(
   facts: string[],
   format?: string,
   dnaSummary?: string,
-  options: { referenceCopy?: boolean } = {},
+  options: { referenceCopy?: boolean; composition?: boolean } = {},
 ) {
-  const rules = options.referenceCopy
+  const structureRule =
+    "structure_score: integer 0-10, how closely the first image keeps the structure of the reference (subject position and proportions, title position, blocks, rectangles, frames, CTA, logo spot, colors, typography, hierarchy, graphic elements, spacing, format). 10 = same poster structure. A pretty poster with another layout scores low.";
+  const rules = options.composition
     ? [
+        "The second image is the REFERENCE poster. The first image must keep its visual grammar (zones, proportions, hierarchy, subject/text relationship, CTA and brand areas) with new content.",
+        structureRule,
+        "Set composition_match=false if blocks moved (e.g. subject left became centered, title right became top), or if it looks like a different layout.",
+        "FAIL if any original word, name, phone, date, price, handle or brand of the reference is visible.",
+      ]
+    : options.referenceCopy
+    ? [
+        structureRule,
         "The second image is the REFERENCE poster. The first image must be the SAME poster with only the text, faces and logo changed.",
         "Set composition_match=false and reference_match=false if the layout, fonts, text boxes/cards/bands, colors, background, hands or the number/poses of people changed, or if it looks simplified compared with the reference.",
         "FAIL if any original word, name, phone, date, price or brand of the reference is still visible.",
@@ -117,7 +131,7 @@ export function qcPrompt(
   return [
     "You are the FlyerMint art director doing a quality check on a finished poster (first image).",
     "Reply with JSON only, no markdown.",
-    "Keys: pass, has_person, person_natural, readable_text, text_matches_brief, domain_fit, looks_ai_generic, format_ok, composition_match, margins_ok, reference_match, design_rules, human_realism, text_readability, hierarchy, contrast, alignment, spacing, safe_zone, image_quality, domain_relevance, visible_text (string[]), issues (string[]), repair_prompt (string).",
+    "Keys: pass, structure_score (number, only when a reference is provided), has_person, person_natural, readable_text, text_matches_brief, domain_fit, looks_ai_generic, format_ok, composition_match, margins_ok, reference_match, design_rules, human_realism, text_readability, hierarchy, contrast, alignment, spacing, safe_zone, image_quality, domain_relevance, visible_text (string[]), issues (string[]), repair_prompt (string).",
     "visible_text: transcribe EVERY word visible on the first image exactly as written, letter by letter, including misspellings. Do not correct anything.",
     "text_matches_brief=false if any word is misspelled compared with the facts below, or if a word not in the facts was added (field names like 'artistes:' count as added).",
     ...rules,
@@ -154,6 +168,7 @@ export function parseQcReport(raw: string): PosterQcReport {
     const generic = Boolean(data.looks_ai_generic);
     const issues = Array.isArray(data.issues) ? data.issues.map(String).slice(0, 8) : [];
     const visibleText = Array.isArray(data.visible_text) ? data.visible_text.map(String).slice(0, 80) : undefined;
+    const structureScore = Number.isFinite(Number(data.structure_score)) ? Number(data.structure_score) : undefined;
     const explicitFail =
       data.pass === false ||
       !hasPerson ||
@@ -196,6 +211,7 @@ export function parseQcReport(raw: string): PosterQcReport {
       issues,
       repair_prompt: String(data.repair_prompt ?? "").slice(0, 500),
       visible_text: visibleText,
+      structure_score: structureScore,
     };
   } catch {
     return skippedQcReport();
@@ -262,6 +278,40 @@ export function applyTextCheck(report: PosterQcReport, allowedText: string[]): P
     repair_prompt: [
       report.repair_prompt,
       `Fix the misspelled words: ${typos.map((typo) => `"${typo.found}" must be written exactly as in the client text (closest: "${typo.expected}")`).join("; ")}.`,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+export const MIN_STRUCTURE_SCORE = 7;
+
+/** Reference fidelity is judged on structure and content, never on beauty. */
+export function applyReferenceCheck(
+  report: PosterQcReport,
+  input: { originalText: string[]; clientText: string[]; strictStructure: boolean },
+): PosterQcReport {
+  if (qcWasSkipped(report)) return report;
+  const leftovers = report.visible_text?.length ? findLeftovers(report.visible_text, input.originalText, input.clientText) : [];
+  const weakStructure =
+    input.strictStructure && (report.structure_score === undefined || report.structure_score < MIN_STRUCTURE_SCORE);
+  if (!leftovers.length && !weakStructure) return { ...report, leftovers };
+  return {
+    ...report,
+    pass: false,
+    composition_match: weakStructure ? false : report.composition_match,
+    reference_match: weakStructure ? false : report.reference_match,
+    text_matches_brief: leftovers.length ? false : report.text_matches_brief,
+    leftovers,
+    issues: [
+      ...report.issues,
+      ...(weakStructure ? [`STRUCTURE: ${report.structure_score ?? "?"}/10 < ${MIN_STRUCTURE_SCORE}`] : []),
+      ...leftovers.map((word) => `ANCIEN CONTENU: "${word}"`),
+    ].slice(0, 14),
+    repair_prompt: [
+      report.repair_prompt,
+      leftovers.length ? `Remove every original text of the reference still visible: ${leftovers.join(", ")}.` : "",
+      weakStructure ? "The layout drifted from the reference: restore the same block positions, proportions and shapes." : "",
     ]
       .filter(Boolean)
       .join(" "),

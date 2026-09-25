@@ -7,7 +7,7 @@ import {
   selectImageModel,
   sizeForFormat,
 } from "@/server/rodium";
-import { referenceDomainKeys } from "@/lib/inspiration-domains";
+import { supabaseDomainFor } from "@/lib/inspiration-domains";
 import { classifyPaymentStatus } from "@/server/payments";
 import { paidPlans } from "@/lib/plans";
 
@@ -103,10 +103,10 @@ describe("image model routing", () => {
     expect(parts[5].text).toMatch(/CLIENT LOGO/);
   });
 
-  it("looks in the Formation folder when an event brief is about a training", () => {
-    expect(referenceDomainKeys("Evenementiel", "Formation Place limité")).toEqual(["education", "evenementiel"]);
-    expect(referenceDomainKeys("Technologie", "Google AI Plus accès 12 mois étudiants")).toEqual(["education", "technologie"]);
-    expect(referenceDomainKeys("Restauration", "Menu du soir")).toEqual(["restauration"]);
+  it("searches only the folder of the domain chosen by the client", () => {
+    expect(supabaseDomainFor("Education & Formation")).toBe("education");
+    expect(supabaseDomainFor("Evenementiel")).toBe("evenementiel");
+    expect(supabaseDomainFor("Domaine inconnu")).toBe("");
   });
 });
 

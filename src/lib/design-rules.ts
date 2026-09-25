@@ -39,7 +39,8 @@ export const STYLE_REFERENCE_PROMPT = [
 
 /** Client generation with a reference bitmap: the output is the same poster with the client's text, not a new design. */
 export const REFERENCE_COPY_PROMPT = [
-  "TASK: EDIT THE ATTACHED REFERENCE POSTER. This is a copy-and-replace job, not a new design.",
+  "TASK: EDIT THE ATTACHED REFERENCE POSTER. Modify the reference poster provided. Keep its composition and visual structure. Replace only the allowed elements with the elements of the new brief. This is a copy-and-replace job, not a new design.",
+  "The FlyerMint general design rules do NOT apply here (no 2-3 color limit, no single-person rule, no FlyerMint palette, no new grid, no new hierarchy). The reference wins.",
   "At first glance the result must look like the SAME poster. Keep 100% identical:",
   "- the layout: position, size and order of every block, title, photo, card, box and line;",
   "- the background: photo, blur, texture, grid, gradient, light and decorative shapes;",
@@ -56,6 +57,21 @@ export const REFERENCE_COPY_PROMPT = [
   "Do NOT modernize, simplify, clean up, recolor, flatten or restyle. Same density and richness as the reference.",
   "If the output canvas ratio differs from the reference, extend the background to fit; do not rearrange the blocks.",
   "Spell every word exactly as given, letter by letter. Sharp, readable text only.",
+].join("\n");
+
+/** Composition reference: same visual grammar (zones, proportions, hierarchy), new content and new identity. */
+export const REFERENCE_COMPOSITION_PROMPT = [
+  "TASK: TRANSPOSE THE STRUCTURE of the attached reference poster onto the client content. The reference gives the STRUCTURE, the client gives the CONTENT.",
+  "Keep faithfully: subject position and scale, title block position and size, info blocks, CTA position and shape, brand/logo area, footer, margins, negative space, direction of gaze, subject/text relationship, density and hierarchy.",
+  "You may redraw: the person (new original person, same pose and role), the background details, the photography, the decorative elements — but each shape must keep the function it has in the reference (badge, button, card, band, separator, icon).",
+  "Never copy from the reference: text, phone, address, logo, company name, brand, QR code, social handles, identifiable people, commercial information.",
+  "Do NOT move blocks: if the reference has the subject left and the title right, the result has the subject left and the title right.",
+].join("\n");
+
+/** General inspiration: mood, palette and general composition, freer layout. */
+export const REFERENCE_INSPIRATION_PROMPT = [
+  "TASK: CREATE A NEW POSTER INSPIRED by the attached reference: same mood, palette family, general composition and hierarchy logic. Layout details may differ.",
+  "Never copy from the reference: text, phone, address, logo, company name, brand, QR code, social handles, identifiable people.",
 ].join("\n");
 
 export const STYLE_INSPIRATION_TEXT = [
