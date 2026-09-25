@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
-import { VisualPoster } from "@/components/landing/visual-poster";
+import { CreationGrid } from "@/components/landing/creation-grid";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { SHOWCASE_SHEETS } from "@/lib/showcase-sheets";
-import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
+import { getGeneratedShowcase, isVerified4k, toPoster } from "@/lib/showcase";
 
 export const metadata: Metadata = {
   title: pageTitle("Créations"),
@@ -16,8 +16,8 @@ export default async function CreationsPage() {
   const { generated } = await getGeneratedShowcase();
   const posters = SHOWCASE_SHEETS.map((sheet) => {
     const entry = generated.find((item) => item.id === sheet.id);
-    return entry
-      ? toPoster(entry)
+    return entry?.fichier_image
+      ? { ...toPoster(entry), fourK: isVerified4k(entry) }
       : {
           id: sheet.id,
           title: sheet.titre_affiche_finale,
@@ -27,12 +27,13 @@ export default async function CreationsPage() {
           tone: sheet.tone,
           imageSrc: undefined,
           domaine: sheet.domaine,
+          fourK: false,
         };
-  });
-  const realImages = posters.filter((poster) => poster.imageSrc).length;
+  }).filter((poster) => poster.imageSrc);
+  const realImages = posters.length;
 
   return (
-    <div className="space-y-8">
+    <div className="page-canvas space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold">Créations</h1>
@@ -46,17 +47,10 @@ export default async function CreationsPage() {
           Créer une affiche
         </Link>
       </div>
-      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
-        {posters.map((poster) => (
-          <div key={poster.id} className="space-y-2">
-            <VisualPoster {...poster} />
-            <p className="text-xs text-slate-500">{poster.domaine}</p>
-          </div>
-        ))}
-      </div>
+      <CreationGrid posters={posters} />
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {DOMAINS.map((domain) => (
-          <Link key={domain} href="/create" className="rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center text-sm font-semibold hover:border-violet-200 hover:text-[#6D28D9]">
+          <Link key={domain} href="/create" className="rounded-card border border-slate-200 bg-white px-3 py-4 text-center text-sm font-semibold hover:border-violet/30 hover:text-violet">
             {DOMAIN_LABELS[domain]}
           </Link>
         ))}

@@ -1,5 +1,5 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { env, getAllowedImageModels } from "@/lib/env";
+import { env, getAllowedImageModels, getRodiumApiKey } from "@/lib/env";
 
 type RodiumResponse = {
   id?: string;
@@ -45,7 +45,38 @@ export function isLikelyImageModel(modelId: string) {
   return IMAGE_MODEL_HINTS.some((hint) => id.includes(hint));
 }
 
-export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, available: string[] = []) {
+export function acceptsBitmapInput(modelId: string) {
+  return !modelId.toLowerCase().includes("gpt-image");
+}
+
+/** Reference copy needs a model that edits the attached poster; lite and GPT image models redraw from scratch. */
+export function selectReferenceCopyModel(available: string[] = []) {
+  const candidates = [
+    env.RODIUMAI_IMAGE_MODEL_REFERENCE_COPY?.trim(),
+    "google/gemini-3-pro-image",
+    "google/gemini-3-pro-image-preview",
+    env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim(),
+    "google/gemini-3.1-flash-image",
+  ].filter((id): id is string => Boolean(id));
+  const allowed = getAllowedImageModels();
+  const usable = (id: string) =>
+    acceptsBitmapInput(id) &&
+    !id.toLowerCase().includes("lite") &&
+    (allowed.length === 0 || allowed.includes(id));
+  if (available.length === 0) return candidates.find(usable) ?? null;
+  return candidates.find((id) => usable(id) && available.includes(id)) ?? null;
+}
+
+export function selectImageModel(
+  brief: CreateBriefInput,
+  finalPrompt: string,
+  available: string[] = [],
+  options: { prefersBitmap?: boolean; referenceCopy?: boolean } = {},
+) {
+  if (options.referenceCopy) {
+    const copyModel = selectReferenceCopyModel(available);
+    if (copyModel) return copyModel;
+  }
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();
   const textHeavyFields = [
@@ -61,7 +92,7 @@ export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, a
   ].filter(Boolean).length;
 
   const preferred = (() => {
-    if (brief.mainImageUrl || brief.logoUrl) {
+    if (options.prefersBitmap || brief.mainImageUrl || brief.logoUrl) {
       return env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
     }
     if (textHeavyFields >= 6) {
@@ -85,7 +116,8 @@ export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, a
 }
 
 export async function listRodiumImageModels() {
-  if (!env.RODIUMAI_API_KEY) return [];
+  const apiKey = getRodiumApiKey();
+  if (!apiKey) return [];
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/models`, {
       headers: rodiumHeaders(),
@@ -104,7 +136,7 @@ export async function listRodiumImageModels() {
 }
 
 function rodiumHeaders() {
-  const key = env.RODIUMAI_API_KEY ?? "";
+  const key = getRodiumApiKey();
   return {
     "Content-Type": "application/json",
     Authorization: `Bearer ${key}`,
@@ -112,17 +144,52 @@ function rodiumHeaders() {
   };
 }
 
-export async function generateWithRodium(input: { prompt: string; brief: CreateBriefInput }) {
-  if (!env.RODIUMAI_API_KEY) {
+export async function getRodiumWallet() {
+  if (!getRodiumApiKey()) return null;
+  const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
+    headers: rodiumHeaders(),
+    cache: "no-store",
+  });
+  if (!response.ok) return null;
+  return (await response.json()) as Record<string, unknown>;
+}
+
+/** Available RODI = balance − reserved (what image calls actually spend). */
+export function rodiumDisponible(wallet: Record<string, unknown> | null | undefined) {
+  if (!wallet) return null;
+  const balance = Number(wallet.balance_rodi ?? wallet.balance ?? NaN);
+  const reserved = Number(wallet.reserved_rodi ?? wallet.reserved ?? 0);
+  if (!Number.isFinite(balance)) return null;
+  return Math.max(0, balance - (Number.isFinite(reserved) ? reserved : 0));
+}
+
+export async function generateWithRodium(input: {
+  prompt: string;
+  brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
+}) {
+  if (!getRodiumApiKey()) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
+  // Fail fast when the provided key has no free RODI (reserved ≠ spendable).
+  const wallet = await getRodiumWallet();
+  const disponible = rodiumDisponible(wallet);
+  if (disponible !== null && disponible < 1) {
+    throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+  }
+
   const available = await listRodiumImageModels();
-  const imageModel = selectImageModel(input.brief, input.prompt, available);
+  const prefersBitmap = Boolean(input.styleReferenceDataUrl || input.brief.mainImageUrl || input.brief.logoUrl);
+  const imageModel = selectImageModel(input.brief, input.prompt, available, {
+    prefersBitmap,
+    referenceCopy: Boolean(input.styleReferenceDataUrl),
+  });
   const render = await renderImage({
     model: imageModel,
     prompt: input.prompt,
     brief: input.brief,
+    styleReferenceDataUrl: input.styleReferenceDataUrl,
   });
 
   const totalTokens = render.usage?.total_tokens ?? 0;
@@ -132,6 +199,7 @@ export async function generateWithRodium(input: { prompt: string; brief: CreateB
     imageModel,
     imageUrl: render.imageUrl,
     rawText: render.rawText,
+    visualRefSent: render.visualRefSent,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -150,6 +218,7 @@ async function renderImage(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
+  styleReferenceDataUrl?: string;
 }) {
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
@@ -158,9 +227,14 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const reference = params.brief.mainImageUrl || params.brief.logoUrl;
-  if (reference?.startsWith("data:image/") && params.model.toLowerCase().includes("gemini")) {
+  const acceptsBitmap = acceptsBitmapInput(params.model);
+  let visualRefSent = false;
+  const styleRef = params.styleReferenceDataUrl;
+  const clientRef = params.brief.mainImageUrl || params.brief.logoUrl;
+  const reference = styleRef || clientRef;
+  if (reference?.startsWith("data:image/") && acceptsBitmap) {
     body.image = reference;
+    visualRefSent = Boolean(styleRef);
   }
 
   const response = await fetch(endpoint, {
@@ -169,6 +243,13 @@ async function renderImage(params: {
     body: JSON.stringify(body),
   });
   if (!response.ok) {
+    const raw = await response.text().catch(() => "");
+    if (
+      response.status === 402 ||
+      /insufficient_balance|insufficient_quota|solde/i.test(raw)
+    ) {
+      throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+    }
     throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
   }
   const data = (await response.json()) as RodiumResponse;
@@ -179,7 +260,7 @@ async function renderImage(params: {
       ? `data:image/png;base64,${first.b64_json}`
       : "";
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  return { imageUrl, rawText: JSON.stringify({ model: data.model, visualRefSent }), usage: data.usage, visualRefSent };
 }
 
 export function sizeForFormat(format: string) {
@@ -197,16 +278,6 @@ export function sizeForFormat(format: string) {
   return "1024x1024";
 }
 
-export async function getRodiumWallet() {
-  if (!env.RODIUMAI_API_KEY) return null;
-  const response = await fetch(`${env.RODIUMAI_BASE_URL}/wallet`, {
-    headers: rodiumHeaders(),
-    cache: "no-store",
-  });
-  if (!response.ok) return null;
-  return (await response.json()) as Record<string, unknown>;
-}
-
 function textFromChat(data: RodiumResponse) {
   const content = data.choices?.[0]?.message?.content;
   if (typeof content === "string") return content;
@@ -216,8 +287,8 @@ function textFromChat(data: RodiumResponse) {
   return "";
 }
 
-export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
-  if (!env.RODIUMAI_API_KEY) return "";
+export async function reviewPosterQuality(input: { imageUrl: string; prompt: string; referenceDataUrl?: string }) {
+  if (!getRodiumApiKey()) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
@@ -230,6 +301,13 @@ export async function reviewPosterQuality(input: { imageUrl: string; prompt: str
             role: "user",
             content: [
               { type: "text", text: input.prompt },
+              ...(input.referenceDataUrl
+                ? [
+                    { type: "text", text: "Image 1: the REFERENCE poster." },
+                    { type: "image_url", image_url: { url: input.referenceDataUrl } },
+                    { type: "text", text: "Image 2: the RESULT to check." },
+                  ]
+                : []),
               { type: "image_url", image_url: { url: input.imageUrl } },
             ],
           },

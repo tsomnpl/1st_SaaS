@@ -21,6 +21,7 @@ const PUBLIC_PREFIXES = [
   "/sign-in/",
   "/sign-up/",
   "/creations/",
+  "/affiche/",
   "/api/webhooks/moneyfusion",
   "/api/payments/webhook",
   "/api/health",

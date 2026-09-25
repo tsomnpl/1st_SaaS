@@ -6,15 +6,16 @@ export type HeroPoster = {
   subtitle?: string;
   meta?: string;
   cta?: string;
-  tone?: "night" | "warm" | "gold" | "clean" | "sport" | "soft" | "dark" | "fresh" | "rose" | "earth";
+  tone?: string;
   imageSrc?: string;
 };
 
 const TILTS = ["-rotate-6", "rotate-5", "-rotate-3", "rotate-4", "-rotate-5", "rotate-2"];
 
 export function HeroPosterLoop({ posters }: { posters: HeroPoster[] }) {
-  if (posters.length < 3) return null;
-  const track = [...posters, ...posters];
+  const usable = posters.filter((poster) => poster.imageSrc);
+  if (usable.length < 3) return null;
+  const track = [...usable, ...usable];
 
   return (
     <div className="relative mx-auto h-[440px] w-full max-w-[440px] overflow-hidden">
@@ -28,17 +29,18 @@ export function HeroPosterLoop({ posters }: { posters: HeroPoster[] }) {
             cta={poster.cta}
             tone={poster.tone}
             imageSrc={poster.imageSrc}
+            requireImage
             className={`w-[58%] max-w-[240px] ${TILTS[index % TILTS.length]} ${index % 2 ? "ml-auto" : "mr-auto"}`}
           />
         ))}
       </div>
       <div className="glass absolute bottom-8 right-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
         Direction artistique
-        <p className="text-sm font-semibold text-[#6D28D9]">Hiérarchie · CTA · Safe zone</p>
+        <p className="text-sm font-semibold text-violet">Hiérarchie · CTA · Safe zone</p>
       </div>
       <div className="glass absolute right-4 top-2 z-40 rounded-2xl px-3 py-2 text-xs text-slate-600">
         Mints
-        <p className="text-lg font-bold text-[#10B981]">1 affiche offerte</p>
+        <p className="text-lg font-bold text-mint">1 affiche offerte</p>
       </div>
     </div>
   );

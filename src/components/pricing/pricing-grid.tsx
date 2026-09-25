@@ -17,25 +17,25 @@ export function PricingGrid({
         return (
           <article
             key={plan.code}
-            className={`flex flex-col rounded-[1.6rem] border bg-white p-6 ${
+            className={`card flex flex-col p-6 ${
               highlighted
-                ? "border-[#6D28D9] shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
+                ? "border-violet shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
                 : "border-slate-200"
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-500">{plan.shortName}</p>
               {highlighted ? (
-                <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#6D28D9]">
+                <span className="rounded-full bg-violet/10 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-violet">
                   Le plus choisi
                 </span>
               ) : null}
             </div>
-            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#1E293B]">
+            <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-night">
               {plan.headline}
             </h2>
             <p className="mt-2 text-sm text-slate-600">{plan.description}</p>
-            <p className="mt-5 text-4xl font-extrabold tracking-tight text-[#1E293B]">
+            <p className="mt-5 text-4xl font-extrabold tracking-tight text-night">
               {formatFcfa(plan.priceFcfa)}
             </p>
             <p className="mt-1 text-sm font-medium text-slate-500">
@@ -47,7 +47,7 @@ export function PricingGrid({
             <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex gap-2">
-                  <span className="mt-0.5 text-[#6D28D9]">✓</span>
+                  <span className="mt-0.5 text-violet">✓</span>
                   <span>{feature}</span>
                 </li>
               ))}

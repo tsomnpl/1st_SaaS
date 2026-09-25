@@ -35,7 +35,7 @@ export function AdminShell({
 
   return (
     <div data-admin-shell className="space-y-4">
-      <div className="overflow-hidden rounded-[1.6rem] border border-slate-800 bg-[#1E293B] text-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
+      <div className="card overflow-hidden border border-slate-800 bg-night text-white shadow-[0_24px_80px_rgba(15,23,42,0.18)]">
         <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex items-center justify-between gap-3">
             <div className="min-w-0">
@@ -48,7 +48,7 @@ export function AdminShell({
           </div>
           <AdminSearch basePath={basePath} />
           <div className="flex items-center gap-3 text-sm text-slate-300">
-            <span className="inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
+            <span className="inline-flex h-2 w-2 rounded-full bg-mint" />
             <span className="truncate">{adminLabel}</span>
           </div>
         </div>

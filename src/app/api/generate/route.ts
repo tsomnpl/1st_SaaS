@@ -19,9 +19,17 @@ export async function POST(request: Request) {
       repaired: result.repaired,
     });
   } catch (error) {
+    // Return stable error codes; the client maps them via publicErrorMessage.
+    const code = error instanceof Error ? error.message : "GENERATION_FAILED";
+    const status =
+      code === "UNAUTHORIZED"
+        ? 401
+        : code === "INSUFFICIENT_MINTS" || code === "RODIUM_INSUFFICIENT_BALANCE"
+          ? 402
+          : 400;
     return NextResponse.json(
-      { ok: false, error: publicErrorMessage(error) },
-      { status: 400 },
+      { ok: false, error: code, message: publicErrorMessage(error) },
+      { status },
     );
   }
 }

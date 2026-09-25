@@ -18,10 +18,10 @@ export default async function PricingPage() {
   const plans = await loadPlans();
 
   return (
-    <div className="space-y-10 pb-10">
+    <div className="page-canvas space-y-10 pb-10">
       <section className="mx-auto max-w-3xl text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Offres</p>
-        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-[#1E293B]">
+        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-violet">Offres</p>
+        <h1 className="mt-3 text-4xl font-extrabold tracking-tight text-night">
           Choisis tes Mints
         </h1>
         <p className="mt-3 text-slate-600">

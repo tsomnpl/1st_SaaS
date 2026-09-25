@@ -30,12 +30,12 @@ export function PublicChrome({ children }: { children: ReactNode }) {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className="hidden transition hover:text-[#6D28D9] sm:inline"
+                  className="hidden transition hover:text-violet sm:inline"
                 >
                   {link.label}
                 </Link>
               ))}
-              <Link href="/sign-in" className="hidden transition hover:text-[#6D28D9] sm:inline">
+              <Link href="/sign-in" className="hidden transition hover:text-violet sm:inline">
                 Connexion
               </Link>
               <Link href="/create" className="btn-primary whitespace-nowrap">

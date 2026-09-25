@@ -90,7 +90,7 @@ export function AdminUsersClient({
             {filtered.map((user) => (
               <tr key={user.id} className="border-t border-slate-100">
                 <td className="px-3 py-2">
-                  <Link href={`${basePath}/users/${user.id}`} className="font-medium text-[#6D28D9]">
+                  <Link href={`${basePath}/users/${user.id}`} className="font-medium text-violet">
                     {user.name ?? user.email ?? user.id}
                   </Link>
                   <p className="text-xs text-slate-400">{user.email}</p>

@@ -41,11 +41,11 @@ export default async function CreatePage({
   const prefilledTitle = (query.title ?? "").slice(0, 80);
 
   return (
-    <div className="space-y-6">
+    <div className="page-canvas space-y-6">
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">Créer une affiche</h1>
         <p className="mt-2 text-slate-600">
-          Solde : <span className="font-semibold text-[#6D28D9]">{balance} Mint{balance > 1 ? "s" : ""}</span>
+          Solde : <span className="font-semibold text-violet">{balance} Mint{balance > 1 ? "s" : ""}</span>
           . 1 Mint = 1 affiche. Direction artistique + personne réelle + contrôle qualité inclus.
         </p>
       </div>

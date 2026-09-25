@@ -12,6 +12,7 @@ const envSchema = z.object({
   CLERK_SECRET_KEY: optionalString,
   DATABASE_URL: optionalString,
   RODIUMAI_API_KEY: optionalString,
+  RODIUM_API_KEY: optionalString,
   RODIUMAI_BASE_URL: z.preprocess(
     emptyToUndefined,
     z.string().url().default("https://api.rodiumai.io/v1"),
@@ -22,6 +23,7 @@ const envSchema = z.object({
   RODIUMAI_IMAGE_MODEL_PREMIUM: optionalString,
   RODIUMAI_IMAGE_MODEL_TEXT_HEAVY: optionalString,
   RODIUMAI_IMAGE_MODEL_IMAGE_EDIT: optionalString,
+  RODIUMAI_IMAGE_MODEL_REFERENCE_COPY: optionalString,
   RODIUMAI_ALLOWED_IMAGE_MODELS: optionalString,
   MONEY_FUSION_API_URL: optionalUrl,
   MONEY_FUSION_WEBHOOK_URL: optionalUrl,
@@ -37,7 +39,8 @@ export const env = envSchema.parse({
     process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY,
   CLERK_SECRET_KEY: process.env.CLERK_SECRET_KEY,
   DATABASE_URL: process.env.DATABASE_URL,
-  RODIUMAI_API_KEY: process.env.RODIUMAI_API_KEY,
+  RODIUMAI_API_KEY: process.env.RODIUMAI_API_KEY || process.env.RODIUM_API_KEY,
+  RODIUM_API_KEY: process.env.RODIUM_API_KEY || process.env.RODIUMAI_API_KEY,
   RODIUMAI_BASE_URL: process.env.RODIUMAI_BASE_URL,
   RODIUMAI_MODEL: process.env.RODIUMAI_MODEL,
   RODIUMAI_TEXT_MODEL: process.env.RODIUMAI_TEXT_MODEL,
@@ -45,6 +48,7 @@ export const env = envSchema.parse({
   RODIUMAI_IMAGE_MODEL_PREMIUM: process.env.RODIUMAI_IMAGE_MODEL_PREMIUM,
   RODIUMAI_IMAGE_MODEL_TEXT_HEAVY: process.env.RODIUMAI_IMAGE_MODEL_TEXT_HEAVY,
   RODIUMAI_IMAGE_MODEL_IMAGE_EDIT: process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT,
+  RODIUMAI_IMAGE_MODEL_REFERENCE_COPY: process.env.RODIUMAI_IMAGE_MODEL_REFERENCE_COPY,
   RODIUMAI_ALLOWED_IMAGE_MODELS: process.env.RODIUMAI_ALLOWED_IMAGE_MODELS,
   MONEY_FUSION_API_URL: process.env.MONEY_FUSION_API_URL,
   MONEY_FUSION_WEBHOOK_URL: process.env.MONEY_FUSION_WEBHOOK_URL,
@@ -62,6 +66,13 @@ export function getAdminPrivatePath() {
 
 export function getAdminBasePath() {
   return "/admin";
+}
+
+/** Prefer the provided `RODIUM_API_KEY` secret over the legacy `RODIUMAI_API_KEY` alias. */
+export function getRodiumApiKey() {
+  const provided = (process.env.RODIUM_API_KEY || "").trim();
+  if (provided) return provided;
+  return (env.RODIUM_API_KEY || env.RODIUMAI_API_KEY || "").trim();
 }
 
 export function getAllowedImageModels() {

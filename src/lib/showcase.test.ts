@@ -88,7 +88,7 @@ describe("showcase catalogue alignment", () => {
       expect(prompt).toMatch(/Maximum 2 type families/i);
       expect(prompt).toMatch(/Clear hierarchy/i);
       expect(prompt).toMatch(/Strong contrast/i);
-      expect(prompt).toMatch(/Do NOT copy or near-copy/i);
+      expect(prompt).toMatch(/Do NOT copy logos|Do NOT copy or near-copy/i);
       expect(buildShowcasePrompt(sheet, false)).toMatch(/Every visible word must be correctly spelled/i);
       expect(prompt).toContain(sheet.titre_affiche_finale);
       expect(prompt).toMatch(/photoreal human/i);
@@ -101,7 +101,9 @@ describe("showcase catalogue alignment", () => {
     const closet = SHOWCASE_SHEETS.find((sheet) => sheet.id === "mode-03");
     expect(ramen?.prompt).toMatch(/cook or diner|chopsticks|serving or tasting/i);
     expect(ramen?.prompt).toMatch(/Not a bowl alone/i);
-    expect(closet?.prompt).toMatch(/model belongs in the scene/i);
+    expect(closet?.sous_titre_affiche_finale).toBe("Élégance assumée");
+    expect(closet?.prompt).toMatch(/Élégance assumée/);
+    expect(closet?.prompt).not.toMatch(/Braced in beauty/);
     expect(closet?.prompt).toMatch(/Not a product grid without a person/i);
   });
 
@@ -114,17 +116,25 @@ describe("showcase catalogue alignment", () => {
     expect(landing.every((row) => row.fichier_image)).toBe(true);
     expect(pickAfterPoster(generated)?.id).toMatch(/restauration/);
     expect(posterForDomaine(generated, "Événementiel")?.id).toMatch(/evenementiel/);
+    expect(posterForDomaine(generated, "Entreprise")?.id).toMatch(/immobilier-business/);
+    expect(posterForDomaine(generated, "Formation")?.id).toMatch(/techno-education/);
+    expect(posterForDomaine(generated, "Mariage")).toBeUndefined();
   });
 
-  it("requests max poster size and GPT Image for client-facing posters", () => {
+  it("requests a bitmap-capable model, a measured 4K master, and a real web resize", () => {
     const script = readFileSync("scripts/generate-showcase.mts", "utf8");
+    const derivatives = readFileSync("src/lib/poster-derivatives.ts", "utf8");
     expect(script).toContain('|| "openai/gpt-image-2"');
-    expect(script).toContain("lanczos3");
+    expect(script).toContain("1024x1536");
+    expect(script).toContain("visualRefSent");
+    expect(script).toContain("ensureReferenceImage");
     expect(script).toContain("page_reference_pdf");
     expect(script).toContain("body.image");
-    expect(script).toContain("storage/masters");
     expect(script).toContain("isGptImageModel");
+    expect(script).toContain("storage/masters");
     expect(script).toContain("-master.webp");
+    expect(derivatives).toContain("lanczos3");
+    expect(derivatives).toContain("3840");
     expect(script).not.toContain("-4k.webp");
     expect(script).not.toContain("/chat/completions");
     expect(script).not.toContain('|| "openai/gpt-image-1"');

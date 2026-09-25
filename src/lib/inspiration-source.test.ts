@@ -5,6 +5,8 @@ import {
   formatInspirationForPrompt,
   pickInspirationAnalyses,
   publicArtDirection,
+  rankReferenceAnalyses,
+  referenceSlugsForBrief,
 } from "./inspiration-source";
 import { buildArtDirection, buildPrompt, createBriefSchema } from "./flyermint";
 
@@ -67,6 +69,61 @@ describe("inspiration source descriptions", () => {
     expect(prompt).toMatch(/Internal style library|style=appetissant/);
     expect(prompt).not.toMatch(/object\/public\/inspirations-source/);
     expect(JSON.stringify(ad)).not.toMatch(/storage\/v1\/object\/public/);
+  });
+
+  it("looks in the Formation folder when an Evenementiel brief is about a training", () => {
+    const slugs = referenceSlugsForBrief("Evenementiel", "Formation Place limité Réduction de 50%");
+    expect(slugs.own).toBe("evenementiel");
+    expect(slugs.inferred).toContain("education");
+    expect(referenceSlugsForBrief("Restauration", "Menu du weekend").inferred).toEqual([]);
+  });
+
+  it("ranks the reference closest to the brief first instead of the first id", () => {
+    const items = [
+      { id: "aaa", domaine: "evenementiel", visuel: "homme dansant avec des masques", textes: "titre doré", palette_dominante: [], style_general: "festif", arriere_plan: "sombre" },
+      { id: "zzz", domaine: "education", visuel: "jeune femme souriante tenant des dossiers", textes: "titre en haut, blocs d'informations", palette_dominante: [], style_general: "professionnel", arriere_plan: "clair" },
+    ];
+    const ranked = rankReferenceAnalyses(items, "Formation professionnelle dossiers", {
+      own: "evenementiel",
+      inferred: ["education"],
+      random: () => 0.5,
+    });
+    expect(ranked[0].id).toBe("zzz");
+  });
+
+  it("does not always reuse the same reference when scores tie", () => {
+    const items = ["a", "b", "c"].map((id) => ({
+      id, domaine: "sport", visuel: "", textes: "", palette_dominante: [], style_general: "", arriere_plan: "",
+    }));
+    const values = [0.9, 0.1, 0.5];
+    let i = 0;
+    const ranked = rankReferenceAnalyses(items, "", { random: () => values[i++] });
+    expect(ranked[0].id).toBe("b");
+  });
+
+  it("builds a copy-and-replace prompt when the reference bitmap is attached", () => {
+    const brief = createBriefSchema.parse({
+      visualType: "Affiche",
+      domain: "Evenementiel",
+      objective: "Attirer du monde",
+      targetAudience: "Jeunes",
+      title: "Formation",
+      date: "12 décembre",
+      price: "5000",
+      cta: "Réserve mtn",
+      format: "instagram_post",
+      colors: [],
+      adaptiveData: {},
+    });
+    const prompt = buildPrompt(brief, buildArtDirection(brief), { hasVisualRef: true });
+    expect(prompt).toMatch(/EDIT THE ATTACHED POSTER/);
+    expect(prompt).toMatch(/every font/);
+    expect(prompt).toMatch(/rectangles, slanted bands/);
+    expect(prompt).toMatch(/Keep the reference colors exactly/);
+    expect(prompt).toContain("Title: Formation");
+    expect(prompt).toContain("Date (exact): 12 décembre");
+    expect(prompt).not.toMatch(/Maximum 2-3 main colors/);
+    expect(prompt).not.toMatch(/#6D28D9|#10B981/);
   });
 
   it("exposes only a count of library refs to the client", () => {

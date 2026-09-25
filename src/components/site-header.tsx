@@ -41,22 +41,22 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
 
         <nav className="hidden items-center gap-6 text-sm text-slate-600 md:flex">
           {publicLinks.map((link) => (
-            <Link key={link.href} href={link.href} className="transition hover:text-[#6D28D9]">
+            <Link key={link.href} href={link.href} className="transition hover:text-violet">
               {link.label}
             </Link>
           ))}
           <SignedIn>
-            <Link href="/dashboard" className="transition hover:text-[#6D28D9]">
+            <Link href="/dashboard" className="transition hover:text-violet">
               Tableau de bord
             </Link>
-            <Link href="/history" className="transition hover:text-[#6D28D9]">
+            <Link href="/history" className="transition hover:text-violet">
               Historique
             </Link>
-            <Link href="/profile" className="transition hover:text-[#6D28D9]">
+            <Link href="/profile" className="transition hover:text-violet">
               Profil
             </Link>
             {showAdmin && adminHref ? (
-              <Link href={adminHref} className="transition hover:text-[#6D28D9]">
+              <Link href={adminHref} className="transition hover:text-violet">
                 Admin
               </Link>
             ) : null}
@@ -69,12 +69,12 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
           </SignedIn>
           <SignedOut>
             <SignInButton mode="modal">
-              <button type="button" className="transition hover:text-[#6D28D9]">
+              <button type="button" className="transition hover:text-violet">
                 Connexion
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
-              <button type="button" className="transition hover:text-[#6D28D9]">
+              <button type="button" className="transition hover:text-violet">
                 Inscription
               </button>
             </SignUpButton>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/chrome/public-chrome";
+import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,8 +13,12 @@ export const metadata: Metadata = {
   description:
     "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
   icons: {
-    icon: "/logo-mark.svg",
-    apple: "/logo-mark.svg",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32", type: "image/x-icon" },
+      { url: "/logo-mark.svg", type: "image/svg+xml" },
+    ],
+    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
+    shortcut: ["/favicon.ico"],
   },
   openGraph: {
     title: "FlyerMint — Créez des visuels qui marquent",
@@ -34,11 +39,15 @@ export const dynamic = "force-dynamic";
 
 const clerkAppearance = {
   variables: {
-    colorPrimary: "#6D28D9",
-    colorText: "#1E293B",
-    colorBackground: "#FFFFFF",
+    colorPrimary: BRAND.colors.violet,
+    colorText: BRAND.colors.night,
+    colorBackground: BRAND.colors.white,
     borderRadius: "0.9rem",
     fontFamily: "Plus Jakarta Sans, sans-serif",
+  },
+  elements: {
+    footer: "clerk-hide",
+    badge: "clerk-hide",
   },
 };
 

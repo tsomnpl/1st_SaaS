@@ -34,7 +34,7 @@ export default async function AdminUserDetailPage({ params }: { params: Params }
 
   return (
     <div className="space-y-6">
-      <Link href={`${getAdminBasePath()}/users`} className="text-sm text-[#6D28D9]">
+      <Link href={`${getAdminBasePath()}/users`} className="text-sm text-violet">
         ← Utilisateurs
       </Link>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -89,7 +89,7 @@ export default async function AdminUserDetailPage({ params }: { params: Params }
         <h2 className="font-bold">Paiements</h2>
         <div className="mt-3 space-y-2 text-sm">
           {user.payments.map((payment) => (
-            <Link key={payment.id} href={`${getAdminBasePath()}/payments/${payment.id}`} className="block hover:text-[#6D28D9]">
+            <Link key={payment.id} href={`${getAdminBasePath()}/payments/${payment.id}`} className="block hover:text-violet">
               {payment.plan.name} · {payment.amountFcfa.toLocaleString("fr-FR")} FCFA · {payment.status} · {payment.orderId}
             </Link>
           ))}

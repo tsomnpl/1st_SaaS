@@ -11,7 +11,7 @@ export default async function PaymentSuccessPage({
 
   return (
     <div className="card mx-auto max-w-2xl space-y-4 p-6">
-      <h1 className="text-2xl font-extrabold text-[#10B981]">Paiement reçu</h1>
+      <h1 className="text-2xl font-extrabold text-mint">Paiement reçu</h1>
       <p className="text-slate-600">
         Merci. Tes Mints seront crédités automatiquement dès que le paiement est confirmé
         par Money Fusion. Cette page n’est pas une preuve de paiement.

@@ -2,6 +2,11 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { SHOWCASE_SHEETS } from "../src/lib/showcase-sheets.ts";
 import { buildShowcasePrompt, referenceCategorisation } from "../src/lib/showcase-design.ts";
+import { MASTER_LONG_SIDE, writePosterDerivatives } from "../src/lib/poster-derivatives.ts";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 const OUT_DIR = path.join(ROOT, "public/creations");
@@ -12,9 +17,9 @@ const MANIFEST = path.join(ROOT, "docs/inspirations/showcase-manifest.json");
 const CATALOGUE = path.join(ROOT, "docs/inspirations/catalogue-extrait.json");
 const PAGE_MAP = path.join(ROOT, "docs/inspirations/reference-page-map.json");
 const REF_CATALOG = path.join(ROOT, "docs/inspirations/references-catalog.json");
-const MASTER_SIZE = "1024x1536";
+const MODEL_REQUEST_SIZE = "1024x1536";
 const FALLBACK_SIZE = "1024x1536";
-const MASTER_LABEL = "1024x1536 (max portrait for GPT Image 2 — not 4K)";
+const MASTER_LABEL = `master long side ${MASTER_LONG_SIDE}px after measured lanczos3 upscale; model request ${MODEL_REQUEST_SIZE}`;
 const FORCE_REGEN = process.env.FORCE_REGEN === "1";
 const FORCE_REGEN_ALL = process.env.FORCE_REGEN === "all";
 const ONLY_IDS = new Set(
@@ -116,9 +121,11 @@ async function callRodium(params: {
     n: 1,
     size: params.size,
   };
-  const gemini = params.model.toLowerCase().includes("gemini");
+  const gemini = !isGptImageModel(params.model);
+  let imageAttached = false;
   if (gemini && params.referenceDataUrl) {
     body.image = params.referenceDataUrl;
+    imageAttached = true;
   }
 
   let lastError = "RODIUM_IMAGES_FAILED";
@@ -134,7 +141,12 @@ async function callRodium(params: {
       const first = data.data?.[0];
       const url = first?.url || (first?.b64_json ? `data:image/png;base64,${first.b64_json}` : "");
       if (!url) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-      return { url, tokens: data.usage?.total_tokens ?? 0, model: data.model ?? params.model };
+      return {
+        url,
+        tokens: data.usage?.total_tokens ?? 0,
+        model: data.model ?? params.model,
+        visualRefSent: imageAttached,
+      };
     }
     lastError = `RODIUM_IMAGES_${response.status}_${shortErrorBody(raw)}`;
     if (raw.includes("insufficient_balance") || raw.includes("insufficient_quota")) {
@@ -160,47 +172,39 @@ async function loadImageBuffer(url: string) {
   return Buffer.from(await response.arrayBuffer());
 }
 
-async function writeMasterAndWeb(buffer: Buffer, id: string) {
-  const sharp = (await import("sharp")).default;
-  const meta = await sharp(buffer).metadata();
-  const masterPath = path.join(MASTER_DIR, `${id}-master.webp`);
-  const webPath = path.join(WEB_DIR, `${id}.webp`);
-  const publicPath = path.join(OUT_DIR, `${id}.webp`);
-  const heroPath = path.join(HERO_DIR, `${id}.webp`);
-
-  const master = await sharp(buffer).rotate().webp({ quality: 90 }).toBuffer();
-  await writeFile(masterPath, master);
-
-  let quality = 85;
-  let web = await sharp(buffer)
-    .rotate()
-    .resize({ width: 1600, withoutEnlargement: true, kernel: "lanczos3" })
-    .webp({ quality })
-    .toBuffer();
-  while (web.length > 1_500_000 && quality > 70) {
-    quality -= 5;
-    web = await sharp(buffer)
-      .rotate()
-      .resize({ width: 1600, withoutEnlargement: true, kernel: "lanczos3" })
-      .webp({ quality })
-      .toBuffer();
+async function ensureReferenceImage(id: string, page: number | null, localPath?: string) {
+  if (localPath) {
+    try {
+      await readFile(path.join(ROOT, localPath));
+      return localPath;
+    } catch {
+      // The mapped jpeg is not on disk; render the PDF page below.
+    }
   }
-  await writeFile(webPath, web);
-  await writeFile(publicPath, web);
-  await sharp(buffer)
-    .rotate()
-    .resize({ width: 640, withoutEnlargement: true, kernel: "lanczos3" })
-    .webp({ quality: 82 })
-    .toFile(heroPath);
+  if (!page) return "";
+  const rel = path.join("storage/private/ref-pages", `${id}-p${page}.jpg`);
+  const dest = path.join(ROOT, rel);
+  await mkdir(path.dirname(dest), { recursive: true });
+  const pdf = path.join(ROOT, "docs/inspirations/references.pdf");
+  const py = [
+    "import pymupdf, sys",
+    "doc = pymupdf.open(sys.argv[1])",
+    "page = doc[int(sys.argv[2]) - 1]",
+    "pix = page.get_pixmap(matrix=pymupdf.Matrix(1.6, 1.6))",
+    "pix.save(sys.argv[3], jpg_quality=82)",
+  ].join("\n");
+  await execFileAsync("python3", ["-c", py, pdf, String(page), dest]);
+  return rel;
+}
 
-  const webMeta = await sharp(web).metadata();
-  return {
-    masterWidth: meta.width ?? 0,
-    masterHeight: meta.height ?? 0,
-    webWidth: webMeta.width ?? 0,
-    webHeight: webMeta.height ?? 0,
-    webBytes: web.length,
-  };
+async function writeMasterAndWeb(buffer: Buffer, id: string) {
+  return writePosterDerivatives({
+    buffer,
+    masterPath: path.join(MASTER_DIR, `${id}-master.webp`),
+    webPath: path.join(WEB_DIR, `${id}.webp`),
+    publicPath: path.join(OUT_DIR, `${id}.webp`),
+    heroPath: path.join(HERO_DIR, `${id}.webp`),
+  });
 }
 
 function isGptImageModel(model: unknown) {
@@ -253,7 +257,6 @@ async function persistOutputs(
   }
   for (const row of merged) {
     row.hero_loop = loop.includes(String(row.id));
-    if (row.fichier_image_master) row.master_size = MASTER_SIZE;
   }
 
   const catalog = {
@@ -276,12 +279,12 @@ async function persistOutputs(
     generated_at: new Date().toISOString(),
     count: merged.length,
     rodi_total: Number(merged.reduce((sum, row) => sum + Number(row.cout_rodi ?? 0), 0).toFixed(3)),
-    master_size_requested: MASTER_SIZE,
+    master_size_requested: MODEL_REQUEST_SIZE,
     master_size_note: MASTER_LABEL,
     hero_loop_count: loop.length,
     note:
       extra.note ??
-      "Hero loop uses OpenAI GPT Image 2 (readable text). openai/gpt-image-1 returns Rodium 500. Gallery fills may keep Gemini when the wallet cannot cover 27 GPT posters. Master files are 1024x1536 (model max portrait), not 4K.",
+      "Visual references are PDF page rasters sent only to a model that accepts a bitmap. visual_ref_used is true only after that send succeeds. Masters are upscaled with sharp lanczos3 until the long side is at least 3840px, then the web file is a smaller derivative.",
     fiches: merged,
   };
   await writeFile(MANIFEST, `${JSON.stringify(manifest, null, 2)}\n`);
@@ -291,7 +294,7 @@ async function persistOutputs(
 async function main() {
   await loadLocalEnv();
   const baseUrl = process.env.RODIUMAI_BASE_URL?.trim() || "https://api.rodiumai.io/v1";
-  const apiKey = process.env.RODIUMAI_API_KEY?.trim() || "";
+  const apiKey = process.env.RODIUM_API_KEY?.trim() || process.env.RODIUMAI_API_KEY?.trim() || "";
   const gpt = process.env.RODIUMAI_IMAGE_MODEL_PREMIUM?.trim() || "openai/gpt-image-2";
   const geminiFast = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
   const geminiPremium = process.env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
@@ -323,12 +326,12 @@ async function main() {
     const walletResponse = await fetch(`${baseUrl}/wallet`, { headers: rodiumHeaders(apiKey) });
     if (walletResponse.ok) {
       const wallet = (await walletResponse.json()) as { balance_rodi?: string };
-      console.log("wallet", wallet.balance_rodi, "RODI", "hero_model", gpt, "fill_model", geminiFast, "size", MASTER_SIZE);
+      console.log("wallet", wallet.balance_rodi, "RODI", "ref_model", geminiFast, "text_model", gpt, "request", MODEL_REQUEST_SIZE, "master", MASTER_LONG_SIDE);
     } else {
-      console.log("wallet_status", walletResponse.status, "hero_model", gpt, "size", MASTER_SIZE);
+      console.log("wallet_status", walletResponse.status, "ref_model", geminiFast, "request", MODEL_REQUEST_SIZE);
     }
   } catch {
-    console.log("wallet_unavailable", "hero_model", gpt, "size", MASTER_SIZE);
+    console.log("wallet_unavailable", "ref_model", geminiFast, "request", MODEL_REQUEST_SIZE);
   }
 
   let existing: { fiches?: Array<Record<string, unknown>> } = {};
@@ -348,23 +351,21 @@ async function main() {
     const mapRow = pageMap.fiches.find((row) => row.id === sheet.id);
     const previous = existing.fiches?.find((row) => row.id === sheet.id);
     const hero = HERO_IDS.includes(sheet.id);
-    const model = gpt;
+    const pageRef = mapRow?.page_reference_pdf ?? null;
     if (ONLY_IDS.size && !ONLY_IDS.has(sheet.id)) {
       if (previous) fiches.push(previous);
       continue;
     }
-    const attachBitmap = model.toLowerCase().includes("gemini") && Boolean(mapRow?.local_ref_path);
-    const prompt = buildShowcasePrompt(sheet, attachBitmap);
     const categorisation = referenceCategorisation(sheet);
-    const pageRef = mapRow?.page_reference_pdf ?? null;
+    const promptForSkip = buildShowcasePrompt(sheet, false);
 
     if (previous && shouldSkipPrevious(previous, sheet.id)) {
       fiches.push({
         ...previous,
-        prompt_image_final: prompt,
+        prompt_image_final: typeof previous.prompt_image_final === "string" ? previous.prompt_image_final : promptForSkip,
         page_reference_pdf: pageRef,
         modele_image_utilise: previous.modele_image_utilise,
-        visual_ref_used: false,
+        visual_ref_used: previous.visual_ref_used === true,
         regles_design_appliquees: [
           "palette limitée 2-3 couleurs",
           "2 familles typographiques max",
@@ -381,16 +382,21 @@ async function main() {
       continue;
     }
 
+    const refPath = await ensureReferenceImage(sheet.id, pageRef, mapRow?.local_ref_path || undefined);
+    const reference = refPath ? await referenceDataUrl(refPath) : "";
+    const model = reference ? geminiFast : gpt;
+    const attachBitmap = Boolean(reference) && !isGptImageModel(model);
+    const prompt = buildShowcasePrompt(sheet, attachBitmap);
+
     try {
-      const reference = attachBitmap ? await referenceDataUrl(mapRow?.local_ref_path) : "";
-      console.log("gen", sheet.id, model, hero ? "hero" : "fill");
+      console.log("gen", sheet.id, model, attachBitmap ? "ref" : "text", hero ? "hero" : "fill");
       const result = await callRodium({
         baseUrl,
         apiKey,
         model,
         prompt,
-        referenceDataUrl: reference,
-        size: MASTER_SIZE,
+        referenceDataUrl: attachBitmap ? reference : "",
+        size: MODEL_REQUEST_SIZE,
       });
       const buffer = await loadImageBuffer(result.url);
       const dims = await writeMasterAndWeb(buffer, sheet.id);
@@ -415,9 +421,10 @@ async function main() {
         modele_image_utilise: result.model,
         cout_rodi: estimateRodi(result.model, result.tokens),
         fichier_image_master: `storage/masters/${sheet.id}-master.webp`,
-        master_size: MASTER_SIZE,
+        master_size: `${dims.masterWidth}x${dims.masterHeight}`,
         master_width: dims.masterWidth,
         master_height: dims.masterHeight,
+        is_4k: dims.is4k,
         fichier_image_web: `/creations/${sheet.id}.webp`,
         fichier_image: `/creations/${sheet.id}.webp`,
         fichier_image_hero: `/creations/hero/${sheet.id}.webp`,
@@ -425,9 +432,9 @@ async function main() {
         poids_ko: Number((dims.webBytes / 1024).toFixed(1)),
         web_width: dims.webWidth,
         web_height: dims.webHeight,
-        resize: "sharp lanczos3 width<=1600 webp q85",
+        resize: dims.resize,
         page_reference_pdf: pageRef,
-        visual_ref_used: Boolean(reference),
+        visual_ref_used: result.visualRefSent === true,
         reference_categorisation: categorisation,
         statut: "genere",
         hero_loop: false,
@@ -468,14 +475,15 @@ async function main() {
       const insufficient = error instanceof Error && error.message.includes("RODIUM_INSUFFICIENT_BALANCE");
       if (insufficient && hero && !model.toLowerCase().includes("gemini")) {
         try {
-          console.log("fallback", sheet.id, geminiFast);
+          console.log("fallback", sheet.id, geminiPremium);
+          const fallbackPrompt = buildShowcasePrompt(sheet, attachBitmap);
           const fallback = await callRodium({
             baseUrl,
             apiKey,
-            model: geminiFast,
-            prompt: buildShowcasePrompt(sheet, Boolean(mapRow?.local_ref_path)),
-            referenceDataUrl: mapRow?.local_ref_path ? await referenceDataUrl(mapRow.local_ref_path) : "",
-            size: MASTER_SIZE,
+            model: geminiPremium,
+            prompt: fallbackPrompt,
+            referenceDataUrl: attachBitmap ? reference : "",
+            size: MODEL_REQUEST_SIZE,
           });
           const buffer = await loadImageBuffer(fallback.url);
           const dims = await writeMasterAndWeb(buffer, sheet.id);
@@ -486,7 +494,7 @@ async function main() {
             titre_original_catalogue: sheet.titre_original_catalogue,
             titre_affiche_finale: sheet.titre_affiche_finale,
             sous_titre_affiche_finale: sheet.sous_titre_affiche_finale,
-            prompt_image_final: buildShowcasePrompt(sheet, Boolean(mapRow?.local_ref_path)),
+            prompt_image_final: fallbackPrompt,
             regles_design_appliquees: [
               "palette limitée 2-3 couleurs",
               "2 familles typographiques max",
@@ -501,9 +509,10 @@ async function main() {
             modele_image_utilise: fallback.model,
             cout_rodi: estimateRodi(fallback.model, fallback.tokens),
             fichier_image_master: `storage/masters/${sheet.id}-master.webp`,
-        master_size: MASTER_SIZE,
+            master_size: `${dims.masterWidth}x${dims.masterHeight}`,
             master_width: dims.masterWidth,
             master_height: dims.masterHeight,
+            is_4k: dims.is4k,
             fichier_image_web: `/creations/${sheet.id}.webp`,
             fichier_image: `/creations/${sheet.id}.webp`,
             fichier_image_hero: `/creations/hero/${sheet.id}.webp`,
@@ -511,9 +520,9 @@ async function main() {
             poids_ko: Number((dims.webBytes / 1024).toFixed(1)),
             web_width: dims.webWidth,
             web_height: dims.webHeight,
-            resize: "sharp lanczos3 width<=1600 webp q85",
+            resize: dims.resize,
             page_reference_pdf: pageRef,
-            visual_ref_used: Boolean(mapRow?.local_ref_path),
+            visual_ref_used: fallback.visualRefSent === true,
             reference_categorisation: categorisation,
             statut: "genere",
             hero_loop: false,
