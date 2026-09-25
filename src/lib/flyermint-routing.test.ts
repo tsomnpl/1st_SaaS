@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { isLikelyImageModel, selectImageModel, sizeForFormat } from "@/server/rodium";
+import { isLikelyImageModel, selectImageModel, selectReferenceCopyModel, sizeForFormat } from "@/server/rodium";
 import { classifyPaymentStatus } from "@/server/payments";
 import { paidPlans } from "@/lib/plans";
 
@@ -36,6 +36,29 @@ describe("image model routing", () => {
       ["openai/gpt-5", "openai/gpt-image-2", "google/gemini-3.1-flash-image"],
     );
     expect(model).toBe("openai/gpt-image-2");
+  });
+
+  it("copies a reference with a bitmap-editing model, never lite or GPT image", () => {
+    const model = selectImageModel(
+      {
+        visualType: "Affiche",
+        domain: "Evenementiel",
+        objective: "Attirer",
+        targetAudience: "Public",
+        title: "Formation",
+        format: "instagram_post",
+        creativeFreedom: "liberte_guidee",
+        colors: [],
+        adaptiveData: {},
+      } as unknown as CreateBriefInput,
+      "copy",
+      ["openai/gpt-image-2", "google/gemini-3.1-flash-lite-image", "google/gemini-3-pro-image"],
+      { prefersBitmap: true, referenceCopy: true },
+    );
+    expect(model).toBe("google/gemini-3-pro-image");
+    expect(selectReferenceCopyModel(["openai/gpt-image-2", "google/gemini-3.1-flash-lite-image", "google/gemini-3.1-flash-image"])).toBe(
+      "google/gemini-3.1-flash-image",
+    );
   });
 });
 

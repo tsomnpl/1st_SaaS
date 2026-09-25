@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
+import {
+  GLOBAL_DESIGN_PROMPT,
+  REFERENCE_COPY_PROMPT,
+  STYLE_INSPIRATION_TEXT,
+} from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 import { catalogueStyleNotesFor } from "@/lib/catalogue-refs";
@@ -190,10 +194,14 @@ export function buildPrompt(
       .map(([key, value]) => `${key}: ${value}`),
   ].filter(Boolean);
 
+  if (options.hasVisualRef) {
+    return buildReferenceCopyPrompt(input, facts as string[]);
+  }
+
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
-    options.hasVisualRef ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
+    STYLE_INSPIRATION_TEXT,
     options.creativeDna ? formatCreativeDnaForPrompt(options.creativeDna) : "",
     GLOBAL_DESIGN_PROMPT,
     `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
@@ -212,6 +220,27 @@ export function buildPrompt(
     `Avoid: ${ad.avoid.join("; ")}.`,
     "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
     "If it would not be publishable by a real local business, it is a failure.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+function buildReferenceCopyPrompt(input: CreateBriefInput, facts: string[]) {
+  return [
+    REFERENCE_COPY_PROMPT,
+    "CLIENT TEXT TO WRITE (exact spelling, nothing else):",
+    `Title: ${input.title}`,
+    ...facts,
+    input.cta ? `CTA: ${input.cta}` : "",
+    input.colors.length
+      ? `Client colors ${input.colors.slice(0, 3).join(", ")}: apply them only to the elements that carry the accent color in the reference. Keep every other color as in the reference.`
+      : "Keep the reference colors exactly.",
+    input.mainImageUrl
+      ? "The client supplied a photo: use that person in place of the main person of the reference, same pose, framing and lighting."
+      : "",
+    input.logoUrl ? "The client supplied a logo: place it in the reference logo spot, small and sharp." : "",
+    `Output format: ${input.format}.`,
+    "Keep every photoreal person of the reference in place (new faces only). Do not invent business details.",
   ]
     .filter(Boolean)
     .join("\n");

@@ -45,12 +45,38 @@ export function isLikelyImageModel(modelId: string) {
   return IMAGE_MODEL_HINTS.some((hint) => id.includes(hint));
 }
 
+export function acceptsBitmapInput(modelId: string) {
+  return !modelId.toLowerCase().includes("gpt-image");
+}
+
+/** Reference copy needs a model that edits the attached poster; lite and GPT image models redraw from scratch. */
+export function selectReferenceCopyModel(available: string[] = []) {
+  const candidates = [
+    env.RODIUMAI_IMAGE_MODEL_REFERENCE_COPY?.trim(),
+    "google/gemini-3-pro-image",
+    "google/gemini-3-pro-image-preview",
+    env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim(),
+    "google/gemini-3.1-flash-image",
+  ].filter((id): id is string => Boolean(id));
+  const allowed = getAllowedImageModels();
+  const usable = (id: string) =>
+    acceptsBitmapInput(id) &&
+    !id.toLowerCase().includes("lite") &&
+    (allowed.length === 0 || allowed.includes(id));
+  if (available.length === 0) return candidates.find(usable) ?? null;
+  return candidates.find((id) => usable(id) && available.includes(id)) ?? null;
+}
+
 export function selectImageModel(
   brief: CreateBriefInput,
   finalPrompt: string,
   available: string[] = [],
-  options: { prefersBitmap?: boolean } = {},
+  options: { prefersBitmap?: boolean; referenceCopy?: boolean } = {},
 ) {
+  if (options.referenceCopy) {
+    const copyModel = selectReferenceCopyModel(available);
+    if (copyModel) return copyModel;
+  }
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();
   const textHeavyFields = [
@@ -155,7 +181,10 @@ export async function generateWithRodium(input: {
 
   const available = await listRodiumImageModels();
   const prefersBitmap = Boolean(input.styleReferenceDataUrl || input.brief.mainImageUrl || input.brief.logoUrl);
-  const imageModel = selectImageModel(input.brief, input.prompt, available, { prefersBitmap });
+  const imageModel = selectImageModel(input.brief, input.prompt, available, {
+    prefersBitmap,
+    referenceCopy: Boolean(input.styleReferenceDataUrl),
+  });
   const render = await renderImage({
     model: imageModel,
     prompt: input.prompt,
@@ -198,7 +227,7 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const acceptsBitmap = !params.model.toLowerCase().includes("gpt-image");
+  const acceptsBitmap = acceptsBitmapInput(params.model);
   let visualRefSent = false;
   const styleRef = params.styleReferenceDataUrl;
   const clientRef = params.brief.mainImageUrl || params.brief.logoUrl;
@@ -258,7 +287,7 @@ function textFromChat(data: RodiumResponse) {
   return "";
 }
 
-export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
+export async function reviewPosterQuality(input: { imageUrl: string; prompt: string; referenceDataUrl?: string }) {
   if (!getRodiumApiKey()) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
   try {
@@ -272,6 +301,13 @@ export async function reviewPosterQuality(input: { imageUrl: string; prompt: str
             role: "user",
             content: [
               { type: "text", text: input.prompt },
+              ...(input.referenceDataUrl
+                ? [
+                    { type: "text", text: "Image 1: the REFERENCE poster." },
+                    { type: "image_url", image_url: { url: input.referenceDataUrl } },
+                    { type: "text", text: "Image 2: the RESULT to check." },
+                  ]
+                : []),
               { type: "image_url", image_url: { url: input.imageUrl } },
             ],
           },

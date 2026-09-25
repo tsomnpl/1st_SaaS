@@ -14,6 +14,7 @@ import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 import {
+  briefSubjectText,
   loadDomainInspirationAnalyses,
   loadVisualReferenceForDomain,
 } from "@/lib/inspiration-source";
@@ -39,7 +40,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const [library, visualReference] = await Promise.all([
     loadDomainInspirationAnalyses(brief.domain, 3),
     Promise.race([
-      loadVisualReferenceForDomain(brief.domain),
+      loadVisualReferenceForDomain(brief.domain, briefSubjectText(brief)),
       new Promise<null>((resolve) => setTimeout(() => resolve(null), 8_000)),
     ]),
   ]);
@@ -94,15 +95,18 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     let qc = skippedQcReport();
     let repaired = false;
     let visualRefUsed = first.visualRefSent === true;
+    const referenceCopy = visualRefUsed;
+    const referenceDataUrl = referenceCopy ? visualReference?.dataUrl : undefined;
 
     const qcRaw = await reviewPosterQuality({
       imageUrl,
-      prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+      prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), { referenceCopy }),
+      referenceDataUrl,
     });
     if (qcRaw) {
       qc = parseQcReport(qcRaw);
       if (shouldRepair(qc)) {
-        prompt = applyRepair(prompt, qc);
+        prompt = applyRepair(prompt, qc, { referenceCopy });
         const second = await generateWithRodium({
           prompt,
           brief,
@@ -116,7 +120,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           visualRefUsed = visualRefUsed || second.visualRefSent === true;
           const secondQc = await reviewPosterQuality({
             imageUrl,
-            prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+            prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), { referenceCopy }),
+            referenceDataUrl,
           });
           if (secondQc) qc = parseQcReport(secondQc);
         }

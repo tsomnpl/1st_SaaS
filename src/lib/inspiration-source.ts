@@ -173,15 +173,102 @@ export async function countInspirationSourceRows() {
   return Number.isFinite(total) ? total : 0;
 }
 
-/** Fetch one real Supabase bitmap for a domain and mark it usable for Rodium image models. */
-export async function loadVisualReferenceForDomain(domain: string): Promise<VisualReference | null> {
-  const config = supabaseConfig();
-  const slug = slugForDomain(domain);
-  if (!config || !slug) return null;
+const SUBJECT_SLUGS: Array<{ slug: string; pattern: RegExp }> = [
+  { slug: "education", pattern: /\b(formation|formations|cours|atelier|masterclass|seminaire|webinaire|ecole|inscription|etudiant|coaching|bootcamp)\b/ },
+  { slug: "emploi", pattern: /\b(recrutement|recrute|emploi|stage|job|candidature|poste)\b/ },
+  { slug: "musique", pattern: /\b(concert|album|showcase|single|dj|festival)\b/ },
+  { slug: "religion-culture", pattern: /\b(eglise|culte|priere|veillee|croisade|ministere|prophete|pasteur|adoration)\b/ },
+  { slug: "restauration", pattern: /\b(menu|restaurant|burger|pizza|plat|livraison repas)\b/ },
+  { slug: "mariage", pattern: /\b(mariage|wedding|fiancailles)\b/ },
+  { slug: "anniversaire", pattern: /\b(anniversaire|birthday)\b/ },
+  { slug: "sport", pattern: /\b(match|tournoi|marathon|fitness|gym)\b/ },
+  { slug: "beaute", pattern: /\b(spa|coiffure|salon|onglerie|maquillage|soins)\b/ },
+  { slug: "immobilier", pattern: /\b(appartement|villa|terrain|location|immobilier)\b/ },
+];
 
-  const analyses = await loadDomainIndex(slug);
+const STOPWORDS = new Set([
+  "avec", "pour", "dans", "des", "les", "une", "sur", "par", "plus", "tres", "sans", "entre", "vers", "leur", "cette", "votre", "notre",
+]);
+
+function normalizeText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function tokens(value: string) {
+  return new Set(
+    normalizeText(value)
+      .split(/[^a-z0-9]+/)
+      .filter((word) => word.length >= 4 && !STOPWORDS.has(word)),
+  );
+}
+
+/** Domain folders worth searching: the chosen domain plus any folder the brief subject clearly points to. */
+export function referenceSlugsForBrief(domain: string, subject: string) {
+  const own = slugForDomain(domain);
+  const text = normalizeText(subject);
+  const inferred = SUBJECT_SLUGS.filter((row) => row.pattern.test(text)).map((row) => row.slug);
+  return { own, inferred: inferred.filter((slug) => slug !== own) };
+}
+
+/** Rank reference analyses by closeness to the brief; ties are shuffled so one poster is not reused forever. */
+export function rankReferenceAnalyses(
+  items: InspirationAnalysis[],
+  briefText: string,
+  options: { own?: string | null; inferred?: string[]; random?: () => number } = {},
+) {
+  const wanted = tokens(briefText);
+  const random = options.random ?? Math.random;
+  return items
+    .map((item) => {
+      const words = tokens(`${item.visuel} ${item.textes} ${item.style_general} ${item.arriere_plan}`);
+      let score = 0;
+      for (const word of wanted) if (words.has(word)) score += 1;
+      if (options.inferred?.includes(item.domaine)) score += 3;
+      if (item.domaine === options.own) score += 1;
+      return { item, score, tie: random() };
+    })
+    .sort((a, b) => b.score - a.score || a.tie - b.tie)
+    .map((row) => row.item);
+}
+
+export function briefSubjectText(brief: {
+  title: string;
+  subtitle?: string;
+  description?: string;
+  objective?: string;
+  visualType?: string;
+  targetAudience?: string;
+  adaptiveData?: Record<string, string>;
+}) {
+  return [
+    brief.title,
+    brief.subtitle,
+    brief.description,
+    brief.objective,
+    brief.visualType,
+    brief.targetAudience,
+    ...Object.entries(brief.adaptiveData ?? {}).flatMap(([key, value]) => (value ? [key, value] : [])),
+  ]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/** Fetch the real Supabase bitmap closest to the brief and mark it usable for Rodium image models. */
+export async function loadVisualReferenceForDomain(
+  domain: string,
+  briefText = "",
+): Promise<VisualReference | null> {
+  const config = supabaseConfig();
+  const { own, inferred } = referenceSlugsForBrief(domain, briefText);
+  const slugs = [...inferred, ...(own ? [own] : [])];
+  if (!config || slugs.length === 0) return null;
+
+  const analyses = (await Promise.all(slugs.map((slug) => loadDomainIndex(slug)))).flat();
   const response = await fetch(
-    `${config.url}/rest/v1/inspiration_source?domaine=eq.${encodeURIComponent(slug)}&select=id,domaine,storage_path&limit=12`,
+    `${config.url}/rest/v1/inspiration_source?domaine=in.(${slugs.map(encodeURIComponent).join(",")})&select=id,domaine,storage_path&limit=200`,
     {
       headers: {
         apikey: config.key,
@@ -194,8 +281,13 @@ export async function loadVisualReferenceForDomain(domain: string): Promise<Visu
   const rows = (await response.json()) as Array<{ id: string; domaine: string; storage_path: string }>;
   if (!Array.isArray(rows) || rows.length === 0) return null;
 
-  const preferred = analyses[0] ? rows.find((row) => row.id === analyses[0].id) : null;
-  const ordered = preferred ? [preferred, ...rows.filter((row) => row.id !== preferred.id)] : rows;
+  const ranked = rankReferenceAnalyses(analyses, briefText, { own, inferred });
+  const byId = new Map(rows.map((row) => [row.id, row]));
+  const rankedRows = ranked.flatMap((item) => {
+    const row = byId.get(item.id);
+    return row ? [row] : [];
+  });
+  const ordered = [...rankedRows, ...rows.filter((row) => !rankedRows.includes(row))];
 
   for (const row of ordered) {
     const dataUrl = await downloadStorageObject(row.storage_path);
