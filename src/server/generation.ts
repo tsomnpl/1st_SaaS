@@ -98,6 +98,21 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       personalReference: Boolean(personalUrl),
     });
     const layoutPlan = buildLayoutPlan(brief, referenceAnalysis);
+    console.info(
+      "[generation:selection]",
+      generation.id,
+      JSON.stringify({
+        domain: brief.domain,
+        domainKey: visual.domainKey || null,
+        mode: brief.referenceMode,
+        referenceType,
+        referencePath: personalUrl ? "personal" : visual.storagePath || null,
+        reason: personalUrl ? "personal" : visual.selection?.reason ?? null,
+        candidates: visual.selection?.candidates ?? 0,
+        analyzed: visual.selection?.analyzed ?? 0,
+        personalReferenceRejected,
+      }),
+    );
     let imageUrl = "";
     let model = "pending";
     let rodiCost = 0;

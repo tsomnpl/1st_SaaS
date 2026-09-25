@@ -8,7 +8,13 @@ import {
   REFERENCE_INSPIRATION_PROMPT,
   STYLE_INSPIRATION_TEXT,
 } from "@/lib/design-rules";
-import { buildLayoutPlan, layoutPlanLines, slotMapping, type ReferenceAnalysis } from "@/lib/reference-selection";
+import {
+  buildLayoutPlan,
+  layoutPlanLines,
+  slotMapping,
+  unplacedClientText,
+  type ReferenceAnalysis,
+} from "@/lib/reference-selection";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
@@ -300,6 +306,10 @@ export function adaptiveFacts(input: CreateBriefInput) {
     .map(([key, value]) => `${labels.get(key) ?? key} (exact value, write the value only): ${value.trim()}`);
 }
 
+function withHeading(heading: string, lines: string[]) {
+  return lines.length ? [heading, ...lines] : [];
+}
+
 function buildReferencePrompt(input: CreateBriefInput, facts: string[], analysis: ReferenceAnalysis | null, personal: boolean) {
   const plan = layoutPlanLines(buildLayoutPlan(input, analysis));
   const colors = input.colors.length
@@ -316,8 +326,10 @@ function buildReferencePrompt(input: CreateBriefInput, facts: string[], analysis
       ...plan,
       "SLOT BY SLOT (each client value goes where the equivalent information is on the reference):",
       ...slotMapping(input, analysis),
-      "Other client text (write in the closest matching slot, exact spelling):",
-      ...facts,
+      ...withHeading(
+        "Client text with no matching slot on the reference: write it in the closest equivalent spot (e.g. a CTA inside the contact band), same style as the nearby original text, without adding a new block:",
+        [...unplacedClientText(input, analysis), ...(analysis?.textSlots.includes("bullets") ? [] : adaptiveFacts(input))],
+      ),
       colors,
       ...assets,
       `Output format: ${input.format}.`,

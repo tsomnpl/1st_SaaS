@@ -261,6 +261,15 @@ export function slotMapping(brief: CreateBriefInput, analysis: ReferenceAnalysis
   });
 }
 
+/** Client values the reference has no slot for: they must still appear, in the closest equivalent spot. */
+export function unplacedClientText(brief: CreateBriefInput, analysis: ReferenceAnalysis | null) {
+  const slots = new Set<TextSlot>(analysis?.textSlots.length ? analysis.textSlots : ["title", "subtitle", "date", "time", "price", "location", "phone", "cta", "logo"]);
+  return TEXT_SLOTS.filter((slot) => slot !== "logo" && slot !== "bullets" && !slots.has(slot))
+    .map((slot) => [slot, SLOT_VALUE[slot](brief)?.trim()] as const)
+    .filter(([, value]) => Boolean(value))
+    .map(([slot, value]) => `${SLOT_LABEL[slot].replace(/ slots?$/, "")}: "${value}"`);
+}
+
 /** Layout plan written before calling the image model. */
 export function buildLayoutPlan(brief: CreateBriefInput, analysis: ReferenceAnalysis | null) {
   return {

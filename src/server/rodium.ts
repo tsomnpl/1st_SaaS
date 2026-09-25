@@ -507,7 +507,8 @@ export async function analyzeReferenceFull(input: { imageUrl: string; domain: st
         model,
         messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image_url", image_url: { url: input.imageUrl } }] }],
         temperature: 0,
-        max_tokens: 8000,
+        // Rodium reserves balance from max_tokens up front; the full analysis fits in 3000.
+        max_tokens: 3000,
       });
     if (!response.ok) return "";
     return textFromChat((await response.json()) as RodiumResponse).trim();

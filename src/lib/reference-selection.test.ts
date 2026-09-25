@@ -6,8 +6,10 @@ import {
   parseReferenceAnalysis,
   rankDomainReferences,
   slotMapping,
+  unplacedClientText,
   type ReferenceAnalysis,
 } from "@/lib/reference-selection";
+import { buildArtDirection, buildPrompt } from "@/lib/flyermint";
 import { applyReferenceCheck, skippedQcReport, type PosterQcReport } from "@/lib/quality-control";
 import { collectImageAttachments, EXACT_COPY_MODEL, geminiImageRequestBody } from "@/server/rodium";
 
@@ -72,6 +74,14 @@ describe("exact copy content mapping", () => {
     expect(lines[2]).toContain("+228 90 00 00 00");
     expect(lines[3]).toContain("Inscrivez-vous maintenant");
     expect(lines[4]).toMatch(/FLYERMINT/);
+  });
+
+  it("keeps client values the reference has no slot for, such as the CTA", () => {
+    const ref = analysis({ textSlots: ["title", "price", "phone", "logo"] });
+    const prompt = buildPrompt(brief, buildArtDirection(brief), { hasVisualReferenceImage: true, analysis: ref });
+    expect(unplacedClientText(brief, ref)).toEqual(['CTA / button: "Inscrivez-vous maintenant"']);
+    expect(prompt).toContain('CTA / button: "Inscrivez-vous maintenant"');
+    expect(prompt).toContain('Title slot → "Formation Excel"');
   });
 
   it("detects old reference text still visible on the result", () => {
