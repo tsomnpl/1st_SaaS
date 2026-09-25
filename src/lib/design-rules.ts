@@ -37,6 +37,27 @@ export const STYLE_REFERENCE_PROMPT = [
   "Do NOT treat the reference as a loose theme. It is the model to follow.",
 ].join(" ");
 
+/** Client generation with a reference bitmap: the output is the same poster with the client's text, not a new design. */
+export const REFERENCE_COPY_PROMPT = [
+  "TASK: EDIT THE ATTACHED REFERENCE POSTER. This is a copy-and-replace job, not a new design.",
+  "At first glance the result must look like the SAME poster. Keep 100% identical:",
+  "- the layout: position, size and order of every block, title, photo, card, box and line;",
+  "- the background: photo, blur, texture, grid, gradient, light and decorative shapes;",
+  "- the colors of every element (background, title, boxes, bands, accents, glow);",
+  "- every font: same typeface feel, weight, case, italic/script, outline, glow, 3D or gold effect, letter spacing and relative size;",
+  "- every shape that holds text: rectangles, cards, glass panels, slanted bands, pills, badges, icons, frames, arrows, separators — same color, same position;",
+  "- the people and hands: same number, same pose, same gesture, same framing, same crop, same lighting and depth of field.",
+  "Change ONLY these things:",
+  "1) TEXT: erase every original word and write the client text in the SAME slot, with the SAME font style, size, color and effect as the word it replaces. Main title slot → client title. Secondary headline → subtitle or offer. Old/new price slots → prices. Date box → date. Time box → time. Info or contact line → location, phone, WhatsApp. Bottom call-to-action → CTA. Bullet/feature slots → client details, one per slot.",
+  "2) EMPTY SLOTS: if the client gave nothing for a slot, remove that text (and its box if the box would be empty). Never write filler, lorem ipsum, field names, or leftover original words.",
+  "3) PEOPLE: replace each real person's face with a different, original person of similar age and style, keeping the exact pose, outfit style and lighting. If a CLIENT PHOTO is attached, it replaces the main subject instead. Never reproduce an identifiable real person.",
+  "4) LOGO: remove the original brand logo and brand name. If a CLIENT LOGO is attached, put it in that exact spot; otherwise write a small FLYERMINT wordmark there.",
+  "Never keep any original phone number, date, price, address, social handle, person name or brand from the reference.",
+  "Do NOT modernize, simplify, clean up, recolor, flatten or restyle. Same density and richness as the reference.",
+  "If the output canvas ratio differs from the reference, extend the background to fit; do not rearrange the blocks.",
+  "Spell every word exactly as given, letter by letter. Sharp, readable text only.",
+].join("\n");
+
 export const STYLE_INSPIRATION_TEXT = [
   "No bitmap could be attached. Follow the written Creative DNA / catalog principles as strictly as a visual brief.",
   "Keep domain-specific human staging, hierarchy, crop and contrast.",

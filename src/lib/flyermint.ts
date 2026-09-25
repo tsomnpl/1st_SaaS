@@ -1,7 +1,7 @@
 import { z } from "zod";
-import { DOMAINS } from "@/lib/domains";
+import { ADAPTIVE_FIELDS, DOMAINS } from "@/lib/domains";
 import { dnaPromptBlock, type CreativeDna } from "@/lib/creative-dna";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
+import { GLOBAL_DESIGN_PROMPT, REFERENCE_COPY_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
@@ -222,17 +222,19 @@ export function buildPrompt(
     input.contactPhone && `Phone (exact): ${input.contactPhone}`,
     input.whatsapp && `WhatsApp (exact): ${input.whatsapp}`,
     input.email && `Email (exact): ${input.email}`,
-    ...Object.entries(input.adaptiveData)
-      .filter(([, value]) => value)
-      .map(([key, value]) => `${key}: ${value}`),
-  ].filter(Boolean);
+    ...adaptiveFacts(input),
+  ].filter(Boolean) as string[];
   const dna = options.dna ?? null;
   const structure = dna?.layout || dna?.composition || ad.composition;
+
+  if (options.hasVisualReferenceImage) {
+    return buildReferenceCopyPrompt(input, facts);
+  }
 
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Pipeline: visual library → domain → style → selected reference → visual analysis → art direction → image prompt → generation → quality control.",
-    options.hasVisualReferenceImage ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
+    STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
     dna ? dnaPromptBlock(dna) : "",
     `1. DOMAIN: ${input.domain}. Visual type: ${input.visualType}.`,
@@ -271,6 +273,33 @@ export function buildPrompt(
     "Do not invent business details. If a phone, email, price or date is not in the client information, do not render one.",
     "Never copy contact details from the attached reference.",
     "If it would not be publishable by a real local business, it is a failure.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/** Adaptive answers with their French label, so the model never prints raw keys such as "artistes:". */
+export function adaptiveFacts(input: CreateBriefInput) {
+  const labels = new Map((ADAPTIVE_FIELDS[input.domain] ?? []).map((field) => [field.key, field.label]));
+  return Object.entries(input.adaptiveData)
+    .filter(([, value]) => value?.trim())
+    .map(([key, value]) => `${labels.get(key) ?? key} (exact value, write the value only): ${value.trim()}`);
+}
+
+function buildReferenceCopyPrompt(input: CreateBriefInput, facts: string[]) {
+  return [
+    REFERENCE_COPY_PROMPT,
+    "CLIENT TEXT TO WRITE (exact spelling, nothing else):",
+    `Title: ${input.title.trim()}`,
+    ...facts,
+    input.cta ? `CTA: ${input.cta.trim()}` : "",
+    input.colors.length
+      ? `Client colors ${input.colors.slice(0, 3).join(", ")}: apply them only to the elements that carry the accent color in the reference. Keep every other color as in the reference.`
+      : "Keep the reference colors exactly.",
+    input.mainImageUrl ? "A CLIENT PHOTO is attached: it becomes the main subject, same pose, framing and light as the reference subject." : "",
+    input.logoUrl ? "A CLIENT LOGO is attached: place it in the reference logo spot, unchanged." : "",
+    `Output format: ${input.format}.`,
+    "Keep every photoreal person and hand of the reference in place. Do not invent business details.",
   ]
     .filter(Boolean)
     .join("\n");

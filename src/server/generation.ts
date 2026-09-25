@@ -11,13 +11,20 @@ import {
 } from "@/lib/flyermint";
 import {
   applyRepair,
+  applyTextCheck,
   isCriticalQcFailure,
   MAX_QC_ATTEMPTS,
   parseQcReport,
   qcPrompt,
+  qcWasSkipped,
   shouldRepair,
   skippedQcReport,
 } from "@/lib/quality-control";
+import { ADAPTIVE_FIELDS } from "@/lib/domains";
+
+function adaptiveLabels(brief: CreateBriefInput) {
+  return (ADAPTIVE_FIELDS[brief.domain] ?? []).map((field) => field.label);
+}
 import { dnaSummaryLine } from "@/lib/creative-dna";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
@@ -81,6 +88,18 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     const modelsUsed: string[] = [];
     const dnaSummary = dnaSummaryLine(visual.dna);
     let bitmapAttached = false;
+    let attachmentsSent: string[] = [];
+    const referenceCopy = Boolean(visual.dataUrl);
+    const allowedText = [...factsForQc(brief), ...adaptiveLabels(brief)];
+    const runQc = async () => {
+      const qcRequest = {
+        imageUrl,
+        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format, dnaSummary, { referenceCopy }),
+        referenceImageUrl: visual.dataUrl || undefined,
+      };
+      const raw = (await reviewPosterQuality(qcRequest)) || (await reviewPosterQuality(qcRequest));
+      return raw ? applyTextCheck(parseQcReport(raw), allowedText) : skippedQcReport();
+    };
 
     for (let attempt = 0; attempt < MAX_QC_ATTEMPTS; attempt += 1) {
       const rendered = await generateWithRodium({
@@ -91,19 +110,17 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       if (!rendered.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
       imageUrl = rendered.imageUrl;
       bitmapAttached = rendered.bitmapAttached;
+      attachmentsSent = rendered.attachmentsSent;
       modelsUsed.push(rendered.model);
       rodiCost = Number((rodiCost + rendered.rodiCostEstimate).toFixed(3));
       model = modelsUsed.join("+repair:");
 
-      const qcRaw = await reviewPosterQuality({
-        imageUrl,
-        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief), brief.format, dnaSummary),
-        referenceImageUrl: visual.dataUrl || undefined,
-      });
-      qc = qcRaw ? parseQcReport(qcRaw) : skippedQcReport();
+      qc = await runQc();
+      // Without a QC report a repair would be blind and burn RODI for nothing.
+      if (qcWasSkipped(qc)) break;
       if (!shouldRepair(qc)) break;
       if (attempt === MAX_QC_ATTEMPTS - 1) break;
-      prompt = applyRepair(prompt, qc);
+      prompt = applyRepair(prompt, qc, { referenceCopy });
       repaired = true;
     }
 
@@ -137,6 +154,9 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           visualReferencePath: visual.storagePath || null,
           visualReferenceBytes: visual.bytes,
           bitmapAttached,
+          attachmentsSent,
+          generationMode: referenceCopy ? "reference_copy" : "art_direction",
+          qcStatus: qcWasSkipped(qc) ? "unverified" : qc.pass ? "passed" : "failed",
           creativeDna: visual.dna,
           visualReferenceIds: artDirection.visual_reference_ids,
           durationMs: Date.now() - generation.createdAt.getTime(),
@@ -160,10 +180,13 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       quality: qualityScores,
       artDirection,
       repaired,
+      qcStatus: qcWasSkipped(qc) ? "unverified" : qc.pass ? "passed" : "failed",
+      typos: qc.typos ?? [],
       visualReference: {
         source: visual.source,
         id: visual.referenceId,
-        attached: Boolean(visual.dataUrl),
+        attached: bitmapAttached,
+        inputs: attachmentsSent,
       },
     };
   } catch (error) {

@@ -1,6 +1,6 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { dnaHasStructure, dnaPromptBlock, parseCreativeDna, type CreativeDna } from "@/lib/creative-dna";
-import { pickIndex, supabaseDomainFor } from "@/lib/inspiration-domains";
+import { pickIndex, referenceDomainKeys } from "@/lib/inspiration-domains";
 import { firstAvailableStyleReference } from "@/lib/visual-references";
 import { prisma } from "@/lib/prisma";
 import { analyzeStyleReference } from "@/server/rodium";
@@ -58,14 +58,22 @@ export async function resolveVisualLibrary(
 }
 
 async function resolveSupabaseReference(brief: CreateBriefInput): Promise<VisualLibraryHit> {
-  const domainKey = supabaseDomainFor(brief.domain);
-  if (!domainKey) return EMPTY_HIT;
+  const subject = [brief.title, brief.subtitle, brief.description, brief.visualType, brief.objective].filter(Boolean).join(" ");
+  const keys = referenceDomainKeys(brief.domain, subject);
+  if (!keys.length) return EMPTY_HIT;
 
   let rows: InspirationSourceRow[] = [];
-  try {
-    rows = await listInspirationByDomain(domainKey);
-  } catch {
-    return EMPTY_HIT;
+  let domainKey = "";
+  for (const key of keys) {
+    try {
+      rows = await listInspirationByDomain(key);
+    } catch {
+      rows = [];
+    }
+    if (rows.length) {
+      domainKey = key;
+      break;
+    }
   }
   if (!rows.length) return EMPTY_HIT;
 

@@ -70,10 +70,18 @@ export function selectImageModel(
     brief.cta,
   ].filter(Boolean).length;
 
-  const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
+  const editModel = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
   const fastModel = env.RODIUMAI_IMAGE_MODEL_FAST?.trim() || "google/gemini-3.1-flash-lite-image";
+  const referenceCopyModels = [
+    env.RODIUMAI_IMAGE_MODEL_REFERENCE_COPY?.trim(),
+    "google/gemini-3-pro-image",
+    "google/gemini-3-pro-image-preview",
+    "google/gemini-3.1-flash-image",
+    editModel,
+  ].filter((id): id is string => Boolean(id));
   const preferred = (() => {
-    if (brief.mainImageUrl || brief.logoUrl || options.hasStyleReference) {
+    if (options.hasStyleReference) return referenceCopyModels[0];
+    if (brief.mainImageUrl || brief.logoUrl) {
       return editModel;
     }
     if (textHeavyFields >= 6) {
@@ -92,6 +100,14 @@ export function selectImageModel(
 
   if (options.hasStyleReference || brief.mainImageUrl || brief.logoUrl) {
     const visionPool = pool.filter(canConsumeReferenceBitmap);
+    if (options.hasStyleReference) {
+      const copyModel = referenceCopyModels.find(
+        (id) => canConsumeReferenceBitmap(id) && (available.length === 0 ? allowed.length === 0 || allowed.includes(id) : visionPool.includes(id)),
+      );
+      if (copyModel) return copyModel;
+      const nonLite = visionPool.find((id) => !id.toLowerCase().includes("lite"));
+      if (nonLite) return nonLite;
+    }
     if (visionPool.includes(preferred)) return preferred;
     if (visionPool.includes(editModel)) return editModel;
     if (visionPool.length > 0) return visionPool[0];
@@ -157,6 +173,11 @@ export async function generateWithRodium(input: {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
 
+  const disponible = rodiumDisponible(await getRodiumWallet().catch(() => null));
+  if (disponible !== null && disponible < 1) {
+    throw new Error("RODIUM_INSUFFICIENT_BALANCE");
+  }
+
   const available = await listRodiumImageModels();
   const imageModel = selectImageModel(input.brief, input.prompt, available, {
     hasStyleReference: Boolean(input.styleReferenceDataUrl),
@@ -176,6 +197,7 @@ export async function generateWithRodium(input: {
     imageUrl: render.imageUrl,
     rawText: render.rawText,
     bitmapAttached: render.bitmapAttached,
+    attachmentsSent: render.attachmentsSent,
     usage: {
       text: null,
       render: render.usage ?? null,
@@ -198,40 +220,60 @@ function isProvidedQuotaError(text: string) {
   );
 }
 
-async function postGeminiImage(model: string, prompt: string, attached: string): Promise<{
+export type ImageAttachment = { role: "reference" | "photo" | "logo"; url: string };
+
+const ATTACHMENT_LABELS: Record<ImageAttachment["role"], string> = {
+  reference: "IMAGE — REFERENCE POSTER: the poster to copy (layout, fonts, boxes, colors, background, people poses).",
+  photo: "IMAGE — CLIENT PHOTO: put this exact person/product in place of the main subject of the reference.",
+  logo: "IMAGE — CLIENT LOGO: place this exact logo in the logo spot of the reference, small and sharp. Do not redraw it.",
+};
+
+export function collectImageAttachments(brief: CreateBriefInput, styleReferenceDataUrl?: string): ImageAttachment[] {
+  const list: ImageAttachment[] = [];
+  if (styleReferenceDataUrl?.startsWith("data:image/")) list.push({ role: "reference", url: styleReferenceDataUrl });
+  if (brief.mainImageUrl && /^(data:image\/|https:\/\/)/.test(brief.mainImageUrl)) list.push({ role: "photo", url: brief.mainImageUrl });
+  if (brief.logoUrl && /^(data:image\/|https:\/\/)/.test(brief.logoUrl)) list.push({ role: "logo", url: brief.logoUrl });
+  return list;
+}
+
+export function geminiImageRequestBody(model: string, prompt: string, attachments: ImageAttachment[]) {
+  const content: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
+  for (const attachment of attachments) {
+    content.push({ type: "text", text: ATTACHMENT_LABELS[attachment.role] });
+    content.push({ type: "image_url", image_url: { url: attachment.url } });
+  }
+  return {
+    model,
+    messages: [{ role: "user", content }],
+    temperature: attachments.some((item) => item.role === "reference") ? 0.2 : 0.4,
+  };
+}
+
+async function postGeminiImage(model: string, prompt: string, attachments: ImageAttachment[]): Promise<{
   imageUrl: string;
   rawText: string;
   usage: RodiumResponse["usage"];
   bitmapAttached: boolean;
+  attachmentsSent: ImageAttachment["role"][];
 }> {
-  const content: Array<Record<string, unknown>> = [{ type: "text", text: prompt }];
-  if (attached) {
-    content.push({ type: "image_url", image_url: { url: attached } });
-  }
   const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
     method: "POST",
     headers: rodiumHeaders(),
-    body: JSON.stringify({
-      model,
-      messages: [{ role: "user", content }],
-      temperature: 0.4,
-    }),
+    body: JSON.stringify(geminiImageRequestBody(model, prompt, attachments)),
   });
   const raw = await response.text();
-  if (!response.ok) {
-    if (attached && isProvidedQuotaError(raw)) {
-      return postGeminiImage(model, prompt, "");
-    }
-    throwRodiumHttpError(response.status, raw);
-  }
+  // No silent retry without the images: a text-only poster would ignore the reference.
+  if (!response.ok) throwRodiumHttpError(response.status, raw);
   const data = JSON.parse(raw) as RodiumResponse;
   const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
+  const attachmentsSent = attachments.map((item) => item.role);
   return {
     imageUrl,
-    rawText: JSON.stringify({ model: data.model, bitmap_attached: Boolean(attached) }),
+    rawText: JSON.stringify({ model: data.model, attachments: attachmentsSent }),
     usage: data.usage,
-    bitmapAttached: Boolean(attached),
+    bitmapAttached: attachmentsSent.includes("reference"),
+    attachmentsSent,
   };
 }
 
@@ -257,18 +299,12 @@ async function renderImage(params: {
   brief: CreateBriefInput;
   styleReferenceDataUrl?: string;
 }) {
-  const clientReference = params.brief.mainImageUrl || params.brief.logoUrl || "";
-  const styleReference = params.styleReferenceDataUrl ?? "";
-  const bitmap = clientReference.startsWith("data:image/")
-    ? clientReference
-    : styleReference.startsWith("data:image/")
-      ? styleReference
-      : "";
-  const attached = canConsumeReferenceBitmap(params.model) ? bitmap : "";
+  const attachments = collectImageAttachments(params.brief, params.styleReferenceDataUrl);
 
   if (canConsumeReferenceBitmap(params.model) || params.model.toLowerCase().includes("gemini")) {
-    return postGeminiImage(params.model, params.prompt, attached);
+    return postGeminiImage(params.model, params.prompt, attachments);
   }
+  if (attachments.length > 0) throw new Error("RODIUM_NO_IMAGE_EDIT_MODEL");
 
   const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
   const body: Record<string, unknown> = {
@@ -277,8 +313,6 @@ async function renderImage(params: {
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  if (attached) body.image = attached;
-
   const response = await fetch(endpoint, {
     method: "POST",
     headers: rodiumHeaders(),
@@ -287,15 +321,21 @@ async function renderImage(params: {
   if (!response.ok) {
     const raw = await response.text();
     if (response.status === 402 || isProvidedQuotaError(raw)) {
-      const fallback = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-lite-image";
-      return postGeminiImage(fallback, params.prompt, "");
+      const fallback = env.RODIUMAI_IMAGE_MODEL_IMAGE_EDIT?.trim() || "google/gemini-3.1-flash-image";
+      return postGeminiImage(fallback, params.prompt, []);
     }
     throwRodiumHttpError(response.status, raw);
   }
   const data = (await response.json()) as RodiumResponse;
   const imageUrl = extractGeneratedImageUrl(data);
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage, bitmapAttached: false };
+  return {
+    imageUrl,
+    rawText: JSON.stringify({ model: data.model }),
+    usage: data.usage,
+    bitmapAttached: false,
+    attachmentsSent: [] as ImageAttachment["role"][],
+  };
 }
 
 function throwRodiumHttpError(status: number, raw: string): never {
@@ -317,6 +357,15 @@ export function sizeForFormat(format: string) {
     return "1024x1536";
   }
   return "1024x1024";
+}
+
+/** Spendable RODI = balance − reserved; reserved credits cannot pay for a new image. */
+export function rodiumDisponible(wallet: Record<string, unknown> | null | undefined) {
+  if (!wallet) return null;
+  const balance = Number(wallet.balance_rodi ?? wallet.balance ?? NaN);
+  const reserved = Number(wallet.reserved_rodi ?? wallet.reserved ?? 0);
+  if (!Number.isFinite(balance)) return null;
+  return Math.max(0, balance - (Number.isFinite(reserved) ? reserved : 0));
 }
 
 export async function getRodiumWallet() {
@@ -363,7 +412,7 @@ export async function reviewPosterQuality(input: {
         model,
         messages: [{ role: "user", content }],
         temperature: 0,
-        max_tokens: 500,
+        max_tokens: 3000,
       }),
     });
     if (!response.ok) return "";
