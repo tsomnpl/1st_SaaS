@@ -1,3 +1,5 @@
+import { findLeftovers } from "@/lib/reference-selection";
+
 export type PosterQcReport = {
   pass: boolean;
   has_person: boolean;
@@ -22,6 +24,10 @@ export type PosterQcReport = {
   domain_relevance: boolean;
   issues: string[];
   repair_prompt: string;
+  visible_text?: string[];
+  typos?: Array<{ found: string; expected: string }>;
+  structure_score?: number;
+  leftovers?: string[];
 };
 
 const EMPTY: PosterQcReport = {
@@ -96,15 +102,39 @@ export function qcPrompt(
   facts: string[],
   format?: string,
   dnaSummary?: string,
+  options: { referenceCopy?: boolean; composition?: boolean } = {},
 ) {
+  const structureRule =
+    "structure_score: integer 0-10, how closely the first image keeps the structure of the reference (subject position and proportions, title position, blocks, rectangles, frames, CTA, logo spot, colors, typography, hierarchy, graphic elements, spacing, format). 10 = same poster structure. A pretty poster with another layout scores low.";
+  const rules = options.composition
+    ? [
+        "The second image is the REFERENCE poster. The first image must keep its visual grammar (zones, proportions, hierarchy, subject/text relationship, CTA and brand areas) with new content.",
+        structureRule,
+        "Set composition_match=false if blocks moved (e.g. subject left became centered, title right became top), or if it looks like a different layout.",
+        "FAIL if any original word, name, phone, date, price, handle or brand of the reference is visible.",
+      ]
+    : options.referenceCopy
+    ? [
+        structureRule,
+        "The second image is the REFERENCE poster. The first image must be the SAME poster with only the text, faces and logo changed.",
+        "Set composition_match=false and reference_match=false if the layout, fonts, text boxes/cards/bands, colors, background, hands or the number/poses of people changed, or if it looks simplified compared with the reference.",
+        "FAIL if any original word, name, phone, date, price or brand of the reference is still visible.",
+        "has_person=true when the result keeps the people of the reference (true if the reference has no person).",
+        "design_rules=true when the result follows the reference design (do not apply generic color/font limits).",
+      ]
+    : [
+        "If a second image is provided, it is the visual REFERENCE. Compare STRUCTURE, not brand names.",
+        "FAIL (pass=false) if ANY critical check fails: no visible human, plastic/waxy/AI face or bad hands, unreadable or gibberish text, invented facts, generic AI collage, wrong domain vibe, cropped edges, wrong orientation, layout that ignores the reference structure, important elements touching the edge, weak hierarchy, weak contrast, bad alignment, cramped spacing, unsafe zone, poor image quality.",
+        "looks_ai_generic=true for: plastic person, random human placement, gradient-only poster, generic centered collage with no art direction, neon without reason, floating cards, 3D clutter.",
+        "The poster MUST contain at least one real-looking person who belongs in the scene.",
+      ];
   return [
-    "You are the FlyerMint art director doing a quality check on a finished poster.",
-    "If a second image is provided, it is the visual REFERENCE. Compare STRUCTURE, not brand names.",
+    "You are the FlyerMint art director doing a quality check on a finished poster (first image).",
     "Reply with JSON only, no markdown.",
-    "Keys: pass, has_person, person_natural, readable_text, text_matches_brief, domain_fit, looks_ai_generic, format_ok, composition_match, margins_ok, reference_match, design_rules, human_realism, text_readability, hierarchy, contrast, alignment, spacing, safe_zone, image_quality, domain_relevance, issues (string[]), repair_prompt (string).",
-    "FAIL (pass=false) if ANY critical check fails: no visible human, plastic/waxy/AI face or bad hands, unreadable or gibberish text, invented facts, generic AI collage, wrong domain vibe, cropped edges, wrong orientation, layout that ignores the reference structure, important elements touching the edge, weak hierarchy, weak contrast, bad alignment, cramped spacing, unsafe zone, poor image quality.",
-    "looks_ai_generic=true for: plastic person, random human placement, gradient-only poster, generic centered collage with no art direction, neon without reason, floating cards, 3D clutter.",
-    "The poster MUST contain at least one real-looking person who belongs in the scene.",
+    "Keys: pass, structure_score (number, only when a reference is provided), has_person, person_natural, readable_text, text_matches_brief, domain_fit, looks_ai_generic, format_ok, composition_match, margins_ok, reference_match, design_rules, human_realism, text_readability, hierarchy, contrast, alignment, spacing, safe_zone, image_quality, domain_relevance, visible_text (string[]), issues (string[]), repair_prompt (string).",
+    "visible_text: transcribe EVERY word visible on the first image exactly as written, letter by letter, including misspellings. Do not correct anything.",
+    "text_matches_brief=false if any word is misspelled compared with the facts below, or if a word not in the facts was added (field names like 'artistes:' count as added).",
+    ...rules,
     `Domain: ${domain}.`,
     format ? `Requested format/orientation: ${format}.` : "",
     `Title that must appear correctly: ${briefTitle}.`,
@@ -137,6 +167,8 @@ export function parseQcReport(raw: string): PosterQcReport {
     const imageQuality = flag(data.image_quality);
     const generic = Boolean(data.looks_ai_generic);
     const issues = Array.isArray(data.issues) ? data.issues.map(String).slice(0, 8) : [];
+    const visibleText = Array.isArray(data.visible_text) ? data.visible_text.map(String).slice(0, 80) : undefined;
+    const structureScore = Number.isFinite(Number(data.structure_score)) ? Number(data.structure_score) : undefined;
     const explicitFail =
       data.pass === false ||
       !hasPerson ||
@@ -178,10 +210,112 @@ export function parseQcReport(raw: string): PosterQcReport {
       domain_relevance: domainFit,
       issues,
       repair_prompt: String(data.repair_prompt ?? "").slice(0, 500),
+      visible_text: visibleText,
+      structure_score: structureScore,
     };
   } catch {
     return skippedQcReport();
   }
+}
+
+const TEXT_WHITELIST = new Set([
+  "flyermint", "fcfa", "whatsapp", "phone", "telephone", "contact", "contactez", "date", "heure", "lieu", "prix",
+  "infos", "info", "www", "com", "avec", "pour", "nous", "votre", "notre", "seulement", "au", "lieu", "de",
+]);
+
+function normalizeWord(value: string) {
+  return value.normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+function words(value: string) {
+  return normalizeWord(value).split(/[^a-z0-9]+/).filter((word) => word.length >= 4 && !/^\d+$/.test(word));
+}
+
+function editDistance(a: string, b: string) {
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i += 1) {
+    let previous = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j += 1) {
+      const current = row[j];
+      row[j] = Math.min(row[j] + 1, row[j - 1] + 1, previous + (a[i - 1] === b[j - 1] ? 0 : 1));
+      previous = current;
+    }
+  }
+  return row[b.length];
+}
+
+/** Words on the poster that are one or two letters away from a word the client typed: misspellings. */
+export function findTypos(visibleText: string[], allowedText: string[]) {
+  const allowed = new Set([...allowedText.flatMap(words), ...TEXT_WHITELIST]);
+  const typos: Array<{ found: string; expected: string }> = [];
+  const seen = new Set<string>();
+  for (const word of visibleText.flatMap(words)) {
+    if (allowed.has(word) || seen.has(word)) continue;
+    seen.add(word);
+    let best: { word: string; distance: number } | null = null;
+    for (const candidate of allowed) {
+      if (Math.abs(candidate.length - word.length) > 2) continue;
+      const distance = editDistance(word, candidate);
+      if (distance <= (word.length >= 7 ? 2 : 1) && (!best || distance < best.distance)) best = { word: candidate, distance };
+    }
+    if (best) typos.push({ found: word, expected: best.word });
+  }
+  return typos;
+}
+
+/** Fold the server-side spelling check into the vision QC report. */
+export function applyTextCheck(report: PosterQcReport, allowedText: string[]): PosterQcReport {
+  if (!report.visible_text?.length) return report;
+  const typos = findTypos(report.visible_text, allowedText);
+  if (!typos.length) return { ...report, typos };
+  return {
+    ...report,
+    pass: false,
+    text_matches_brief: false,
+    typos,
+    issues: [...report.issues, ...typos.map((typo) => `TYPO: "${typo.found}" au lieu de "${typo.expected}"`)].slice(0, 12),
+    repair_prompt: [
+      report.repair_prompt,
+      `Fix the misspelled words: ${typos.map((typo) => `"${typo.found}" must be written exactly as in the client text (closest: "${typo.expected}")`).join("; ")}.`,
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
+}
+
+export const MIN_STRUCTURE_SCORE = 7;
+
+/** Reference fidelity is judged on structure and content, never on beauty. */
+export function applyReferenceCheck(
+  report: PosterQcReport,
+  input: { originalText: string[]; clientText: string[]; strictStructure: boolean },
+): PosterQcReport {
+  if (qcWasSkipped(report)) return report;
+  const leftovers = report.visible_text?.length ? findLeftovers(report.visible_text, input.originalText, input.clientText) : [];
+  const weakStructure =
+    input.strictStructure && (report.structure_score === undefined || report.structure_score < MIN_STRUCTURE_SCORE);
+  if (!leftovers.length && !weakStructure) return { ...report, leftovers };
+  return {
+    ...report,
+    pass: false,
+    composition_match: weakStructure ? false : report.composition_match,
+    reference_match: weakStructure ? false : report.reference_match,
+    text_matches_brief: leftovers.length ? false : report.text_matches_brief,
+    leftovers,
+    issues: [
+      ...report.issues,
+      ...(weakStructure ? [`STRUCTURE: ${report.structure_score ?? "?"}/10 < ${MIN_STRUCTURE_SCORE}`] : []),
+      ...leftovers.map((word) => `ANCIEN CONTENU: "${word}"`),
+    ].slice(0, 14),
+    repair_prompt: [
+      report.repair_prompt,
+      leftovers.length ? `Remove every original text of the reference still visible: ${leftovers.join(", ")}.` : "",
+      weakStructure ? "The layout drifted from the reference: restore the same block positions, proportions and shapes." : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+  };
 }
 
 export function shouldRepair(report: PosterQcReport) {
@@ -206,7 +340,22 @@ export function isCriticalQcFailure(report: PosterQcReport) {
   );
 }
 
-export function applyRepair(prompt: string, report: PosterQcReport) {
+export function applyRepair(prompt: string, report: PosterQcReport, options: { referenceCopy?: boolean } = {}) {
+  if (options.referenceCopy) {
+    const hint = report.repair_prompt || report.issues.filter((issue) => issue !== "QC_SKIPPED").join("; ");
+    return [
+      prompt,
+      "QUALITY REPAIR (mandatory):",
+      hint || "Fix the failed quality checks.",
+      !report.composition_match || report.looks_ai_generic
+        ? "PROBLEM: the result drifted from the reference. Copy the reference poster again: same layout, fonts, boxes, colors, background, people poses. Change the text only."
+        : "",
+      report.typos?.length ? `PROBLEM: misspelled words (${report.typos.map((typo) => typo.found).join(", ")}). Write every client word letter by letter.` : "",
+      "Keep every title, date, price, phone and CTA exactly as given. No extra words, no field names.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
   const extras: string[] = [];
   if (!report.has_person) {
     extras.push(

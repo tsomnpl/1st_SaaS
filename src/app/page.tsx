@@ -3,6 +3,7 @@ import { STEPS } from "@/lib/brand";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
+import { LandingAudio } from "@/components/landing/landing-audio";
 import { getLandingVisualsSafe } from "@/lib/landing-visuals";
 
 export default async function Home() {
@@ -227,6 +228,7 @@ export default async function Home() {
           Créer une affiche
         </Link>
       </section>
+      <LandingAudio />
     </div>
   );
 }

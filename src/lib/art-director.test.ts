@@ -1,7 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { DOMAINS } from "./domains";
 import { allDomainsHaveHumanStaging, humanStagingFor } from "./human-staging";
-import { applyRepair, parseQcReport, shouldRepair, skippedQcReport } from "./quality-control";
+import {
+  applyRepair,
+  applyTextCheck,
+  findTypos,
+  isCriticalQcFailure,
+  parseQcReport,
+  qcWasSkipped,
+  shouldRepair,
+  skippedQcReport,
+} from "./quality-control";
 
 describe("art director human staging", () => {
   it("defines a human role for every domain", () => {
@@ -33,8 +42,25 @@ describe("poster quality control", () => {
     expect(applyRepair("base prompt", report)).toMatch(/QUALITY REPAIR/);
   });
 
-  it("repairs a skipped check instead of shipping it", () => {
-    expect(shouldRepair(skippedQcReport())).toBe(true);
-    expect(shouldRepair(parseQcReport("not json"))).toBe(true);
+  it("marks a missing QC report as skipped", () => {
+    expect(qcWasSkipped(skippedQcReport())).toBe(true);
+    expect(qcWasSkipped(parseQcReport("not json"))).toBe(true);
+  });
+
+  it("catches the 'artister' typo from the FORMATION poster", () => {
+    const allowed = ["Formation", "Place limité", "Réduction de 50% 3 premiers", "12 décembre", "Gazo", "Artistes / invitée", "Heure d’ouverture", "Réserve mtn"];
+    expect(findTypos(["FORMATION", "Place limité", "artister: Gazo", "Réserve mtn"], allowed)).toEqual([
+      { found: "artister", expected: "artistes" },
+    ]);
+    expect(findTypos(["FORMATION", "Place limité", "Gazo"], allowed)).toEqual([]);
+    const report = applyTextCheck(
+      parseQcReport(JSON.stringify({ pass: true, visible_text: ["FORMATION", "artister: Gazo"] })),
+      allowed,
+    );
+    expect(report.pass).toBe(false);
+    expect(report.text_matches_brief).toBe(false);
+    expect(report.issues.join(" ")).toContain('"artister" au lieu de "artistes"');
+    expect(isCriticalQcFailure(report)).toBe(true);
+    expect(applyRepair("base", report, { referenceCopy: true })).toMatch(/misspelled words \(artister\)/);
   });
 });

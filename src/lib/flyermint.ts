@@ -1,7 +1,20 @@
 import { z } from "zod";
-import { DOMAINS } from "@/lib/domains";
+import { ADAPTIVE_FIELDS, DOMAINS } from "@/lib/domains";
 import { dnaPromptBlock, type CreativeDna } from "@/lib/creative-dna";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT } from "@/lib/design-rules";
+import {
+  GLOBAL_DESIGN_PROMPT,
+  REFERENCE_COMPOSITION_PROMPT,
+  REFERENCE_COPY_PROMPT,
+  REFERENCE_INSPIRATION_PROMPT,
+  STYLE_INSPIRATION_TEXT,
+} from "@/lib/design-rules";
+import {
+  buildLayoutPlan,
+  layoutPlanLines,
+  slotMapping,
+  unplacedClientText,
+  type ReferenceAnalysis,
+} from "@/lib/reference-selection";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
@@ -53,6 +66,8 @@ export const createBriefSchema = z.object({
     .default("liberte_guidee"),
   mainImageUrl: imageRef,
   logoUrl: imageRef,
+  personalReferenceUrl: imageRef,
+  referenceMode: z.enum(["exact_copy", "composition", "inspiration"]).default("exact_copy"),
   regenerateFromId: z.string().min(3).max(80).optional(),
   rememberBrand: z.boolean().optional(),
   adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
@@ -208,7 +223,12 @@ export function applyVisualLibrary(
 export function buildPrompt(
   input: CreateBriefInput,
   ad: ArtDirection,
-  options: { hasVisualReferenceImage?: boolean; dna?: CreativeDna | null } = {},
+  options: {
+    hasVisualReferenceImage?: boolean;
+    dna?: CreativeDna | null;
+    analysis?: ReferenceAnalysis | null;
+    personalReference?: boolean;
+  } = {},
 ) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
@@ -222,17 +242,19 @@ export function buildPrompt(
     input.contactPhone && `Phone (exact): ${input.contactPhone}`,
     input.whatsapp && `WhatsApp (exact): ${input.whatsapp}`,
     input.email && `Email (exact): ${input.email}`,
-    ...Object.entries(input.adaptiveData)
-      .filter(([, value]) => value)
-      .map(([key, value]) => `${key}: ${value}`),
-  ].filter(Boolean);
+    ...adaptiveFacts(input),
+  ].filter(Boolean) as string[];
   const dna = options.dna ?? null;
   const structure = dna?.layout || dna?.composition || ad.composition;
+
+  if (options.hasVisualReferenceImage) {
+    return buildReferencePrompt(input, facts, options.analysis ?? null, Boolean(options.personalReference));
+  }
 
   return [
     "You are FlyerMint's senior art director, not a generic image generator.",
     "Pipeline: visual library → domain → style → selected reference → visual analysis → art direction → image prompt → generation → quality control.",
-    options.hasVisualReferenceImage ? STYLE_REFERENCE_PROMPT : STYLE_INSPIRATION_TEXT,
+    STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
     dna ? dnaPromptBlock(dna) : "",
     `1. DOMAIN: ${input.domain}. Visual type: ${input.visualType}.`,
@@ -276,6 +298,66 @@ export function buildPrompt(
     .join("\n");
 }
 
+/** Adaptive answers with their French label, so the model never prints raw keys such as "artistes:". */
+export function adaptiveFacts(input: CreateBriefInput) {
+  const labels = new Map((ADAPTIVE_FIELDS[input.domain] ?? []).map((field) => [field.key, field.label]));
+  return Object.entries(input.adaptiveData)
+    .filter(([, value]) => value?.trim())
+    .map(([key, value]) => `${labels.get(key) ?? key} (exact value, write the value only): ${value.trim()}`);
+}
+
+function withHeading(heading: string, lines: string[]) {
+  return lines.length ? [heading, ...lines] : [];
+}
+
+function buildReferencePrompt(input: CreateBriefInput, facts: string[], analysis: ReferenceAnalysis | null, personal: boolean) {
+  const plan = layoutPlanLines(buildLayoutPlan(input, analysis));
+  const colors = input.colors.length
+    ? `Client accent colors ${input.colors.slice(0, 3).join(", ")}: apply them only to the elements that carry the accent color in the reference. Do not recolor anything else.`
+    : "Keep the reference colors exactly.";
+  const assets = [
+    personal ? "The REFERENCE POSTER is the client's own reference, for this poster only." : "",
+    input.mainImageUrl ? "A CLIENT PHOTO is attached: it becomes the main subject, same position, pose, framing and light as the reference subject." : "",
+    input.logoUrl ? "A CLIENT LOGO is attached: it is a brand asset. Place the exact file in the reference logo spot. Do not redraw, restyle or imitate it with text." : "",
+  ];
+  if (input.referenceMode === "exact_copy") {
+    return [
+      REFERENCE_COPY_PROMPT,
+      ...plan,
+      "SLOT BY SLOT (each client value goes where the equivalent information is on the reference):",
+      ...slotMapping(input, analysis),
+      ...withHeading(
+        "Client text with no matching slot on the reference: write it in the closest equivalent spot (e.g. a CTA inside the contact band), same style as the nearby original text, without adding a new block:",
+        [...unplacedClientText(input, analysis), ...(analysis?.textSlots.includes("bullets") ? [] : adaptiveFacts(input))],
+      ),
+      colors,
+      ...assets,
+      `Output format: ${input.format}.`,
+      "Do not invent business details. Never keep any original text, number, date, price, name, brand or logo.",
+    ]
+      .filter(Boolean)
+      .join("\n");
+  }
+  return [
+    input.referenceMode === "composition" ? REFERENCE_COMPOSITION_PROMPT : REFERENCE_INSPIRATION_PROMPT,
+    ...plan,
+    `Domain: ${input.domain}. Visual type: ${input.visualType}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
+    "CLIENT CONTENT (exact spelling, never invent):",
+    `Title: ${input.title.trim()}`,
+    ...facts,
+    input.cta ? `CTA: ${input.cta.trim()}` : "",
+    "Place each value in the zone that holds the equivalent information on the reference; drop zones the client gave nothing for.",
+    input.style || input.mood ? `Style: ${[input.style, input.mood].filter(Boolean).join(", ")}.` : "",
+    colors,
+    ...assets,
+    input.mainImageUrl ? "" : "Keep the same number and role of people as the reference, as new original photoreal people.",
+    `Output format: ${input.format}.`,
+    "Do not invent a phone, price, date, URL or address that is not in the client content.",
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
 export function factsForQc(input: CreateBriefInput) {
   return [
     input.title,
@@ -303,6 +385,7 @@ export function mergeRegeneratedBrief(previous: CreateBriefInput, next: CreateBr
     adaptiveData: { ...previous.adaptiveData, ...next.adaptiveData },
     mainImageUrl: next.mainImageUrl || previous.mainImageUrl,
     logoUrl: next.logoUrl || previous.logoUrl,
+    personalReferenceUrl: next.personalReferenceUrl || previous.personalReferenceUrl,
   };
 }
 
