@@ -270,6 +270,24 @@ export function unplacedClientText(brief: CreateBriefInput, analysis: ReferenceA
     .map(([slot, value]) => `${SLOT_LABEL[slot].replace(/ slots?$/, "")}: "${value}"`);
 }
 
+/**
+ * Which image is the model and which is only a hint. The client's own poster wins when given;
+ * exact copy never mixes two posters, free modes keep the library pick as a secondary hint.
+ */
+export function pickReferenceInputs(input: {
+  personalUrl?: string;
+  libraryDataUrl?: string;
+  mode: CreateBriefInput["referenceMode"];
+}) {
+  const personal = input.personalUrl || "";
+  const library = input.libraryDataUrl || "";
+  return {
+    primary: personal || library,
+    secondary: personal && input.mode !== "exact_copy" ? library : "",
+    primaryType: personal ? ("personal" as const) : library ? ("internal" as const) : ("none" as const),
+  };
+}
+
 /** Layout plan written before calling the image model. */
 export function buildLayoutPlan(brief: CreateBriefInput, analysis: ReferenceAnalysis | null) {
   return {

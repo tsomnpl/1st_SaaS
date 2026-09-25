@@ -32,7 +32,7 @@ import { consumeOneMint, grantCredits } from "@/server/credits";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 import { analyzePersonalReference, resolveVisualLibrary } from "@/server/visual-library";
-import { buildLayoutPlan, finalChecklist } from "@/lib/reference-selection";
+import { buildLayoutPlan, finalChecklist, pickReferenceInputs } from "@/lib/reference-selection";
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -86,9 +86,11 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     const artDirection = applyVisualLibrary(baseDirection, visual, brief.colors);
     const personalUrl = brief.personalReferenceUrl || "";
     const personalAnalysis = personalUrl ? await analyzePersonalReference(personalUrl, brief.domain) : null;
-    // The client's own poster is the model when given; the library pick then only helps free modes.
-    const primaryReference = personalUrl || visual.dataUrl;
-    const secondaryReference = personalUrl && brief.referenceMode !== "exact_copy" ? visual.dataUrl : "";
+    const { primary: primaryReference, secondary: secondaryReference } = pickReferenceInputs({
+      personalUrl,
+      libraryDataUrl: visual.dataUrl,
+      mode: brief.referenceMode,
+    });
     const referenceAnalysis = personalUrl ? personalAnalysis : visual.analysis;
     const referenceType = personalUrl ? "personal" : visual.source === "none" ? "none" : `internal_${visual.source}`;
     let prompt = buildPrompt(brief, artDirection, {

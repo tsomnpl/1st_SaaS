@@ -4,6 +4,7 @@ import {
   findLeftovers,
   finalChecklist,
   parseReferenceAnalysis,
+  pickReferenceInputs,
   rankDomainReferences,
   slotMapping,
   unplacedClientText,
@@ -107,6 +108,41 @@ describe("exact copy content mapping", () => {
     const checks = finalChecklist({ brief: { ...brief, logoUrl: "data:image/png;base64,L" }, visibleText: undefined, attachmentsSent: ["reference"], referenceRequired: true });
     const byItem = Object.fromEntries(checks.map((check) => [check.item, check.status]));
     expect(byItem).toMatchObject({ TITRE: "not_verified", PRIX: "not_provided", LOGO: "missing", REFERENCE: "ok" });
+  });
+});
+
+describe("personal reference (packs 20k/25k)", () => {
+  it("exact copy with a personal reference edits the client's poster only", () => {
+    expect(pickReferenceInputs({ personalUrl: "P", libraryDataUrl: "L", mode: "exact_copy" })).toEqual({ primary: "P", secondary: "", primaryType: "personal" });
+  });
+
+  it("composition and inspiration keep the library pick as a secondary hint", () => {
+    expect(pickReferenceInputs({ personalUrl: "P", libraryDataUrl: "L", mode: "composition" })).toEqual({ primary: "P", secondary: "L", primaryType: "personal" });
+    expect(pickReferenceInputs({ personalUrl: "P", libraryDataUrl: "L", mode: "inspiration" }).secondary).toBe("L");
+  });
+
+  it("without uploads the internal reference is used alone; with nothing the generation still has no fake reference", () => {
+    expect(pickReferenceInputs({ libraryDataUrl: "L", mode: "exact_copy" })).toEqual({ primary: "L", secondary: "", primaryType: "internal" });
+    expect(pickReferenceInputs({ mode: "exact_copy" })).toEqual({ primary: "", secondary: "", primaryType: "none" });
+  });
+
+  it("sends personal reference, internal hint, photo and logo as four real images (test 36)", () => {
+    const refs = pickReferenceInputs({ personalUrl: "data:image/jpeg;base64,PERSO", libraryDataUrl: "data:image/jpeg;base64,LIB", mode: "composition" });
+    const withAssets = { ...brief, referenceMode: "composition", mainImageUrl: "data:image/jpeg;base64,P", logoUrl: "data:image/png;base64,L" } as CreateBriefInput;
+    const attachments = collectImageAttachments(withAssets, refs.primary, refs.secondary);
+    expect(attachments.map((item) => [item.role, item.url.slice(-5)])).toEqual([
+      ["reference", "PERSO"],
+      ["reference_secondary", "4,LIB"],
+      ["photo", "e64,P"],
+      ["logo", "e64,L"],
+    ]);
+    const checks = finalChecklist({ brief: withAssets, visibleText: undefined, attachmentsSent: attachments.map((a) => a.role), referenceRequired: true });
+    expect(checks.filter((c) => ["LOGO", "IMAGE", "REFERENCE"].includes(c.item)).every((c) => c.status === "ok")).toBe(true);
+  });
+
+  it("without uploads only the internal reference is sent (test 37)", () => {
+    const refs = pickReferenceInputs({ libraryDataUrl: "data:image/jpeg;base64,LIB", mode: "exact_copy" });
+    expect(collectImageAttachments(brief, refs.primary, refs.secondary).map((a) => a.role)).toEqual(["reference"]);
   });
 });
 
