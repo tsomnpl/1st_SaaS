@@ -27,21 +27,19 @@ export function CreationGrid({ posters }: { posters: GalleryPoster[] }) {
     <>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
         {posters.map((poster) => (
-          <div key={poster.id} className="space-y-2">
-            <Link
-              href={poster.imageSrc ? `/affiche/${poster.id}` : "/creations"}
-              className="block w-full rounded-card text-left transition hover:-translate-y-0.5 hover:shadow-lg"
-              aria-label={poster.imageSrc ? `Ouvrir ${poster.title}` : poster.title}
-              onClick={(event) => {
-                if (!poster.imageSrc) return;
-                event.preventDefault();
-                setOpenId(poster.id);
-              }}
-            >
-              <VisualPoster {...poster} requireImage />
-            </Link>
-            <p className="text-xs text-slate-500">{poster.domaine}</p>
-          </div>
+          <Link
+            key={poster.id}
+            href={poster.imageSrc ? `/affiche/${poster.id}` : "/creations"}
+            className="block w-full overflow-hidden rounded-card text-left"
+            aria-label={poster.imageSrc ? `Ouvrir ${poster.title}` : poster.title}
+            onClick={(event) => {
+              if (!poster.imageSrc) return;
+              event.preventDefault();
+              setOpenId(poster.id);
+            }}
+          >
+            <VisualPoster {...poster} requireImage />
+          </Link>
         ))}
       </div>
       {current?.imageSrc ? (
