@@ -20,6 +20,9 @@ export async function POST(request: Request) {
       generationId: result.generationId,
       outputUrl: result.outputUrl,
       repaired: result.repaired,
+      qcStatus: result.qcStatus,
+      visualReference: result.visualReference,
+      referenceLog: result.referenceLog,
     });
   } catch (error) {
     const failure = generationFailurePayload(error);

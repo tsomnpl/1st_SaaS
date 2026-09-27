@@ -100,9 +100,29 @@ describe("flyermint core", () => {
     expect(ad.composition).toMatch(/person right/);
     expect(ad.color_palette).toEqual(["#0f172a", "#2563eb"]);
     const prompt = buildPrompt(brief, ad, { hasVisualReferenceImage: true, dna });
-    expect(prompt).toMatch(/bitmap is attached/);
-    expect(prompt).toContain("Menu du soir");
+    expect(prompt).toMatch(/EDIT THE ATTACHED REFERENCE POSTER/);
+    expect(prompt).toMatch(/every font/);
+    expect(prompt).toContain('Title slot → "Menu du soir"');
+    expect(prompt).toMatch(/Modify the reference poster provided/);
     expect(prompt).toContain("5 000 FCFA");
+    expect(prompt).not.toMatch(/Maximum 2-3 main colors|Keep STRUCTURE only|WIPE every original letter/);
+  });
+
+  it("writes adaptive answers with their label, never the raw key", () => {
+    const brief = createBriefSchema.parse({
+      visualType: "Affiche",
+      domain: "Evenementiel",
+      objective: "Attirer du monde",
+      targetAudience: "Jeunes",
+      title: "Formation",
+      format: "instagram_post",
+      colors: [],
+      adaptiveData: { artistes: "Gazo", ouverture: "16h", places: "" },
+    });
+    const prompt = buildPrompt(brief, buildArtDirection(brief), { hasVisualReferenceImage: true });
+    expect(prompt).toContain("Artistes / invitée (exact value, write the value only): Gazo");
+    expect(prompt).not.toMatch(/\bartistes: Gazo/);
+    expect(prompt).not.toMatch(/places:|Places/);
   });
 
   it("computes quality score in expected range", () => {

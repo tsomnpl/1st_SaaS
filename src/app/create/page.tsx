@@ -4,7 +4,7 @@ import { CreateFlyerForm } from "@/components/create-flyer-form";
 import { pageTitle } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
-import { userHasEditableExport } from "@/server/generation";
+import { userHasEditableExport, userHasPersonalReferencePlan } from "@/server/generation";
 import { getBrandKit } from "@/server/brand-kit";
 import { FORMATS } from "@/lib/domains";
 
@@ -28,9 +28,10 @@ export default async function CreatePage({
     throw error;
   }
   const query = await searchParams;
-  const [account, canExport, kit] = await Promise.all([
+  const [account, canExport, canPersonalReference, kit] = await Promise.all([
     prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null),
     userHasEditableExport(user.id).catch(() => false),
+    userHasPersonalReferencePlan(user.id).catch(() => false),
     getBrandKit(user.id),
   ]);
   const balance = account?.balance ?? 0;
@@ -53,6 +54,7 @@ export default async function CreatePage({
         regenerateFromId={query.from ?? ""}
         initialFormat={allowedFormat ?? ""}
         initialDomain={query.domain ?? ""}
+        canPersonalReference={canPersonalReference}
       />
     </div>
   );

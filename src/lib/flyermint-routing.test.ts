@@ -1,6 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { isLikelyImageModel, selectImageModel, sizeForFormat } from "@/server/rodium";
+import {
+  collectImageAttachments,
+  geminiImageRequestBody,
+  isLikelyImageModel,
+  selectImageModel,
+  sizeForFormat,
+} from "@/server/rodium";
+import { supabaseDomainFor } from "@/lib/inspiration-domains";
 import { classifyPaymentStatus } from "@/server/payments";
 import { paidPlans } from "@/lib/plans";
 
@@ -55,9 +62,51 @@ describe("image model routing", () => {
         hasStyleReference: true,
       }),
     ).toBe("google/gemini-3.1-flash-image");
+    expect(
+      selectImageModel(
+        brief,
+        "restaurant poster",
+        ["openai/gpt-image-2", "google/gemini-3.1-flash-lite-image", "google/gemini-3-pro-image"],
+        { hasStyleReference: true },
+      ),
+    ).toBe("google/gemini-3-pro-image");
     expect(() =>
       selectImageModel(brief, "restaurant poster", ["openai/gpt-image-2"], { hasStyleReference: true }),
     ).toThrow("RODIUM_NO_IMAGE_EDIT_MODEL");
+  });
+
+  it("sends the reference poster, the client photo and the client logo as real images", () => {
+    const brief = {
+      visualType: "Affiche",
+      domain: "Technologie",
+      objective: "Vendre",
+      targetAudience: "Etudiants",
+      title: "Google AI Plus",
+      format: "affiche_a4",
+      creativeFreedom: "liberte_guidee",
+      colors: [],
+      adaptiveData: {},
+      mainImageUrl: "data:image/jpeg;base64,PHOTO",
+      logoUrl: "data:image/png;base64,LOGO",
+    } as unknown as CreateBriefInput;
+    const attachments = collectImageAttachments(brief, "data:image/jpeg;base64,REF");
+    expect(attachments.map((item) => item.role)).toEqual(["reference", "photo", "logo"]);
+    const body = geminiImageRequestBody("google/gemini-3-pro-image", "PROMPT", attachments);
+    const parts = body.messages[0].content as Array<{ type: string; text?: string; image_url?: { url: string } }>;
+    expect(parts.filter((part) => part.type === "image_url").map((part) => part.image_url?.url)).toEqual([
+      "data:image/jpeg;base64,REF",
+      "data:image/jpeg;base64,PHOTO",
+      "data:image/png;base64,LOGO",
+    ]);
+    expect(parts[1].text).toMatch(/REFERENCE POSTER/);
+    expect(parts[3].text).toMatch(/CLIENT PHOTO/);
+    expect(parts[5].text).toMatch(/CLIENT LOGO/);
+  });
+
+  it("searches only the folder of the domain chosen by the client", () => {
+    expect(supabaseDomainFor("Education & Formation")).toBe("education");
+    expect(supabaseDomainFor("Evenementiel")).toBe("evenementiel");
+    expect(supabaseDomainFor("Domaine inconnu")).toBe("");
   });
 });
 
