@@ -56,3 +56,6 @@ storage/web/
 
 # local inspiration upload reports (never commit source inventory)
 docs/inspirations/*upload-report*
+
+# generated while seeding if seed.mjs still contains a TypeScript cast
+prisma/.seed-run.mjs
