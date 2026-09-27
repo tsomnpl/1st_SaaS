@@ -7,3 +7,13 @@ This version has breaking changes — APIs, conventions, and file structure may 
 This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
+
+## Cloud Agent
+
+PostgreSQL 16 is part of the environment image. The start command launches it, creates the local `flyermint` role and database, applies `npx prisma migrate deploy`, then seeds plans.
+
+Local database URL, written into `.env` when `DATABASE_URL` is empty:
+
+`postgresql://flyermint@127.0.0.1:5432/flyermint`
+
+`npm run dev` serves the app on port 3000. Public pages and `/api/health` run without Clerk, Rodium, or Money Fusion keys. Copy `.env.example` to `.env` before filling those keys. `prisma/seed.mjs` must stay plain JavaScript: `npm run db:seed` executes it with Node, while `npx prisma db seed` loads `.env` first.
