@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { COOKIE_CONSENT_EVENT, COOKIE_CONSENT_KEY, COOKIE_SETTINGS_EVENT } from "@/lib/cookie-consent";
 
 export const LANDING_AUDIO_SRC = "/audio/landing.mp3";
 const PREF_KEY = "flyermint:landing-audio";
@@ -15,6 +16,23 @@ export function LandingAudio({ src = LANDING_AUDIO_SRC }: { src?: string }) {
   const [muted, setMuted] = useState(false);
   const [volume, setVolume] = useState(0.4);
   const [open, setOpen] = useState(false);
+  const [bannerOpen, setBannerOpen] = useState(true);
+
+  // The cookie banner covers the bottom of the screen; the pill waits until the visitor has chosen.
+  useEffect(() => {
+    const sync = () => setBannerOpen(!window.localStorage.getItem(COOKIE_CONSENT_KEY));
+    const reopen = () => setBannerOpen(true);
+    const timer = window.setTimeout(sync, 0);
+    window.addEventListener(COOKIE_CONSENT_EVENT, sync);
+    window.addEventListener("fm-analytics-revoke", sync);
+    window.addEventListener(COOKIE_SETTINGS_EVENT, reopen);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener(COOKIE_CONSENT_EVENT, sync);
+      window.removeEventListener("fm-analytics-revoke", sync);
+      window.removeEventListener(COOKIE_SETTINGS_EVENT, reopen);
+    };
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -42,7 +60,7 @@ export function LandingAudio({ src = LANDING_AUDIO_SRC }: { src?: string }) {
     if (!audio) return;
     audio.volume = volume;
     audio.muted = muted;
-  }, [volume, muted, available]);
+  }, [volume, muted, available, bannerOpen]);
 
   function savePref(next: Pref) {
     try {
@@ -68,7 +86,7 @@ export function LandingAudio({ src = LANDING_AUDIO_SRC }: { src?: string }) {
     }
   }
 
-  if (!available) return null;
+  if (!available || bannerOpen) return null;
 
   const on = playing && !muted;
   return (
