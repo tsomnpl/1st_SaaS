@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { CoverGuestActions } from "@/components/cover/cover-actions";
+import { CoverGuestActions, CoverMemberActions } from "@/components/cover/cover-actions";
 import { CoverScene } from "@/components/cover/cover-scene";
 
 export const metadata: Metadata = {
@@ -7,24 +7,19 @@ export const metadata: Metadata = {
   description: "Tu réponds à quelques questions, FlyerMint compose l'affiche, tu la télécharges.",
 };
 
-export default function Home() {
-  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
-    return (
-      <CoverScene
-        bar={<CoverGuestActions variant="bar" />}
-        band={<CoverGuestActions variant="band" />}
-      />
-    );
-  }
-  return <CoverHomeAuth />;
+export default async function Home() {
+  const signedIn = await coverVisitorIsSignedIn();
+  const Actions = signedIn ? CoverMemberActions : CoverGuestActions;
+  return <CoverScene bar={<Actions variant="bar" />} band={<Actions variant="band" />} />;
 }
 
-async function CoverHomeAuth() {
-  const { CoverAuthActions } = await import("@/components/cover/cover-auth-actions");
-  return (
-    <CoverScene
-      bar={<CoverAuthActions variant="bar" />}
-      band={<CoverAuthActions variant="band" />}
-    />
-  );
+async function coverVisitorIsSignedIn() {
+  if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) return false;
+  try {
+    const { auth } = await import("@clerk/nextjs/server");
+    const session = await auth();
+    return Boolean(session.userId);
+  } catch {
+    return false;
+  }
 }
