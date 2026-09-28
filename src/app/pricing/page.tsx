@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   },
 };
 import { prisma } from "@/lib/prisma";
-import { OFFICIAL_PLANS, paidPlans } from "@/lib/plans";
+import { isLaunchOfferOpen, LAUNCH_OFFER_CODE, OFFICIAL_PLANS, paidPlans, visiblePaidPlans } from "@/lib/plans";
 import { ensureOfficialPlans } from "@/server/plans";
 
 export default async function PricingPage() {
@@ -25,8 +25,8 @@ export default async function PricingPage() {
           Choisis tes Mints
         </h1>
         <p className="mt-3 text-slate-600">
-          1 Mint = 1 affiche. L’export ne consomme aucun Mint. Le pack Starter expire au bout de
-          30 jours ; les autres packs n’expirent pas.
+          1 Mint = 1 affiche. L’export ne consomme aucun Mint. Le pack à 2 000 FCFA est une offre de
+          lancement : elle disparaît 30 jours après le lancement réel. Ses Mints n’expirent pas.
         </p>
       </section>
       <PricingGrid plans={plans} />
@@ -42,21 +42,23 @@ async function loadPlans() {
       orderBy: { sortOrder: "asc" },
     });
     if (rows.length > 0) {
-      return rows.map((row) => {
-        const seed = OFFICIAL_PLANS.find((plan) => plan.code === row.code);
-        return {
-          ...(seed ?? paidPlans()[0]),
-          code: row.code,
-          name: row.name,
-          priceFcfa: row.priceFcfa,
-          mintAmount: row.mintAmount,
-          durationDays: row.durationDays,
-          editableExport: row.editableExport,
-        };
-      });
+      return rows
+        .map((row) => {
+          const seed = OFFICIAL_PLANS.find((plan) => plan.code === row.code);
+          return {
+            ...(seed ?? paidPlans()[0]),
+            code: row.code,
+            name: row.name,
+            priceFcfa: row.priceFcfa,
+            mintAmount: row.mintAmount,
+            durationDays: row.durationDays,
+            editableExport: row.editableExport,
+          };
+        })
+        .filter((plan) => plan.code !== LAUNCH_OFFER_CODE || isLaunchOfferOpen());
     }
   } catch {
     // Affiche les offres même si la base est indisponible.
   }
-  return paidPlans();
+  return visiblePaidPlans();
 }

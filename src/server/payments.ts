@@ -4,6 +4,7 @@ import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { notifyAdmin, sendPaymentConfirmed, sendPaymentFailed } from "@/server/mail";
+import { isLaunchOfferOpen, LAUNCH_OFFER_CODE } from "@/lib/plans";
 import { ensureOfficialPlans } from "@/server/plans";
 
 type MoneyFusionInitPayload = {
@@ -72,6 +73,9 @@ export async function initMoneyFusionPayment(params: {
 
   const plan = await prisma.plan.findUnique({ where: { code: params.planCode } });
   if (!plan || !plan.active || plan.priceFcfa <= 0) {
+    throw new Error("PLAN_INVALID");
+  }
+  if (plan.code === LAUNCH_OFFER_CODE && !isLaunchOfferOpen()) {
     throw new Error("PLAN_INVALID");
   }
 

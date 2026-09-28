@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatFcfa, paidPlans, type PlanSeed } from "@/lib/plans";
+import { formatFcfa, paidPlans, planAvailabilityLabel, type PlanSeed } from "@/lib/plans";
 
 export function PricingGrid({
   plans,
@@ -35,7 +35,7 @@ export function PricingGrid({
               {plan.mintAmount} Mints = {plan.mintAmount} affiches
             </p>
             <p className="text-sm text-slate-500">
-              {plan.durationDays ? `Valables ${plan.durationDays} jours` : "Sans expiration"}
+              {planAvailabilityLabel(plan)}
             </p>
             <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
               {plan.features.map((feature) => (

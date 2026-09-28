@@ -32,15 +32,16 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     name: "Pack Starter",
     shortName: "Starter",
     headline: "Pour lancer une campagne",
-    description: "Deux affiches, valables 30 jours.",
+    description: "Deux affiches. Offre de lancement, retirée 30 jours après le lancement réel.",
     priceFcfa: 2000,
     mintAmount: 2,
-    durationDays: 30,
+    durationDays: null,
     editableExport: false,
     sortOrder: 1,
     features: [
       "2 Mints = 2 affiches",
-      "Valables 30 jours",
+      "Offre retirée 30 jours après le lancement",
+      "Les Mints n’expirent pas",
       "1 Mint = 1 affiche",
       "Export image inclus",
     ],
@@ -145,6 +146,38 @@ export function formatFcfa(value: number) {
   return `${value.toLocaleString("fr-FR")} FCFA`;
 }
 
+export const LAUNCH_OFFER_CODE = "STARTER_2K";
+export const LAUNCH_OFFER_DAYS = 30;
+
 export function paidPlans() {
   return OFFICIAL_PLANS.filter((plan) => plan.priceFcfa > 0);
+}
+
+export function readLaunchAt(raw = process.env.APP_LAUNCH_AT) {
+  const text = raw?.trim();
+  if (!text) return null;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+export function launchOfferEndsAt(launchAt: Date | null) {
+  if (!launchAt) return null;
+  return new Date(launchAt.getTime() + LAUNCH_OFFER_DAYS * 86400000);
+}
+
+export function isLaunchOfferOpen(now = new Date(), launchAt = readLaunchAt()) {
+  const ends = launchOfferEndsAt(launchAt);
+  if (!ends) return true;
+  return now.getTime() < ends.getTime();
+}
+
+export function visiblePaidPlans(now = new Date(), launchAt = readLaunchAt()) {
+  return paidPlans().filter((plan) => plan.code !== LAUNCH_OFFER_CODE || isLaunchOfferOpen(now, launchAt));
+}
+
+export function planAvailabilityLabel(plan: { code: string; durationDays: number | null }) {
+  if (plan.code === LAUNCH_OFFER_CODE) {
+    return "Offre retirée 30 jours après le lancement. Mints sans expiration";
+  }
+  return plan.durationDays ? `Valables ${plan.durationDays} jours` : "Sans expiration";
 }

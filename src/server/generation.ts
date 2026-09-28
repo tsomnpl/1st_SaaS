@@ -47,6 +47,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       }
     }
   }
+  brief = { ...brief, creativeFreedom: "copie_exacte" };
 
   const selection = await resolveReferenceSelection(brief);
   const exact = isExactCopy(brief);

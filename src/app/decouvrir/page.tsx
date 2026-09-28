@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { STEPS } from "@/lib/brand";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
-import { formatFcfa, paidPlans } from "@/lib/plans";
+import { formatFcfa, planAvailabilityLabel, visiblePaidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
 import posters from "@/lib/exact-domain-posters.json";
@@ -183,7 +183,7 @@ export default function DiscoverPage() {
           </Link>
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {paidPlans().map((plan) => (
+          {visiblePaidPlans().map((plan) => (
             <Link
               key={plan.code}
               href={`/checkout?plan=${plan.code}`}
@@ -196,7 +196,7 @@ export default function DiscoverPage() {
                 {plan.mintAmount} Mints
               </p>
               <p className="mt-2 text-sm text-slate-600">
-                {plan.durationDays ? `Valables ${plan.durationDays} jours` : "Sans expiration"}
+                {planAvailabilityLabel(plan)}
                 {plan.editableExport ? " · pack éditable" : ""}
               </p>
             </Link>

@@ -80,10 +80,11 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     "Leave every other zone blank. Do not invent a subtitle, benefit cards, a price, a duration, a level, or a certificate.",
     "Erase every other word, number, price, date, phone, email, website, brand and slogan.",
     "Keep the same number of people, the same pose, and the same side of the frame. Do not add a new person or a new product.",
+    "Do not blur, pixelate, or cover any face. The photograph stays sharp.",
     "Allowed changes: texts, people or faces when a new person is required, and the logo.",
     brief.mainImageUrl
-      ? "Replace the person with the client photo. Keep the same position, pose, framing, visual role, and relation to the other elements."
-      : "Keep the existing person in the same position, pose, framing, and visual role. Do not add or remove people.",
+      ? "The second attached image is the client photo. Replace the person with that photo. Keep that photo sharp, including the face. Do not blur it. Keep the same position, pose, framing, visual role, and relation to the other elements."
+      : "Keep the existing person in the same position, pose, framing, and visual role. Do not add or remove people. Do not blur the face.",
     brief.logoUrl
       ? "Replace the logo slot with the client logo. Remove the old brand."
       : wantsReplacementIdentity(brief)
