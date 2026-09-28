@@ -149,18 +149,47 @@ export async function cancelPendingMintGrant(input: { adminUserId: string; grant
   });
 }
 
+export function isMissingPendingMintGrantTable(error: unknown) {
+  const code =
+    error && typeof error === "object" && "code" in error ? String((error as { code?: unknown }).code) : "";
+  const message = error instanceof Error
+    ? error.message
+    : String((error as { message?: unknown } | null)?.message ?? error ?? "");
+  if (!/pendingmintgrant/i.test(message)) return false;
+  return code === "P2021" || code === "P2022" || /does not exist|n'existe pas/i.test(message);
+}
+
+export async function listRecentMintGrants(take = 40) {
+  try {
+    return await prisma.pendingMintGrant.findMany({
+      orderBy: { createdAt: "desc" },
+      take,
+      include: { admin: true, user: true },
+    });
+  } catch (error) {
+    if (!isMissingPendingMintGrantTable(error)) throw error;
+    return [];
+  }
+}
+
 export async function redeemPendingMintGrants(input: { userId: string; verifiedEmails: string[] }) {
   const emails = [...new Set(input.verifiedEmails.map(normalizeGrantEmail).filter((email) => EMAIL_PATTERN.test(email)))];
   if (!emails.length) return { appliedIds: [] as string[] };
 
   const now = new Date();
-  const pending = await prisma.pendingMintGrant.findMany({
-    where: {
-      email: { in: emails },
-      status: PendingMintGrantStatus.PENDING,
-      OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
-    },
-  });
+  let pending;
+  try {
+    pending = await prisma.pendingMintGrant.findMany({
+      where: {
+        email: { in: emails },
+        status: PendingMintGrantStatus.PENDING,
+        OR: [{ expiresAt: null }, { expiresAt: { gt: now } }],
+      },
+    });
+  } catch (error) {
+    if (!isMissingPendingMintGrantTable(error)) throw error;
+    return { appliedIds: [] as string[] };
+  }
 
   const appliedIds: string[] = [];
   for (const grant of pending) {

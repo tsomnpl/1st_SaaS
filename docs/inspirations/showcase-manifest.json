@@ -346,16 +346,16 @@
       "modele_texte_utilise": "",
       "modele_image_utilise": "gemini-3.1-flash-image",
       "cout_rodi": 4.906,
-      "fichier_image": "/creations/restauration-04.webp",
-      "fichier_image_hero": "/creations/hero/restauration-04.webp",
+      "fichier_image": "",
+      "fichier_image_hero": "",
       "poids_ko": 245.3,
-      "statut": "genere",
+      "statut": "echec",
       "hero_loop": false,
       "page_reference_pdf": 116,
       "visual_ref_used": false,
       "web_width": 896,
       "web_height": 1200,
-      "fichier_image_web": "/creations/restauration-04.webp",
+      "fichier_image_web": "",
       "poids_web_ko": 245.3,
       "resize": "sharp lanczos3 width<=1600 webp q85 (legacy; native pixels recorded, not 4K)",
       "fichier_image_master_4k": "",
@@ -381,7 +381,8 @@
         "proximité des infos liées",
         "espace blanc / safe zone",
         "un seul héros visuel"
-      ]
+      ],
+      "erreur": "Le fichier montrait le burger, pas LIZIM. Case retirée de la galerie."
     },
     {
       "id": "mode-01",

@@ -4,6 +4,7 @@ import { requireAdminUser } from "@/lib/auth";
 import { getAdminBasePath } from "@/lib/env";
 import { AdminMintForm } from "@/components/admin/admin-mint-form";
 import { AdminMintGrantForm, CancelMintGrantButton } from "@/components/admin/admin-mint-grant-form";
+import { listRecentMintGrants } from "@/server/mint-grants";
 
 type SearchParams = Promise<{ type?: string }>;
 
@@ -24,11 +25,7 @@ export default async function AdminMintsPage({ searchParams }: { searchParams: S
       take: 80,
       include: { user: true },
     }),
-    prisma.pendingMintGrant.findMany({
-      orderBy: { createdAt: "desc" },
-      take: 40,
-      include: { admin: true, user: true },
-    }),
+    listRecentMintGrants(40),
     prisma.creditBucket.aggregate({
       where: { sourceType: "ADMIN_ADD", remainingAmount: { gt: 0 } },
       _sum: { remainingAmount: true },

@@ -10,26 +10,26 @@ const display = Bebas_Neue({
 
 const POSTERS = [
   {
-    src: "/creations/mode-01.webp",
+    src: "/creations/cover-sport.webp",
     width: 896,
     height: 1200,
-    alt: "Affiche d'exemple FlyerMint pour une collection de mode, avec une femme en robe blanche.",
+    alt: "Affiche d'exemple FlyerMint, course SPRINT 10K, un coureur au premier plan.",
     className: "cover-side cover-side-left",
     priority: false,
   },
   {
-    src: "/creations/mode-02.webp",
+    src: "/creations/cover-mode.webp",
     width: 896,
     height: 1200,
-    alt: "Affiche d'exemple FlyerMint pour une collection de mode, portrait d'une femme.",
+    alt: "Affiche d'exemple FlyerMint, collection LOOK NEUF, un mannequin au premier plan.",
     className: "cover-side cover-side-right",
     priority: false,
   },
   {
-    src: "/creations/evenementiel-03.webp",
+    src: "/creations/cover-musique.webp",
     width: 896,
     height: 1200,
-    alt: "Affiche d'exemple FlyerMint pour un concert, avec un jeune homme au premier plan.",
+    alt: "Affiche d'exemple FlyerMint, concert SESSION LIVE, un guitariste au premier plan.",
     className: "cover-hero",
     priority: true,
   },
