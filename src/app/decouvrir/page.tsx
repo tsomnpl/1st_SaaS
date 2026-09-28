@@ -94,7 +94,7 @@ export default async function DiscoverPage() {
               title="PROMO CE WEEKEND"
               subtitle="Burger + boisson"
               meta="5 000 FCFA"
-              imageSrc="/creations/restauration-04.webp"
+              imageSrc="/creations/promo-burger.webp"
               className="min-h-[220px]"
             />
           </div>
