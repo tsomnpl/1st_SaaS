@@ -5,7 +5,7 @@ import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
-import { EXACT_SHOWCASE } from "@/lib/exact-showcase";
+import posters from "@/lib/exact-domain-posters.json";
 
 export const metadata: Metadata = {
   title: "Découvrir",
@@ -13,12 +13,10 @@ export const metadata: Metadata = {
 };
 
 export default function DiscoverPage() {
-  const heroPosters = EXACT_SHOWCASE.map((poster) => ({
+  const heroPosters = posters.map((poster) => ({
     id: poster.id,
-    title: poster.title,
-    subtitle: poster.subtitle,
-    meta: poster.meta,
-    cta: poster.cta,
+    title: poster.label,
+    subtitle: poster.domaine,
     imageSrc: poster.src,
   }));
 
@@ -67,18 +65,18 @@ export default function DiscoverPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Copie exacte des références.</h2>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Une affiche exacte par domaine.</h2>
           </div>
           <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
             Toute la galerie
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {EXACT_SHOWCASE.map((poster) => (
-            <VisualPoster key={poster.id} title={poster.title} subtitle={poster.subtitle} meta={poster.meta} imageSrc={poster.src} />
+          {posters.map((poster) => (
+            <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
           ))}
         </div>
-        <p className="text-sm text-slate-500">Même image, même texte, même police, même fond.</p>
+        <p className="text-sm text-slate-500">Chaque visuel est la référence de son dossier, affichée telle quelle.</p>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
