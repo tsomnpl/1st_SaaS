@@ -228,7 +228,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   }
 
   const payloadOrderId = getStringField(payload, ["orderId", "order_id", "personal_Info"]);
-  const payloadAmount = getNumericField(payload, ["amount", "totalPrice", "montant"]);
+  const payloadAmount = getNumericField(payload, ["amount", "totalPrice"]);
 
   if (payloadOrderId && !String(payloadOrderId).includes(payment.orderId)) {
     throw new Error("PAYMENT_ORDER_MISMATCH");

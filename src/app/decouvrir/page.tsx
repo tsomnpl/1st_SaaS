@@ -98,6 +98,11 @@ export default function DiscoverPage() {
               className="min-h-[220px]"
             />
           </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {posters.slice(0, 4).map((poster) => (
+              <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
+            ))}
+          </div>
         </article>
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
@@ -119,6 +124,11 @@ export default function DiscoverPage() {
                 </span>
                 {question}
               </div>
+            ))}
+          </div>
+          <div className="mt-5 grid grid-cols-2 gap-3">
+            {posters.slice(4, 8).map((poster) => (
+              <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
             ))}
           </div>
         </article>
