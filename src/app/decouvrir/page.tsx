@@ -7,6 +7,24 @@ import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
 import posters from "@/lib/exact-domain-posters.json";
 
+function ShowcaseStrip() {
+  return (
+    <div className="mt-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Showcase</p>
+      <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+        {posters.map((poster) => (
+          <img
+            key={poster.id}
+            src={poster.src}
+            alt={poster.label}
+            className="h-36 w-auto shrink-0 rounded-lg border border-slate-200 bg-white object-contain"
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export const metadata: Metadata = {
   title: "Découvrir",
   description: "Le parcours FlyerMint : questions, direction artistique, affiche à télécharger.",
@@ -83,6 +101,7 @@ export default function DiscoverPage() {
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">Avant / Après</p>
           <h3 className="mt-2 text-2xl font-extrabold">D’un message brut à un visuel qui vend</h3>
+          <ShowcaseStrip />
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avant</p>
@@ -98,15 +117,11 @@ export default function DiscoverPage() {
               className="min-h-[220px]"
             />
           </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {posters.slice(0, 4).map((poster) => (
-              <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
-            ))}
-          </div>
         </article>
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
           <h3 className="mt-2 text-2xl font-extrabold">Tu réponds. On compose.</h3>
+          <ShowcaseStrip />
           <div className="mt-6 space-y-3">
             {[
               "Quel est ton domaine ?",
@@ -124,11 +139,6 @@ export default function DiscoverPage() {
                 </span>
                 {question}
               </div>
-            ))}
-          </div>
-          <div className="mt-5 grid grid-cols-2 gap-3">
-            {posters.slice(4, 8).map((poster) => (
-              <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
             ))}
           </div>
         </article>
