@@ -5,6 +5,7 @@ type LogoProps = {
   size?: "sm" | "md" | "lg";
   withSlogan?: boolean;
   onDark?: boolean;
+  wordmark?: "brand" | "ink";
   className?: string;
 };
 
@@ -19,6 +20,7 @@ export function BrandLogo({
   size = "md",
   withSlogan = false,
   onDark = false,
+  wordmark = "brand",
   className = "",
 }: LogoProps) {
   const dim = sizes[size];
@@ -34,8 +36,8 @@ export function BrandLogo({
       />
       <span className="leading-tight">
         <span className={`block font-extrabold tracking-tight ${dim.text}`}>
-          <span className={onDark ? "text-white" : "text-[#1E293B]"}>Flyer</span>
-          <span className="bg-gradient-to-r from-[#6D28D9] to-[#7C3AED] bg-clip-text text-transparent">
+          <span className={onDark ? "text-white" : wordmark === "ink" ? "text-inherit" : "text-[#1E293B]"}>Flyer</span>
+          <span className={wordmark === "ink" ? "text-inherit" : onDark ? "text-white" : "text-[#6D28D9]"}>
             Mint
           </span>
         </span>
@@ -50,7 +52,7 @@ export function BrandLogo({
 
   if (!href) return content;
   return (
-    <Link href={href} className="inline-flex" aria-label="FlyerMint — accueil">
+    <Link href={href} className="inline-flex" aria-label="FlyerMint, accueil">
       {content}
     </Link>
   );

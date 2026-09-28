@@ -12,6 +12,9 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-6 text-sm text-slate-600">
+          <Link href="/decouvrir" className="hover:text-[#6D28D9]">
+            Découvrir
+          </Link>
           <Link href="/creations" className="hover:text-[#6D28D9]">
             Créations
           </Link>
