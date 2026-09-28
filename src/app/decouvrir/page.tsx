@@ -7,24 +7,6 @@ import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
 import posters from "@/lib/exact-domain-posters.json";
 
-function ShowcaseStrip() {
-  return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400">Showcase</p>
-      <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
-        {posters.map((poster) => (
-          <img
-            key={poster.id}
-            src={poster.src}
-            alt={poster.label}
-            className="h-36 w-auto shrink-0 rounded-lg border border-slate-200 bg-white object-contain"
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
-
 export const metadata: Metadata = {
   title: "Découvrir",
   description: "Le parcours FlyerMint : questions, direction artistique, affiche à télécharger.",
@@ -79,29 +61,10 @@ export default function DiscoverPage() {
         </div>
       </section>
 
-      <section id="creations" className="space-y-6">
-        <div className="flex flex-wrap items-end justify-between gap-3">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Une affiche exacte par domaine.</h2>
-          </div>
-          <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
-            Toute la galerie
-          </Link>
-        </div>
-        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {posters.map((poster) => (
-            <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
-          ))}
-        </div>
-        <p className="text-sm text-slate-500">Chaque visuel reprend la référence de son dossier, sans nom, numéro ni date réelle.</p>
-      </section>
-
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">Avant / Après</p>
           <h3 className="mt-2 text-2xl font-extrabold">D’un message brut à un visuel qui vend</h3>
-          <ShowcaseStrip />
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avant</p>
@@ -121,7 +84,6 @@ export default function DiscoverPage() {
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">Questionnaire</p>
           <h3 className="mt-2 text-2xl font-extrabold">Tu réponds. On compose.</h3>
-          <ShowcaseStrip />
           <div className="mt-6 space-y-3">
             {[
               "Quel est ton domaine ?",
@@ -142,6 +104,24 @@ export default function DiscoverPage() {
             ))}
           </div>
         </article>
+      </section>
+
+      <section id="creations" className="space-y-6">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Une affiche exacte par domaine.</h2>
+          </div>
+          <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
+            Toute la galerie
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+          {posters.map((poster) => (
+            <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
+          ))}
+        </div>
+        <p className="text-sm text-slate-500">Chaque visuel reprend la référence de son dossier, sans nom, numéro ni date réelle. Les visages de ces exemples sont floutés, comme expliqué dans la confidentialité.</p>
       </section>
 
       <section id="comment-ca-marche">
