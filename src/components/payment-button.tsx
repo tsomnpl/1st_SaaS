@@ -46,7 +46,7 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
         </p>
       </div>
       <p className="text-sm text-slate-600">
-        Money Fusion demande le nom, l’e-mail et le pays sur sa page. FlyerMint ne les redemande pas.
+        La page Money Fusion demande ensuite le pays et le numéro, puis le moyen de paiement.
       </p>
       <button type="button" onClick={startPayment} disabled={loading} className="btn-primary w-full">
         {loading ? "Redirection…" : "Payer avec Money Fusion"}

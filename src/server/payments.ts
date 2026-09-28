@@ -17,7 +17,7 @@ type MoneyFusionInitPayload = {
 };
 
 type MoneyFusionInitResponse = {
-  statut?: string;
+  statut?: boolean | string;
   token?: string;
   message?: string;
   url?: string;
@@ -129,14 +129,25 @@ export async function initMoneyFusionPayment(params: {
     throw new Error("PAYMENT_INIT_FAILED");
   }
 
-  await prisma.payment.update({
-    where: { id: payment.id },
-    data: {
-      tokenPay: body.token,
-      rawStatus: body.statut,
-      rawResponse: body as Prisma.JsonObject,
-    },
-  });
+  const recordedStatus = moneyFusionRecordedStatus(body.statut, body.message);
+  try {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        tokenPay: body.token,
+        rawStatus: recordedStatus,
+        rawResponse: body as Prisma.JsonObject,
+      },
+    });
+  } catch {
+    await prisma.payment.update({
+      where: { id: payment.id },
+      data: {
+        tokenPay: body.token,
+        rawStatus: "pending",
+      },
+    });
+  }
 
   return { checkoutUrl: body.url, tokenPay: body.token, orderId: payment.orderId };
 }
@@ -170,6 +181,13 @@ export function classifyPaymentStatus(raw: string): PaymentStatus {
     return PaymentStatus.COMPLETED;
   }
   return PaymentStatus.PENDING;
+}
+
+export function moneyFusionRecordedStatus(statut: unknown, message?: unknown) {
+  if (typeof statut === "string" && statut.trim()) return statut.trim().slice(0, 120);
+  if (typeof message === "string" && message.trim()) return message.trim().slice(0, 120);
+  if (statut === false) return "failed";
+  return "pending";
 }
 
 export function moneyFusionStatusText(payload?: Record<string, unknown>) {

@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { buildMoneyFusionPayload, classifyPaymentStatus, moneyFusionInitUrl } from "@/server/payments";
+import {
+  buildMoneyFusionPayload,
+  classifyPaymentStatus,
+  moneyFusionInitUrl,
+  moneyFusionRecordedStatus,
+} from "@/server/payments";
 import { sanitizeRecord } from "@/lib/sanitize";
 
 describe("Money Fusion status and sanitization", () => {
@@ -16,6 +21,13 @@ describe("Money Fusion status and sanitization", () => {
     expect(classifyPaymentStatus("payin.session.completed")).toBe("COMPLETED");
     expect(classifyPaymentStatus("payin.session.cancelled")).toBe("CANCELLED");
     expect(classifyPaymentStatus("failure")).toBe("FAILED");
+    expect(classifyPaymentStatus("paiement en cours")).toBe("PENDING");
+  });
+
+  it("stores the Money Fusion boolean status as text", () => {
+    expect(moneyFusionRecordedStatus(true, "paiement en cours")).toBe("paiement en cours");
+    expect(moneyFusionRecordedStatus(false, "")).toBe("failed");
+    expect(classifyPaymentStatus(moneyFusionRecordedStatus(true, "paiement en cours"))).toBe("PENDING");
   });
 
   it("posts to the merchant pay url and sends an article list", () => {
