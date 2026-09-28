@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { designLawsBlock, GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
 
@@ -189,7 +189,8 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
     `FORMAT: ${ad.format}.`,
     `TITLE TO RENDER EXACTLY: ${input.title}.`,
     ...facts,
-    `Reference principles (inspire, never copy): ${ad.reference_principles.slice(0, 12).join(" || ")}.`,
+    designLawsBlock(),
+    `Reference principles (inspire, never copy): ${ad.reference_principles.join(" || ")}.`,
     `Avoid: ${ad.avoid.join("; ")}.`,
     "Do not invent business details. Every visible word correctly spelled. No dummy latin, no warped letters.",
     "If it would not be publishable by a real local business, it is a failure.",
