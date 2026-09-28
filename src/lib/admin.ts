@@ -21,11 +21,27 @@ export function getAdminClerkIds() {
   );
 }
 
+export function collectClerkEmails(input: {
+  primary?: string | null;
+  addresses?: Array<string | null | undefined> | null;
+}) {
+  const emails = [input.primary, ...(input.addresses ?? [])]
+    .map((value) => value?.trim() ?? "")
+    .filter(Boolean);
+  return {
+    email: emails[0] ?? null,
+    emails: [...new Set(emails.map((value) => value.toLowerCase()))],
+  };
+}
+
 export function isConfiguredAdmin(input: {
   clerkUserId?: string | null;
   email?: string | null;
+  emails?: Array<string | null | undefined> | null;
 }) {
-  void input.email;
-  if (!input.clerkUserId) return false;
-  return getAdminClerkIds().has(input.clerkUserId);
+  if (input.clerkUserId && getAdminClerkIds().has(input.clerkUserId)) return true;
+  const configured = getConfiguredAdminEmail();
+  if (!configured) return false;
+  const candidates = [input.email, ...(input.emails ?? [])];
+  return candidates.some((email) => emailsMatch(email, configured));
 }

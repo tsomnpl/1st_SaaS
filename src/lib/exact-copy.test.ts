@@ -152,6 +152,9 @@ describe("exact copy prompt and model", () => {
       const prompt = buildPrompt(brief, buildArtDirection(brief));
       expect(prompt).toContain("Modify the supplied reference poster.");
       expect(prompt).toContain("IMAGE EDIT");
+      expect(prompt).toContain("same photograph");
+      expect(prompt).toContain("Do not blur");
+      expect(prompt).toContain("same font");
       expect(prompt).toContain("The only words allowed");
       expect(prompt).not.toContain("DESIGN LAWS, mandatory");
       expect(prompt).not.toContain("un seul heros");
@@ -196,6 +199,13 @@ describe("exact copy prompt and model", () => {
     });
     expect(body.model).toBe("google/gemini-3-pro-image");
     expect(body.image).toBe(reference);
+    const withPhoto = buildImageGenerationBody({
+      model,
+      prompt: "edit",
+      brief: { ...brief, mainImageUrl: "data:image/png;base64,UEhPVE8=" },
+      referenceImageDataUrl: reference,
+    });
+    expect(withPhoto.image).toEqual([reference, "data:image/png;base64,UEhPVE8="]);
     expect(String(body.prompt)).toContain("Modify the supplied reference poster.");
   });
 });

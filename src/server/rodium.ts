@@ -176,10 +176,14 @@ export function buildImageGenerationBody(params: {
   const reference = exact
     ? params.referenceImageDataUrl
     : params.referenceImageDataUrl || params.brief.mainImageUrl || params.brief.logoUrl;
+  const clientPhoto = exact && params.brief.mainImageUrl?.startsWith("data:image/")
+    ? params.brief.mainImageUrl
+    : "";
   if (reference?.startsWith("data:image/") && String(body.model).toLowerCase().includes("gemini")) {
-    body.image = reference;
+    body.image = clientPhoto ? [reference, clientPhoto] : reference;
   }
-  if (exact && body.image !== params.referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
+  const attached = Array.isArray(body.image) ? body.image[0] : body.image;
+  if (exact && attached !== params.referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
   return body;
 }
 

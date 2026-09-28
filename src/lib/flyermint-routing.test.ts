@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { isLikelyImageModel, selectImageModel, sizeForFormat } from "@/server/rodium";
 import { classifyPaymentStatus } from "@/server/payments";
-import { paidPlans } from "@/lib/plans";
+import { isLaunchOfferOpen, launchOfferEndsAt, paidPlans, readLaunchAt, visiblePaidPlans } from "@/lib/plans";
 
 describe("image model routing", () => {
   it("rejects text-only models", () => {
@@ -60,5 +60,19 @@ describe("plans", () => {
       [20000, 15],
       [25000, 20],
     ]);
+    expect(paidPlans().find((plan) => plan.code === "STARTER_2K")?.durationDays).toBeNull();
+  });
+
+  it("keeps the 2 000 FCFA offer until 30 days after the real launch", () => {
+    expect(readLaunchAt("")).toBeNull();
+    expect(readLaunchAt("pas une date")).toBeNull();
+    expect(isLaunchOfferOpen(new Date("2026-10-15T00:00:00Z"), null)).toBe(true);
+    const launch = new Date("2026-10-01T00:00:00Z");
+    const ends = launchOfferEndsAt(launch);
+    expect(ends?.toISOString()).toBe("2026-10-31T00:00:00.000Z");
+    expect(isLaunchOfferOpen(new Date("2026-10-30T23:00:00Z"), launch)).toBe(true);
+    expect(isLaunchOfferOpen(new Date("2026-10-31T00:00:00Z"), launch)).toBe(false);
+    expect(visiblePaidPlans(new Date("2026-11-02T00:00:00Z"), launch).some((plan) => plan.code === "STARTER_2K")).toBe(false);
+    expect(visiblePaidPlans(new Date("2026-10-02T00:00:00Z"), launch).some((plan) => plan.code === "STARTER_2K")).toBe(true);
   });
 });

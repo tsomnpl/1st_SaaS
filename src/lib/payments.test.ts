@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { classifyPaymentStatus } from "@/server/payments";
+import {
+  buildMoneyFusionPayload,
+  classifyPaymentStatus,
+  moneyFusionInitUrl,
+  moneyFusionRecordedStatus,
+} from "@/server/payments";
 import { sanitizeRecord } from "@/lib/sanitize";
 
 describe("Money Fusion status and sanitization", () => {
@@ -12,6 +17,36 @@ describe("Money Fusion status and sanitization", () => {
     expect(classifyPaymentStatus("failed")).toBe("FAILED");
     expect(classifyPaymentStatus("pending")).toBe("PENDING");
     expect(classifyPaymentStatus("unknown-xyz")).toBe("PENDING");
+    expect(classifyPaymentStatus("no paid")).toBe("PENDING");
+    expect(classifyPaymentStatus("payin.session.completed")).toBe("COMPLETED");
+    expect(classifyPaymentStatus("payin.session.cancelled")).toBe("CANCELLED");
+    expect(classifyPaymentStatus("failure")).toBe("FAILED");
+    expect(classifyPaymentStatus("paiement en cours")).toBe("PENDING");
+  });
+
+  it("stores the Money Fusion boolean status as text", () => {
+    expect(moneyFusionRecordedStatus(true, "paiement en cours")).toBe("paiement en cours");
+    expect(moneyFusionRecordedStatus(false, "")).toBe("failed");
+    expect(classifyPaymentStatus(moneyFusionRecordedStatus(true, "paiement en cours"))).toBe("PENDING");
+  });
+
+  it("posts to the merchant pay url and sends an article list", () => {
+    const endpoint = moneyFusionInitUrl("https://pay.moneyfusion.net/Boutique/abc123/pay/");
+    expect(endpoint).toBe("https://pay.moneyfusion.net/Boutique/abc123/pay");
+    expect(endpoint.endsWith("/paiement")).toBe(false);
+
+    const payload = buildMoneyFusionPayload({
+      totalPrice: 2000,
+      articleName: "Pack Starter",
+      orderId: "FM-1",
+      userId: "user_1",
+      nomclient: "Awa",
+      returnUrl: "https://app.test/payment/success",
+      webhookUrl: "https://app.test/api/webhooks/moneyfusion",
+    });
+    expect(payload.article).toEqual([{ "Pack Starter": 2000 }]);
+    expect(payload.personal_Info).toEqual([{ orderId: "FM-1", userId: "user_1" }]);
+    expect(payload.nomclient).toBe("Awa");
   });
 
   it("redacts secrets from webhook payloads", () => {

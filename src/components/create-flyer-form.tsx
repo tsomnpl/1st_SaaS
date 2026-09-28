@@ -93,7 +93,7 @@ export function CreateFlyerForm({
       style: String(form.get("style") ?? ""),
       mood: String(form.get("mood") ?? ""),
       format: String(form.get("format") ?? "instagram_post"),
-      creativeFreedom: String(form.get("creativeFreedom") ?? "liberte_guidee"),
+      creativeFreedom: "copie_exacte",
       colors: String(form.get("colors") ?? "")
         .split(",")
         .map((v) => v.trim())
@@ -200,19 +200,10 @@ export function CreateFlyerForm({
           options={FORMATS.map((item) => item)}
           defaultValue={initialFormat || undefined}
         />
-        <Select
-          name="creativeFreedom"
-          label="Liberté créative"
-          options={[
-            { value: "liberte_guidee", label: "Guidée (recommandé)" },
-            { value: "liberte_totale", label: "Totale" },
-            { value: "design_tres_precis", label: "Très précise" },
-            { value: "copie_exacte", label: "Copie exacte de la référence du domaine" },
-          ]}
-        />
+        <input type="hidden" name="creativeFreedom" value="copie_exacte" />
         <p className="text-xs text-slate-500 md:col-span-2">
-          Copie exacte : FlyerMint garde la composition d’une vraie affiche du domaine choisi, remplace les textes,
-          et retire les informations que tu n’as pas fournies.
+          Chaque affiche est une copie exacte d’une référence du domaine. Ta photo remplace la personne, nette, sans flou.
+          Seuls les textes que tu remplis changent. Le flou des visages ne concerne que les exemples publics.
         </p>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Photo / produit (optionnel)</span>

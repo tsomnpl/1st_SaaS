@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { CheckoutForm } from "@/components/payment-button";
-import { OFFICIAL_PLANS } from "@/lib/plans";
+import { isLaunchOfferOpen, LAUNCH_OFFER_CODE, OFFICIAL_PLANS } from "@/lib/plans";
 import { requireActiveCurrentUser } from "@/server/users";
 
 type SearchParams = Promise<{ plan?: string }>;
@@ -13,7 +13,7 @@ export default async function CheckoutPage({
   await requireActiveCurrentUser();
   const { plan: planCode } = await searchParams;
   const plan = OFFICIAL_PLANS.find((item) => item.code === planCode && item.priceFcfa > 0);
-  if (!plan) notFound();
+  if (!plan || (plan.code === LAUNCH_OFFER_CODE && !isLaunchOfferOpen())) notFound();
 
   return (
     <div className="space-y-6">

@@ -66,6 +66,8 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
   const lines = [
     "Modify the supplied reference poster. Keep its composition and visual structure. Replace only the elements allowed by the new brief.",
     "IMAGE EDIT of the attached poster. Do not generate a new poster.",
+    "Keep the same photograph, the same faces, the same products, the same background, and the same decorations. Do not redraw them.",
+    "Keep the same font, the same letter shapes, the same text color, the same text size, and the same text position. Change only the characters inside a slot the client filled.",
     "Do not create a new design. Do not invent a new grid, a new hierarchy, a new crop, or a new layout.",
     "The original reference is the priority. Do not apply a 2-3 color limit, an official FlyerMint palette, or a single-hero recomposition.",
     ref
@@ -78,15 +80,16 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     "Leave every other zone blank. Do not invent a subtitle, benefit cards, a price, a duration, a level, or a certificate.",
     "Erase every other word, number, price, date, phone, email, website, brand and slogan.",
     "Keep the same number of people, the same pose, and the same side of the frame. Do not add a new person or a new product.",
+    "Do not blur, pixelate, or cover any face. The photograph stays sharp.",
     "Allowed changes: texts, people or faces when a new person is required, and the logo.",
     brief.mainImageUrl
-      ? "Replace the person with the client photo. Keep the same position, pose, framing, visual role, and relation to the other elements."
-      : "Keep the existing person in the same position, pose, framing, and visual role. Do not add or remove people.",
+      ? "The second attached image is the client photo. Replace the person with that photo. Keep that photo sharp, including the face. Do not blur it. Keep the same position, pose, framing, visual role, and relation to the other elements."
+      : "Keep the existing person in the same position, pose, framing, and visual role. Do not add or remove people. Do not blur the face.",
     brief.logoUrl
       ? "Replace the logo slot with the client logo. Remove the old brand."
       : wantsReplacementIdentity(brief)
         ? "No client logo was provided. Put the word FLYERMINT only in the existing logo slot."
-        : "No replacement identity was requested. Remove the old logo and the old brand name. Do not add a FLYERMINT badge.",
+        : "The client brought no logo. Remove the old logo and the old brand name, and restore the original background in that zone. Do not add a FLYERMINT badge.",
     "Put each new fact in the matching slot of the original:",
     ...provided.map((slot) => `- ${slot.label} replaces the original ${slot.label}: "${slot.value}"`),
     "Delete the old element when the new brief does not provide that fact. Remove these slots completely:",
@@ -153,7 +156,7 @@ export function exactCopyQcPrompt(brief: CreateBriefInput, selection: ReferenceS
     "Image 1 is the REFERENCE. Image 2 is the RESULT.",
     "Reply with one JSON object and no markdown.",
     "Keys: visible_text (string), same_layout (boolean).",
-    "visible_text must list every readable word on image 2, including small labels, prices, buttons and the bottom row.",
+    "visible_text must list every readable word painted on image 2 only, including small labels, prices, buttons and the bottom row. Do not transcribe image 1.",
     "same_layout is true only if the person stays on the same side, the blocks stay in the same places, and the background colors still match image 1.",
     "Do not decide if the poster is pretty. Only transcribe image 2 and compare the layout.",
     `Expected words: ${provided.map((slot) => slot.value).join(" | ") || brief.title}.`,

@@ -31,7 +31,7 @@ export default function TermsPage() {
         <ul className="mt-3 list-disc space-y-2 pl-5 text-slate-700">
           <li>1 Mint = 1 affiche.</li>
           <li>1 Mint offert à l’inscription, sans expiration.</li>
-          <li>Le pack à 2 000 FCFA contient 2 Mints, valables 30 jours.</li>
+          <li>Le pack à 2 000 FCFA contient 2 Mints sans expiration. Cette offre disparaît 30 jours après le lancement réel.</li>
           <li>Les autres packs payants n’ont pas de date d’expiration, selon l’offre affichée au moment de l’achat.</li>
           <li>L’export d’une affiche déjà générée ne consomme aucun Mint.</li>
           <li>Les Mints qui expirent le plus tôt sont consommés en premier.</li>

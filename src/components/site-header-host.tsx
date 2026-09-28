@@ -1,5 +1,6 @@
 import { SiteHeader } from "@/components/site-header";
 import { prisma } from "@/lib/prisma";
+import { isConfiguredAdmin } from "@/lib/admin";
 import { currentUserIsAdmin } from "@/lib/auth";
 import { getAdminBasePath } from "@/lib/env";
 import { auth } from "@clerk/nextjs/server";
@@ -10,12 +11,19 @@ export async function SiteHeaderHost() {
   let showAdmin = false;
   if (session.userId) {
     try {
+      showAdmin = await currentUserIsAdmin();
+    } catch {
+      showAdmin = false;
+    }
+    try {
       const user = await prisma.user.findUnique({
         where: { clerkUserId: session.userId },
         include: { creditAccount: true },
       });
       mintBalance = user?.creditAccount?.balance ?? null;
-      showAdmin = await currentUserIsAdmin();
+      if (!showAdmin && user?.email) {
+        showAdmin = isConfiguredAdmin({ clerkUserId: session.userId, email: user.email });
+      }
     } catch {
       mintBalance = null;
     }

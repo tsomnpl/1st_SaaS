@@ -43,6 +43,13 @@ export default function PrivacyPage() {
       </section>
 
       <section>
+        <h2 className="text-2xl font-bold">Exemples publics</h2>
+        <p className="mt-3 text-slate-700">
+          Les affiches de la galerie Créations et du showcase viennent de références déjà publiées. Les visages y sont floutés, et les noms, numéros, dates et lieux réels sont retirés, pour ne pas remettre en ligne l’identité des personnes visibles sur ces sources. Ce flou ne s’applique pas à une affiche qu’un client génère : sa photo reste nette, et seuls les textes qu’il fournit changent.
+        </p>
+      </section>
+
+      <section>
         <h2 className="text-2xl font-bold">Finalités</h2>
         <p className="mt-3 text-slate-700">
           Fournir le compte, composer et générer l’affiche, tenir le ledger de Mints, confirmer un paiement, envoyer les e-mails de paiement, de génération et de support, sécuriser l’accès, prévenir les abus, et permettre à un administrateur autorisé de gérer le service.
