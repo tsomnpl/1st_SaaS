@@ -1,14 +1,20 @@
 import { UserStatus } from "@prisma/client";
-import { requireAuth, ensureUserProfile } from "@/lib/auth";
+import { requireAuth, ensureUserProfile, readClerkIdentity } from "@/lib/auth";
 import { ensureCreditAccount, expireCredits, grantWelcomeMintIfNeeded } from "@/server/credits";
+import { redeemPendingMintGrants } from "@/server/mint-grants";
 
 export async function getOrCreateCurrentUser() {
   const clerkUserId = await requireAuth();
   const user = await ensureUserProfile(clerkUserId);
+  const identity = await readClerkIdentity(clerkUserId);
 
   await ensureCreditAccount(user.id);
   await expireCredits();
   await grantWelcomeMintIfNeeded(user);
+  await redeemPendingMintGrants({
+    userId: user.id,
+    verifiedEmails: identity.verifiedEmails,
+  });
   return user;
 }
 

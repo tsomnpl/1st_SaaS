@@ -12,8 +12,9 @@ type Props = {
 };
 
 const publicLinks = [
+  { href: "/decouvrir", label: "Découvrir" },
   { href: "/creations", label: "Créations" },
-  { href: "/#comment-ca-marche", label: "Comment ça marche" },
+  { href: "/decouvrir#comment-ca-marche", label: "Comment ça marche" },
   { href: "/pricing", label: "Tarifs" },
 ];
 
@@ -47,7 +48,7 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
               </Link>
             ) : null}
             {typeof mintBalance === "number" ? (
-              <span className="rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
+              <span className="rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600">
                 {mintBalance} Mint{mintBalance > 1 ? "s" : ""}
               </span>
             ) : null}

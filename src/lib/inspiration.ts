@@ -222,7 +222,7 @@ const DOMAIN_PLAYBOOK: Record<(typeof DOMAINS)[number], Omit<InspirationReferenc
     composition: "vehicule 3/4, modele/annee, offre financement, CTA essai",
     colorPalette: "sombre metallise + 1 accent",
     typography: "titre condensed, specs lisibles",
-    imageTreatment: "carrosserie nette, reflets maitrises — garder la photo client",
+    imageTreatment: "carrosserie nette, reflets maitrises, garder la photo client",
     layout: "voiture heros + bande deal",
     density: "medium",
     mood: "puissant",

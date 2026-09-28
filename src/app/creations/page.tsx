@@ -9,11 +9,11 @@ import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
 export const metadata: Metadata = {
   title: pageTitle("Créations"),
   description: "Exemples d’affiches FlyerMint par domaine.",
-  openGraph: { title: "Créations — FlyerMint" },
+  openGraph: { title: "Créations, FlyerMint" },
 };
 
 export default async function CreationsPage() {
-  const { generated, manifest } = await getGeneratedShowcase();
+  const { generated } = await getGeneratedShowcase();
   const posters = SHOWCASE_SHEETS.map((sheet) => {
     const entry = generated.find((item) => item.id === sheet.id);
     return entry
@@ -54,12 +54,10 @@ export default async function CreationsPage() {
           </div>
         ))}
       </div>
-      <p className="text-xs text-slate-400">
-        Manifeste : {manifest?.count ?? 0} entrées · RODI {manifest?.rodi_total ?? 0}
-      </p>
+      <p className="text-sm text-slate-500">Exemples créés avec FlyerMint.</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {DOMAINS.map((domain) => (
-          <Link key={domain} href="/create" className="rounded-2xl border border-slate-200 bg-white px-3 py-4 text-center text-sm font-semibold hover:border-violet-200 hover:text-[#6D28D9]">
+          <Link key={domain} href="/create" className="rounded-lg border border-slate-200 bg-white px-3 py-4 text-center text-sm font-semibold hover:border-slate-400">
             {DOMAIN_LABELS[domain]}
           </Link>
         ))}

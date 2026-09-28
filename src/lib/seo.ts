@@ -5,7 +5,7 @@ const SLOGAN = "Créez des visuels qui marquent";
 
 export function pageTitle(name?: string): Metadata["title"] {
   return {
-    absolute: name ? `${name} — ${SITE}` : `${SITE} — ${SLOGAN}`,
+    absolute: name ? `${name}, ${SITE}` : `${SITE}, ${SLOGAN}`,
   };
 }
 

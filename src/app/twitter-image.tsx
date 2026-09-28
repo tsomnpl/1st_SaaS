@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "FlyerMint — Créez des visuels qui marquent.";
+export const alt = "FlyerMint, Créez des visuels qui marquent.";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -15,7 +15,7 @@ export default function TwitterImage() {
           flexDirection: "column",
           justifyContent: "center",
           padding: 80,
-          background: "linear-gradient(135deg, #1E293B 0%, #312E81 55%, #0F766E 100%)",
+          background: "#1E293B",
           color: "white",
           fontFamily: "sans-serif",
         }}
@@ -25,7 +25,7 @@ export default function TwitterImage() {
             width: 72,
             height: 72,
             borderRadius: 20,
-            background: "linear-gradient(135deg, #6D28D9, #3B82F6, #10B981)",
+            background: "#10B981",
             marginBottom: 28,
           }}
         />

@@ -6,6 +6,7 @@ import { clientKey, rateLimit } from "@/lib/rate-limit";
 
 const PUBLIC_EXACT = new Set([
   "/",
+  "/decouvrir",
   "/pricing",
   "/creations",
   "/sign-in",
@@ -13,6 +14,8 @@ const PUBLIC_EXACT = new Set([
   "/payment/success",
   "/privacy",
   "/terms",
+  "/confidentialite",
+  "/cgu",
   "/forbidden",
 ]);
 

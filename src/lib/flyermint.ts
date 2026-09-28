@@ -100,7 +100,7 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
   const human = humanStagingFor(input.domain);
 
   return {
-    concept: `${input.style ?? playbook?.style ?? "moderne"} — direction artistique ${input.domain}`,
+    concept: `${input.style ?? playbook?.style ?? "moderne"}, direction artistique ${input.domain}`,
     main_subject: input.mainImageUrl ? "personne/photo fournie par le client (ne pas remplacer)" : human.role,
     human,
     secondary_elements: [input.subtitle, input.description, input.location].filter(Boolean) as string[],
@@ -124,9 +124,9 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
     cta: input.cta ?? "Contactez-nous",
     format: input.format,
     format_variants: [
-      "instagram_post 1:1 — sujet un peu plus centre",
-      "instagram_story / whatsapp_status 9:16 — sujet bas, titre haut",
-      "affiche_a4 / affiche_a3 — plus de marge print, meme identite",
+      "instagram_post 1:1, sujet un peu plus centre",
+      "instagram_story / whatsapp_status 9:16, sujet bas, titre haut",
+      "affiche_a4 / affiche_a3, plus de marge print, meme identite",
     ],
     reference_principles: [
       "une personne humaine obligatoire, integree, naturelle",
@@ -177,7 +177,7 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
     "Process: brief → domain references → art direction → composition → human staging → generate a publishable poster.",
     STYLE_INSPIRATION_TEXT,
     GLOBAL_DESIGN_PROMPT,
-    `CONTEXT — ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
+    `CONTEXT, ${input.visualType} for ${input.domain}. Objective: ${input.objective}. Audience: ${input.targetAudience}.`,
     `HUMAN SUBJECT (non-negotiable): at least one photoreal person. Role: ${ad.human.role}. Action: ${ad.human.action}. Framing: ${ad.human.framing}. Wardrobe: ${ad.human.wardrobe}. Expression: ${ad.human.expression}. Why they are there: ${ad.human.why}.`,
     input.mainImageUrl
       ? "The client photo IS the human subject. Do not replace their face or body. Integrate them into the scene."

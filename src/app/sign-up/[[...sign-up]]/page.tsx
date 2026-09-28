@@ -1,4 +1,21 @@
+import Link from "next/link";
 import { BrandLogo } from "@/components/brand/logo";
+
+function SignupNotice() {
+  return (
+    <p className="max-w-md text-center text-sm text-slate-600">
+      En créant un compte, tu acceptes les{" "}
+      <Link href="/cgu" className="font-semibold text-[#6D28D9]">
+        conditions d’utilisation
+      </Link>{" "}
+      et la{" "}
+      <Link href="/confidentialite" className="font-semibold text-[#6D28D9]">
+        politique de confidentialité
+      </Link>
+      .
+    </p>
+  );
+}
 
 export default function SignUpPage() {
   if (!process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY) {
@@ -8,6 +25,9 @@ export default function SignUpPage() {
         <p className="mt-6 text-slate-600">
           L’inscription Clerk n’est pas configurée dans cet environnement.
         </p>
+        <div className="mt-4">
+          <SignupNotice />
+        </div>
       </div>
     );
   }
@@ -21,6 +41,7 @@ async function SignUpClient() {
     <div className="flex flex-col items-center gap-6 py-10">
       <BrandLogo withSlogan href="/" />
       <SignUp />
+      <SignupNotice />
     </div>
   );
 }

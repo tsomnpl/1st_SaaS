@@ -244,7 +244,7 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     tone: "clean",
     premium: true,
     prompt:
-      "Vertical fintech poster 3:4. Soft blue app interface, abstract card — not a Visa/Mastercard replica. Title BANQUE RIVE. Balance $24,560 +12.5%. Quick actions. FLYERMINT badge. No real bank names.",
+      "Vertical fintech poster 3:4. Soft blue app interface, abstract card, not a Visa/Mastercard replica. Title BANQUE RIVE. Balance $24,560 +12.5%. Quick actions. FLYERMINT badge. No real bank names.",
   },
   {
     id: "immobilier-business-05",
@@ -270,7 +270,7 @@ export const SHOWCASE_SHEETS: ShowcaseSheet[] = [
     tone: "dark",
     premium: false,
     prompt:
-      "Vertical tech retail poster 3:4. Dark slate and mint accent. Title FACTO TECH. Line Everything tech, right in your palm. Phones, laptops, antennas — generic devices. Fast delivery. FLYERMINT badge. No real electronics brand names.",
+      "Vertical tech retail poster 3:4. Dark slate and mint accent. Title FACTO TECH. Line Everything tech, right in your palm. Phones, laptops, antennas, generic devices. Fast delivery. FLYERMINT badge. No real electronics brand names.",
   },
   {
     id: "techno-education-02",

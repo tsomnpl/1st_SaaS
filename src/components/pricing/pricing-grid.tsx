@@ -17,19 +17,12 @@ export function PricingGrid({
         return (
           <article
             key={plan.code}
-            className={`flex flex-col rounded-[1.6rem] border bg-white p-6 ${
-              highlighted
-                ? "border-[#6D28D9] shadow-[0_20px_50px_rgba(109,40,217,0.12)]"
-                : "border-slate-200"
+            className={`flex flex-col rounded-lg border bg-white p-6 ${
+              highlighted ? "border-[#6D28D9]" : "border-slate-200"
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <p className="text-sm font-semibold text-slate-500">{plan.shortName}</p>
-              {highlighted ? (
-                <span className="rounded-full bg-violet-50 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wide text-[#6D28D9]">
-                  Le plus choisi
-                </span>
-              ) : null}
             </div>
             <h2 className="mt-3 text-2xl font-extrabold tracking-tight text-[#1E293B]">
               {plan.headline}
@@ -47,7 +40,9 @@ export function PricingGrid({
             <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex gap-2">
-                  <span className="mt-0.5 text-[#6D28D9]">✓</span>
+                  <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-[#6D28D9]" aria-hidden="true">
+                    <path d="M3 8.5 6.2 12 13 4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  </svg>
                   <span>{feature}</span>
                 </li>
               ))}
@@ -56,7 +51,7 @@ export function PricingGrid({
               href={ctaHref ? ctaHref(plan.code) : `/checkout?plan=${plan.code}`}
               className={`mt-6 ${highlighted ? "btn-primary" : "btn-secondary"}`}
             >
-              Acheter — {formatFcfa(plan.priceFcfa)}
+              Acheter, {formatFcfa(plan.priceFcfa)}
             </Link>
             <p className="mt-3 text-center text-[11px] text-slate-400">1 Mint = 1 affiche</p>
           </article>

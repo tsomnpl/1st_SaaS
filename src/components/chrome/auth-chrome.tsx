@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { Plus_Jakarta_Sans } from "next/font/google";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteHeaderHost } from "@/components/site-header-host";
+import { SiteFrame } from "@/components/chrome/site-frame";
 import { CookieBanner } from "@/components/legal/cookie-banner";
 import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 
@@ -15,9 +16,9 @@ export function AuthChrome({ children }: { children: ReactNode }) {
   return (
     <html lang="fr" className={`${jakarta.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col text-slate-900">
-        <SiteHeaderHost />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-8 [&:has([data-admin-shell])]:max-w-[1500px]">{children}</main>
-        <SiteFooter />
+        <SiteFrame header={<SiteHeaderHost />} footer={<SiteFooter />}>
+          {children}
+        </SiteFrame>
         <CookieBanner />
         <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
       </body>

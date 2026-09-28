@@ -20,10 +20,12 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
     ["Nouveaux / actifs", `${stats.usersNewWeek} / ${stats.usersActive}`, stats.userSeries.map((p) => p.value), "#3B82F6"],
     ["Suspendus", String(stats.usersSuspended), [stats.usersSuspended], "#F59E0B"],
     ["Mints restants", String(stats.remainingMints), stats.mintSeries.map((p) => p.value), "#10B981"],
-    ["Mints achetés", String(stats.mintsSold), stats.mintSeries.map((p) => p.value), "#3B82F6"],
+    ["Mints vendus", String(stats.mintsSold), stats.soldMintSeries.map((p) => p.value), "#3B82F6"],
     ["Mints consommés", String(stats.mintsConsumed), stats.mintSeries.map((p) => p.value), "#6D28D9"],
     ["Mints expirés / gratuits", `${stats.mintsExpired} / ${stats.mintsFree}`, [stats.mintsExpired, stats.mintsFree], "#F59E0B"],
-    ["Mints admin / remboursés", `${stats.mintsAdminAdd} / ${stats.mintsRefunded}`, [stats.mintsAdminAdd, stats.mintsRefunded], "#10B981"],
+    ["Mints offerts par l'admin", String(stats.mintsGiftedByAdmin), stats.giftedMintSeries.map((p) => p.value), "#10B981"],
+    ["Mints offerts non utilisés", String(stats.giftedMintsUnused), [stats.giftedMintsUnused], "#10B981"],
+    ["Mints remboursés", String(stats.mintsRefunded), [stats.mintsRefunded], "#3B82F6"],
     ["Générations OK / KO", `${stats.generationsSuccess} / ${stats.generationsFailed}`, stats.generationSeries.map((p) => p.value), "#6D28D9"],
     ["Taux d’erreur", `${Math.round(stats.errorRate * 100)}%`, [stats.errorRate * 100], "#F59E0B"],
     ["Durée moyenne", `${Math.round(stats.avgDurationMs / 1000)} s`, [stats.avgDurationMs], "#3B82F6"],
@@ -37,7 +39,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Contrôle du SaaS — données serveur uniquement.</p>
+          <p className="mt-1 text-sm text-slate-500">Contrôle du SaaS, données serveur uniquement.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/api/admin/export?type=users" className="btn-secondary">Export users</Link>

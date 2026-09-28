@@ -12,6 +12,9 @@ export function SiteFooter() {
           </p>
         </div>
         <div className="flex flex-wrap gap-6 text-sm text-slate-600">
+          <Link href="/decouvrir" className="hover:text-[#6D28D9]">
+            Découvrir
+          </Link>
           <Link href="/creations" className="hover:text-[#6D28D9]">
             Créations
           </Link>
@@ -27,10 +30,10 @@ export function SiteFooter() {
           <Link href="/sign-up" className="hover:text-[#6D28D9]">
             Inscription
           </Link>
-          <Link href="/privacy" className="hover:text-[#6D28D9]">
+          <Link href="/confidentialite" className="hover:text-[#6D28D9]">
             Confidentialité
           </Link>
-          <Link href="/terms" className="hover:text-[#6D28D9]">
+          <Link href="/cgu" className="hover:text-[#6D28D9]">
             CGU
           </Link>
         </div>

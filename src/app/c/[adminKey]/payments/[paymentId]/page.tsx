@@ -32,8 +32,8 @@ export default async function AdminPaymentDetailPage({ params }: { params: Param
           ["Plan", payment.plan.name],
           ["Montant", `${payment.amountFcfa.toLocaleString("fr-FR")} FCFA`],
           ["Statut", payment.status],
-          ["Token", payment.tokenPay ?? "—"],
-          ["Webhook", payment.webhookState ?? "—"],
+          ["Token", payment.tokenPay ?? "n/a"],
+          ["Webhook", payment.webhookState ?? "n/a"],
           ["Crédit", payment.creditedAt ? payment.creditedAt.toLocaleString("fr-FR") : "non crédité"],
           ["Créé", payment.createdAt.toLocaleString("fr-FR")],
         ].map(([label, value]) => (

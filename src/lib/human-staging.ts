@@ -76,7 +76,7 @@ const STAGING: Record<(typeof DOMAINS)[number], HumanStaging> = {
   },
   Sport: {
     role: "athlete",
-    action: "in motion — running, lifting, striking",
+    action: "in motion, running, lifting, striking",
     framing: "dynamic diagonal, subject sharp, background speed",
     wardrobe: "kit matching the sport, no real club logos",
     expression: "effort",
@@ -92,7 +92,7 @@ const STAGING: Record<(typeof DOMAINS)[number], HumanStaging> = {
   },
   "Sante & Clinique": {
     role: "clinician or patient",
-    action: "consulting, checking, or welcoming — respectful, no gore",
+    action: "consulting, checking, or welcoming, respectful, no gore",
     framing: "calm portrait, lots of white space",
     wardrobe: "scrubs or simple civilian clothes, no real hospital marks",
     expression: "care",
@@ -163,7 +163,7 @@ const STAGING: Record<(typeof DOMAINS)[number], HumanStaging> = {
     why: "music is a body on stage",
   },
   Associations: {
-    role: "volunteer or beneficiary — respectful, never exploitative",
+    role: "volunteer or beneficiary, respectful, never exploitative",
     action: "helping, teaching, or standing with the community",
     framing: "documentary, one clear face, message has room",
     wardrobe: "everyday clothes",

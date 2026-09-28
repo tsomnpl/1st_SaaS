@@ -86,7 +86,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     name: "Pack Studio",
     shortName: "Studio",
     headline: "Le rythme d’un vrai studio",
-    description: "Dix affiches, sans expiration — le meilleur équilibre.",
+    description: "Dix affiches, sans expiration, le meilleur équilibre.",
     priceFcfa: 15000,
     mintAmount: 10,
     durationDays: null,

@@ -45,7 +45,7 @@ export function AdminPlansClient({ plans }: { plans: PlanRow[] }) {
                 {plan.editableExport ? " · export éditable" : ""}
               </p>
             </div>
-            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${plan.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+            <span className={`rounded-lg px-3 py-1 text-xs font-semibold ${plan.active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
               {plan.active ? "Actif" : "Inactif"}
             </span>
           </div>

@@ -37,7 +37,7 @@ export async function GET(_: Request, { params }: { params: Params }) {
   <p>WhatsApp : ${escapeHtml(brief.whatsapp ?? "")}</p>
   <p>CTA : ${escapeHtml(brief.cta ?? "")}</p>
   <p><img src="${escapeHtml(generation.outputUrl)}" alt="Affiche" style="max-width:100%"/></p>
-  <p>Pack éditable FlyerMint — image + textes. Ouvert par Word ou un navigateur. Pas d’intégration Figma/Canva.</p>
+  <p>Pack éditable FlyerMint, image + textes. Ouvert par Word ou un navigateur. Pas d’intégration Figma/Canva.</p>
 </body>
 </html>`;
 

@@ -50,7 +50,7 @@ export default async function HistoryPage() {
                 <div className="space-y-2 p-4">
                   <p className="font-semibold">{brief.title ?? "Sans titre"}</p>
                   <p className="text-xs text-slate-500">
-                    {brief.domain ?? "—"} · {new Date(generation.createdAt).toLocaleDateString("fr-FR")}
+                    {brief.domain ?? "n/a"} · {new Date(generation.createdAt).toLocaleDateString("fr-FR")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {generation.outputUrl ? (

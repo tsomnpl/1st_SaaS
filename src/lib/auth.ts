@@ -14,14 +14,21 @@ export async function requireAuth() {
 export async function readClerkIdentity(clerkUserId: string) {
   const clerkUser = await currentUser();
   if (!clerkUser || clerkUser.id !== clerkUserId) {
-    return { email: null as string | null, name: null as string | null };
+    return {
+      email: null as string | null,
+      name: null as string | null,
+      verifiedEmails: [] as string[],
+    };
   }
   const email =
     clerkUser.primaryEmailAddress?.emailAddress ??
     clerkUser.emailAddresses[0]?.emailAddress ??
     null;
   const name = [clerkUser.firstName, clerkUser.lastName].filter(Boolean).join(" ") || null;
-  return { email, name };
+  const verifiedEmails = clerkUser.emailAddresses
+    .filter((address) => address.verification?.status === "verified" && address.emailAddress)
+    .map((address) => address.emailAddress);
+  return { email, name, verifiedEmails };
 }
 
 export async function ensureUserProfile(clerkUserId: string) {

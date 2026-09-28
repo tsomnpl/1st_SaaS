@@ -45,7 +45,7 @@ export default async function AdminReferencesPage() {
               <p>{ref.style}</p>
               <p className="text-slate-500">{ref.composition}</p>
               <p className="text-xs text-slate-400">
-                {ref.palette.join(" · ")} — {ref.ambiance}
+                {ref.palette.join(" · ")}, {ref.ambiance}
               </p>
             </article>
           ))}

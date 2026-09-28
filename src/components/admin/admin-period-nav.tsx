@@ -22,7 +22,7 @@ export function AdminPeriodNav({
         <Link
           key={value}
           href={`${baseHref}?period=${value}`}
-          className={`rounded-full px-3 py-1 text-sm ${
+          className={`rounded-lg px-3 py-1 text-sm ${
             current === value ? "bg-[#1E293B] text-white" : "border border-slate-200 bg-white text-slate-600"
           }`}
         >
