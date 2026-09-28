@@ -15,7 +15,10 @@ export const metadata: Metadata = {
 export default async function DiscoverPage() {
   const { generated } = await getGeneratedShowcase();
   const posters = generated.map((entry) => toPoster(entry, true));
-  const heroPosters = posters.filter((poster) => poster.imageSrc).slice(0, 3);
+  const heroPosters = generated
+    .filter((entry) => entry.hero_loop)
+    .map((entry) => toPoster(entry, true))
+    .filter((poster) => poster.imageSrc);
 
   return (
     <div className="space-y-24 pb-8">
@@ -88,10 +91,10 @@ export default async function DiscoverPage() {
               </p>
             </div>
             <VisualPoster
-              title="MENU DU JOUR"
-              subtitle="Plat du jour"
+              title="PROMO CE WEEKEND"
+              subtitle="Burger + boisson"
               meta="5 000 FCFA"
-              imageSrc="/creations/restauration-03.webp"
+              imageSrc="/creations/restauration-04.webp"
               className="min-h-[220px]"
             />
           </div>

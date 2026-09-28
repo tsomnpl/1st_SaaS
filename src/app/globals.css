@@ -25,6 +25,8 @@
 
 html,
 body {
+  max-width: 100%;
+  overflow-x: clip;
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-jakarta), "Plus Jakarta Sans", Arial, Helvetica, sans-serif;
@@ -91,9 +93,13 @@ textarea:focus-visible {
 .cover-root {
   display: flex;
   min-height: 100dvh;
+  max-width: 100%;
   flex-direction: column;
   overflow-x: clip;
-  background: var(--cover-bg);
+  background:
+    radial-gradient(900px 520px at 12% 0%, rgba(255, 255, 255, 0.28), transparent 58%),
+    radial-gradient(720px 460px at 100% 22%, rgba(16, 185, 129, 0.55), transparent 62%),
+    linear-gradient(155deg, #4c1d95 0%, #6d28d9 34%, #7c3aed 52%, #14b8a6 82%, #10b981 100%);
   color: var(--cover-ink);
 }
 
@@ -112,21 +118,25 @@ textarea:focus-visible {
   flex-direction: column;
   align-items: center;
   justify-content: flex-end;
+  width: 100%;
   min-height: 420px;
+  overflow: hidden;
   padding: 0 1rem 0.5rem;
 }
 
 .cover-word {
   position: absolute;
   top: 8%;
-  left: 50%;
+  left: 0;
   z-index: 0;
+  width: 100%;
   margin: 0;
-  transform: translateX(-50%);
+  overflow: hidden;
   color: var(--cover-word);
-  font-size: clamp(4.6rem, 22vw, 15rem);
+  font-size: clamp(4.2rem, 16vw, 12.5rem);
   line-height: 0.8;
   letter-spacing: 0.01em;
+  text-align: center;
   white-space: nowrap;
   user-select: none;
   pointer-events: none;
@@ -286,6 +296,23 @@ textarea:focus-visible {
   outline-offset: 3px;
 }
 
+@keyframes hero-loop {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-50%);
+  }
+}
+
+.hero-loop-track {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  animation: hero-loop 36s linear infinite;
+  will-change: transform;
+}
+
 @keyframes cover-in {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
@@ -324,7 +351,8 @@ textarea:focus-visible {
 
 @media (prefers-reduced-motion: reduce) {
   .cover-enter,
-  .cover-leaf {
+  .cover-leaf,
+  .hero-loop-track {
     animation: none;
   }
 }
