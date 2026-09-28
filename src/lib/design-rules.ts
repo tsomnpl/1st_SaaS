@@ -1,4 +1,23 @@
-/** Design laws applied to every FlyerMint generation. Source: prompt section 3 + DESIGN_LAWS. PDF bases-du-design-lpt.pdf is missing from git. */
+/** Design laws applied to every FlyerMint generation. Source: prompt section 3. PDF bases-du-design-lpt.pdf is missing from git. */
+
+export const DESIGN_LAWS = [
+  "Hierarchie: un seul heros visuel, puis titre, puis offre, puis CTA.",
+  "Contraste: texte lisible sur le fond, jamais gris pale sur image chargee.",
+  "Alignement: une grille claire, bords et colonnes constants.",
+  "Proximite: regrouper date/lieu/prix, separer du titre.",
+  "Repetition: 1 accent de couleur, 1 rythme de marges.",
+  "Equilibre: ne pas saturer les coins, laisser une safe zone.",
+  "Espace blanc: respirer autour du titre et du CTA.",
+  "Typo: 2 familles max, chiffres de prix plus forts que le body.",
+  "CTA: bouton ou bande contraste, verbe d'action, visible en 2 secondes.",
+  "Ne jamais reproduire une affiche de reference: composer un original.",
+] as const;
+
+export function designLawsBlock() {
+  return ["DESIGN LAWS, mandatory on every poster:", ...DESIGN_LAWS.map((law, index) => `${index + 1}. ${law}`)].join(
+    "\n",
+  );
+}
 
 export const DESIGN_RULE_LABELS = [
   "palette limitée 2-3 couleurs",

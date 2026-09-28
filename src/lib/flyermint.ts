@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
-import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { designLawsBlock, GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
 import { humanStagingFor } from "@/lib/human-staging";
-import { designLawsBlock, selectInspirationReferences } from "@/lib/inspiration";
+import { selectInspirationReferences } from "@/lib/inspiration";
 
 function isSafeImageRef(value: string) {
   if (value.startsWith("https://")) return true;
