@@ -153,7 +153,7 @@ export function exactCopyQcPrompt(brief: CreateBriefInput, selection: ReferenceS
     "Image 1 is the REFERENCE. Image 2 is the RESULT.",
     "Reply with one JSON object and no markdown.",
     "Keys: visible_text (string), same_layout (boolean).",
-    "visible_text must list every readable word on image 2, including small labels, prices, buttons and the bottom row.",
+    "visible_text must list every readable word painted on image 2 only, including small labels, prices, buttons and the bottom row. Do not transcribe image 1.",
     "same_layout is true only if the person stays on the same side, the blocks stay in the same places, and the background colors still match image 1.",
     "Do not decide if the poster is pretty. Only transcribe image 2 and compare the layout.",
     `Expected words: ${provided.map((slot) => slot.value).join(" | ") || brief.title}.`,
