@@ -41,6 +41,12 @@ enum GenerationStatus {
   FAILED
 }
 
+enum PendingMintGrantStatus {
+  PENDING
+  REDEEMED
+  CANCELLED
+}
+
 model User {
   id                 String              @id @default(cuid())
   clerkUserId        String              @unique
@@ -57,6 +63,8 @@ model User {
   generations        Generation[]
   brandKit           BrandKit?
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
+  mintGrantsCreated  PendingMintGrant[]  @relation("MintGrantAdmin")
+  mintGrantsRedeemed PendingMintGrant[]  @relation("MintGrantUser")
 }
 
 model Plan {
@@ -186,6 +194,26 @@ model AdminLog {
   metadata   Json?
   createdAt  DateTime @default(now())
   admin      User     @relation("AdminActorLogs", fields: [adminUserId], references: [id])
+}
+
+model PendingMintGrant {
+  id          String                 @id @default(cuid())
+  email       String
+  amount      Int
+  reason      String
+  adminUserId String
+  expiresAt   DateTime?
+  status      PendingMintGrantStatus @default(PENDING)
+  userId      String?
+  redeemedAt  DateTime?
+  claimKey    String?                @unique
+  createdAt   DateTime               @default(now())
+  updatedAt   DateTime               @updatedAt
+  admin       User                   @relation("MintGrantAdmin", fields: [adminUserId], references: [id])
+  user        User?                  @relation("MintGrantUser", fields: [userId], references: [id])
+
+  @@index([email, status])
+  @@index([adminUserId])
 }
 
 model WebhookEvent {

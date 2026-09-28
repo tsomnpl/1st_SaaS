@@ -126,11 +126,11 @@ export async function removeCredits(
   if (amount <= 0) throw new Error("INVALID_REMOVE_AMOUNT");
   const client = getClient(options.tx);
   const account = await ensureCreditAccount(userId, options.tx);
-  if (account.balance <= 0) {
-    return { removed: 0, balanceAfter: 0 };
+  if (account.balance < amount) {
+    throw new Error("BALANCE_WOULD_BE_NEGATIVE");
   }
 
-  const removable = Math.min(amount, account.balance);
+  const removable = amount;
   let left = removable;
 
   const buckets = await client.creditBucket.findMany({
@@ -153,7 +153,7 @@ export async function removeCredits(
 
   const balanceBefore = account.balance;
   const balanceAfter = balanceBefore - removable;
-  await client.creditTransaction.create({
+  const transaction = await client.creditTransaction.create({
     data: {
       userId,
       type: CreditTransactionType.ADMIN_REMOVE,
@@ -169,7 +169,7 @@ export async function removeCredits(
     data: { balance: balanceAfter },
   });
 
-  return { removed: removable, balanceAfter };
+  return { removed: removable, balanceAfter, transaction };
 }
 
 export async function expireCredits(now = new Date(), tx?: Prisma.TransactionClient) {

@@ -1,65 +1,30 @@
-import { CreditTransactionType } from "@prisma/client";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminUser } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
 import { safeJsonError } from "@/lib/safe-api";
-import { grantCredits, removeCredits } from "@/server/credits";
+import { mintAdminMax, adjustUserMints } from "@/server/mint-grants";
 
 const adjustSchema = z.object({
   targetUserId: z.string().min(3).max(80),
-  amount: z.number().int().min(-500).max(500).refine((n) => n !== 0),
+  amount: z.number().int().min(-5000).max(5000).refine((value) => value !== 0),
   reason: z.string().min(2).max(240),
-  reference: z.string().max(80).optional(),
 });
 
 export async function POST(request: Request) {
   try {
     const admin = await requireAdminUser();
     const body = adjustSchema.parse(await request.json());
-
-    const result = await prisma.$transaction(async (tx) => {
-      if (body.amount > 0) {
-        await grantCredits(
-          body.targetUserId,
-          body.amount,
-          CreditTransactionType.ADMIN_ADD,
-          {
-            tx,
-            reference: body.reference ?? "ADMIN_ADJUSTMENT",
-            metadata: { reason: body.reason, adminUserId: admin.id },
-          },
-          null,
-        );
-      } else {
-        await removeCredits(body.targetUserId, Math.abs(body.amount), {
-          tx,
-          reference: body.reference ?? "ADMIN_ADJUSTMENT",
-          metadata: { reason: body.reason, adminUserId: admin.id },
-        });
-      }
-
-      await tx.adminLog.create({
-        data: {
-          adminUserId: admin.id,
-          action: body.amount > 0 ? "ADMIN_ADD_MINT" : "ADMIN_REMOVE_MINT",
-          targetType: "USER",
-          targetId: body.targetUserId,
-          metadata: {
-            amount: body.amount,
-            reason: body.reason,
-            reference: body.reference ?? null,
-          },
-        },
-      });
-
-      const account = await tx.creditAccount.findUnique({
-        where: { userId: body.targetUserId },
-      });
-      return account?.balance ?? 0;
+    const max = mintAdminMax();
+    if (Math.abs(body.amount) > max) {
+      throw new Error("INVALID_MINT_AMOUNT");
+    }
+    const result = await adjustUserMints({
+      adminUserId: admin.id,
+      targetUserId: body.targetUserId,
+      amount: body.amount,
+      reason: body.reason,
     });
-
-    return NextResponse.json({ ok: true, balance: result });
+    return NextResponse.json({ ok: true, ...result });
   } catch (error) {
     return safeJsonError(error);
   }

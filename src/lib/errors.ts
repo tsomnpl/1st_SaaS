@@ -19,6 +19,10 @@ const MESSAGES: Record<string, string> = {
   RATE_LIMITED: "Trop de tentatives. Réessaie dans un instant.",
   EXPORT_LOCKED: "L’export éditable n’est pas inclus dans tes offres.",
   NOT_FOUND: "Ressource introuvable.",
+  INVALID_MINT_AMOUNT: "La quantité doit être un entier dans la limite autorisée.",
+  REASON_REQUIRED: "Le motif est obligatoire.",
+  BALANCE_WOULD_BE_NEGATIVE: "Le solde ne peut pas devenir négatif.",
+  GRANT_NOT_PENDING: "Cette attribution n’est plus en attente.",
 };
 
 export function publicErrorMessage(error: unknown) {

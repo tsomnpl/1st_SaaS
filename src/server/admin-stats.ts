@@ -86,6 +86,7 @@ export async function getAdminStats(period: AdminPeriod = "30") {
     recentLogs,
     webhooks,
     webhookDupes,
+    giftedBuckets,
   ] = await Promise.all([
     prisma.user.count(),
     prisma.user.count({ where: { status: "ACTIVE" } }),
@@ -101,6 +102,10 @@ export async function getAdminStats(period: AdminPeriod = "30") {
     prisma.webhookEvent.count({
       where: { eventKey: { contains: "duplicate" } },
     }),
+    prisma.creditBucket.aggregate({
+      where: { sourceType: "ADMIN_ADD", remainingAmount: { gt: 0 } },
+      _sum: { remainingAmount: true },
+    }),
   ]);
 
   const completed = payments.filter((payment) => payment.status === PaymentStatus.COMPLETED);
@@ -115,6 +120,7 @@ export async function getAdminStats(period: AdminPeriod = "30") {
     completed.filter((payment) => payment.createdAt >= since).reduce((sum, payment) => sum + payment.amountFcfa, 0);
 
   const mintsSold = completed.reduce((sum, payment) => sum + payment.plan.mintAmount, 0);
+  const giftedMintsUnused = giftedBuckets._sum.remainingAmount ?? 0;
   const mintsConsumed = transactions.filter((tx) => tx.type === "GENERATION").reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
   const mintsExpired = transactions.filter((tx) => tx.type === "EXPIRATION").reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
   const mintsFree = transactions.filter((tx) => tx.type === "FREE_GRANT").reduce((sum, tx) => sum + tx.amount, 0);
@@ -249,6 +255,8 @@ export async function getAdminStats(period: AdminPeriod = "30") {
     mintsFree,
     mintsBonus,
     mintsAdminAdd,
+    mintsGiftedByAdmin: mintsAdminAdd,
+    giftedMintsUnused,
     mintsAdminRemove,
     mintsRefunded,
     rodiCost: rodiAll,
@@ -275,7 +283,19 @@ export async function getAdminStats(period: AdminPeriod = "30") {
     generationSeries: fillSeries(days, periodGenerations, (generation) => generation.createdAt, () => 1),
     mintSeries: fillSeries(
       days,
-      periodTransactions.filter((tx) => tx.type === "GENERATION" || tx.type === "PURCHASE" || tx.type === "ADMIN_ADD"),
+      periodTransactions.filter((tx) => tx.type === "GENERATION" || tx.type === "PURCHASE"),
+      (tx) => tx.createdAt,
+      (tx) => Math.abs(tx.amount),
+    ),
+    soldMintSeries: fillSeries(
+      days,
+      periodTransactions.filter((tx) => tx.type === "PURCHASE"),
+      (tx) => tx.createdAt,
+      (tx) => tx.amount,
+    ),
+    giftedMintSeries: fillSeries(
+      days,
+      periodTransactions.filter((tx) => tx.type === "ADMIN_ADD"),
       (tx) => tx.createdAt,
       (tx) => tx.amount,
     ),
