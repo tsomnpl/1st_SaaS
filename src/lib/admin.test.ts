@@ -17,8 +17,8 @@ describe("admin identity", () => {
     expect(emailsMatch("", "owner@example.com")).toBe(false);
   });
 
-  it("grants admin only via configured email or clerk id", () => {
-    expect(isConfiguredAdmin({ email: "owner@example.com", clerkUserId: "user_x" })).toBe(true);
+  it("grants admin only via clerk user id", () => {
+    expect(isConfiguredAdmin({ email: "owner@example.com", clerkUserId: "user_x" })).toBe(false);
     expect(isConfiguredAdmin({ email: "other@example.com", clerkUserId: "user_admin" })).toBe(true);
     expect(isConfiguredAdmin({ email: "other@example.com", clerkUserId: "user_x" })).toBe(false);
     expect(isConfiguredAdmin({ email: null, clerkUserId: null })).toBe(false);

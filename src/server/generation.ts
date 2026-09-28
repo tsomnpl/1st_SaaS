@@ -11,6 +11,7 @@ import {
 import { applyRepair, parseQcReport, qcPrompt, shouldRepair, skippedQcReport } from "@/lib/quality-control";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
+import { notifyAdmin, sendGenerationFailed, sendGenerationSucceeded } from "@/server/mail";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 
@@ -115,6 +116,14 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
       },
     });
 
+    if (user.email) {
+      await sendGenerationSucceeded({
+        to: user.email,
+        title: brief.title,
+        generationId: updated.id,
+      });
+    }
+
     return {
       generationId: updated.id,
       outputUrl: updated.outputUrl,
@@ -141,6 +150,19 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         null,
       );
     });
+
+    if (user.email) {
+      await sendGenerationFailed({
+        to: user.email,
+        title: brief.title,
+        generationId: generation.id,
+      });
+      await notifyAdmin(
+        `Génération non aboutie, ${generation.id}`,
+        `La génération ${generation.id} a échoué. Le Mint a été recrédité.`,
+        user.email,
+      );
+    }
 
     throw error;
   }

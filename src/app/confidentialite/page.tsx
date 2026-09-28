@@ -45,7 +45,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-2xl font-bold">Finalités</h2>
         <p className="mt-3 text-slate-700">
-          Fournir le compte, composer et générer l’affiche, tenir le ledger de Mints, confirmer un paiement, sécuriser l’accès, prévenir les abus, et permettre à un administrateur autorisé de gérer le service.
+          Fournir le compte, composer et générer l’affiche, tenir le ledger de Mints, confirmer un paiement, envoyer les e-mails de paiement, de génération et de support, sécuriser l’accès, prévenir les abus, et permettre à un administrateur autorisé de gérer le service.
         </p>
       </section>
 
@@ -57,6 +57,7 @@ export default function PrivacyPage() {
           <li>PostgreSQL : base qui stocke le compte, les Mints, les paiements et les générations.</li>
           <li>RodiumAI : génération de l’affiche à partir du brief et, le cas échéant, du logo ou de la photo.</li>
           <li>Money Fusion : initiation et confirmation des paiements.</li>
+          <li>Google (Gmail SMTP) : envoi des e-mails transactionnels vers l’adresse du compte.</li>
           <li>Plausible : statistiques de pages, seulement si un domaine analytics est configuré et si tu acceptes ces cookies.</li>
         </ul>
       </section>
@@ -92,7 +93,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-2xl font-bold">Transferts</h2>
         <p className="mt-3 text-slate-700">
-          Clerk, Vercel, RodiumAI, Money Fusion et, si tu les acceptes, les statistiques peuvent traiter des données en dehors du pays où tu te trouves. Le lieu exact dépend de l’infrastructure de chaque prestataire.
+          Clerk, Vercel, RodiumAI, Money Fusion, Google pour l’envoi des e-mails et, si tu les acceptes, les statistiques peuvent traiter des données en dehors du pays où tu te trouves. Le lieu exact dépend de l’infrastructure de chaque prestataire.
         </p>
       </section>
 

@@ -13,6 +13,7 @@
     "showcase:generate": "node --experimental-strip-types --no-warnings scripts/generate-showcase.mts",
     "showcase:map": "python3 scripts/map-reference-pages.py",
     "db:seed": "node prisma/seed.mjs",
+    "mail:check": "MAIL_LIVE_TEST=1 vitest run src/server/mail.live.test.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
@@ -22,6 +23,7 @@
     "@clerk/nextjs": "^6.31.3",
     "@prisma/client": "^6.16.3",
     "next": "16.3.4",
+    "nodemailer": "^10.0.11",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "zod": "^4.1.7"
@@ -33,9 +35,9 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.3.4",
+    "prisma": "^6.16.3",
     "tailwindcss": "^4",
     "typescript": "^5",
-    "prisma": "^6.16.3",
     "vitest": "^3.2.4"
   }
 }
