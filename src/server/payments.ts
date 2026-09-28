@@ -3,6 +3,7 @@ import { env, getAppUrl } from "@/lib/env";
 import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
+import { notifyAdmin, sendPaymentConfirmed, sendPaymentFailed } from "@/server/mail";
 import { ensureOfficialPlans } from "@/server/plans";
 
 type MoneyFusionInitPayload = {
@@ -80,6 +81,12 @@ export async function initMoneyFusionPayment(params: {
         rawResponse: body as Prisma.JsonObject,
       },
     });
+    await emailPaymentOutcome(params.userId, "failed", {
+      orderId: payment.orderId,
+      planName: plan.name,
+      amountFcfa: plan.priceFcfa,
+      mintAmount: plan.mintAmount,
+    });
     throw new Error("PAYMENT_INIT_FAILED");
   }
 
@@ -126,7 +133,7 @@ export function classifyPaymentStatus(raw: string): PaymentStatus {
 export async function confirmPaymentByToken(token: string, payload?: Record<string, unknown>) {
   const payment = await prisma.payment.findUnique({
     where: { tokenPay: token },
-    include: { plan: true },
+    include: { plan: true, user: { select: { email: true } } },
   });
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
 
@@ -164,19 +171,34 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
     throw new Error("PAYMENT_AMOUNT_MISMATCH");
   }
 
+  const details = {
+    orderId: payment.orderId,
+    planName: payment.plan.name,
+    amountFcfa: payment.amountFcfa,
+    mintAmount: payment.plan.mintAmount,
+  };
+
   if (classified !== PaymentStatus.COMPLETED) {
+    const nextStatus = classified === PaymentStatus.PENDING ? payment.status : classified;
     await prisma.payment.update({
       where: { id: payment.id },
       data: {
-        status: classified === PaymentStatus.PENDING ? payment.status : classified,
+        status: nextStatus,
         rawStatus: remoteStatus,
         rawResponse: payload ? safePayload : Prisma.JsonNull,
         webhookState: classified,
       },
     });
+    if (
+      (nextStatus === PaymentStatus.FAILED || nextStatus === PaymentStatus.CANCELLED) &&
+      payment.status !== nextStatus
+    ) {
+      await emailPaymentOutcome(payment.userId, "failed", details, payment.user.email);
+    }
     return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
   }
 
+  let credited = false;
   await prisma.$transaction(async (tx) => {
     const claimed = await tx.payment.updateMany({
       where: {
@@ -194,6 +216,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
     });
     if (claimed.count === 0) return;
 
+    credited = true;
     const alreadyGranted = await tx.creditTransaction.findFirst({
       where: {
         userId: payment.userId,
@@ -221,7 +244,39 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
     );
   });
 
+  if (credited) {
+    await emailPaymentOutcome(payment.userId, "confirmed", details, payment.user.email);
+  }
+
   return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+}
+
+async function emailPaymentOutcome(
+  userId: string,
+  kind: "confirmed" | "failed",
+  details: { orderId: string; planName: string; amountFcfa: number; mintAmount: number },
+  knownEmail?: string | null,
+) {
+  const email =
+    knownEmail ??
+    (await prisma.user.findUnique({ where: { id: userId }, select: { email: true } }))?.email;
+  if (!email) return;
+  const payload = { to: email, ...details };
+  if (kind === "confirmed") {
+    await sendPaymentConfirmed(payload);
+    await notifyAdmin(
+      `Paiement confirmé, ${details.orderId}`,
+      `Commande ${details.orderId}, ${details.amountFcfa} FCFA, ${details.mintAmount} Mints.`,
+      email,
+    );
+    return;
+  }
+  await sendPaymentFailed(payload);
+  await notifyAdmin(
+    `Paiement non abouti, ${details.orderId}`,
+    `Commande ${details.orderId}, ${details.amountFcfa} FCFA. Aucun Mint ajouté.`,
+    email,
+  );
 }
 
 function getStringField(payload: Record<string, unknown> | undefined, keys: string[]) {

@@ -25,13 +25,7 @@ export function isConfiguredAdmin(input: {
   clerkUserId?: string | null;
   email?: string | null;
 }) {
-  const email = normalizeEmail(input.email);
-  const configuredEmail = normalizeEmail(getConfiguredAdminEmail());
-  if (configuredEmail && email && email === configuredEmail) {
-    return true;
-  }
-  if (input.clerkUserId && getAdminClerkIds().has(input.clerkUserId)) {
-    return true;
-  }
-  return false;
+  void input.email;
+  if (!input.clerkUserId) return false;
+  return getAdminClerkIds().has(input.clerkUserId);
 }
