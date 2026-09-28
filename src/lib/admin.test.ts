@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach, afterEach } from "vitest";
-import { emailsMatch, isConfiguredAdmin } from "./admin";
+import { collectClerkEmails, emailsMatch, isConfiguredAdmin } from "./admin";
 
 describe("admin identity", () => {
   const env = { ...process.env };
@@ -15,6 +15,15 @@ describe("admin identity", () => {
     expect(emailsMatch("Owner@Example.com", "owner@example.com")).toBe(true);
     expect(emailsMatch("a@b.com", "c@d.com")).toBe(false);
     expect(emailsMatch("", "owner@example.com")).toBe(false);
+  });
+
+  it("keeps every address on the Clerk account, including an unverified login email", () => {
+    const collected = collectClerkEmails({
+      primary: "other@example.com",
+      addresses: ["owner@example.com", "other@example.com"],
+    });
+    expect(collected.email).toBe("other@example.com");
+    expect(isConfiguredAdmin({ email: collected.email, emails: collected.emails, clerkUserId: "user_x" })).toBe(true);
   });
 
   it("grants admin from the clerk id or the configured email", () => {

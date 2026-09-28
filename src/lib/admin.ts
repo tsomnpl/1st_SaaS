@@ -21,6 +21,19 @@ export function getAdminClerkIds() {
   );
 }
 
+export function collectClerkEmails(input: {
+  primary?: string | null;
+  addresses?: Array<string | null | undefined> | null;
+}) {
+  const emails = [input.primary, ...(input.addresses ?? [])]
+    .map((value) => value?.trim() ?? "")
+    .filter(Boolean);
+  return {
+    email: emails[0] ?? null,
+    emails: [...new Set(emails.map((value) => value.toLowerCase()))],
+  };
+}
+
 export function isConfiguredAdmin(input: {
   clerkUserId?: string | null;
   email?: string | null;
