@@ -1,4 +1,5 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
+import { EXACT_COPY_MODEL, isExactCopy } from "@/lib/exact-copy";
 import { env, getAllowedImageModels } from "@/lib/env";
 
 type RodiumResponse = {
@@ -46,6 +47,8 @@ export function isLikelyImageModel(modelId: string) {
 }
 
 export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, available: string[] = []) {
+  if (isExactCopy(brief)) return EXACT_COPY_MODEL;
+
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();
   const textHeavyFields = [
@@ -112,7 +115,11 @@ function rodiumHeaders() {
   };
 }
 
-export async function generateWithRodium(input: { prompt: string; brief: CreateBriefInput }) {
+export async function generateWithRodium(input: {
+  prompt: string;
+  brief: CreateBriefInput;
+  referenceImageDataUrl?: string;
+}) {
   if (!env.RODIUMAI_API_KEY) {
     throw new Error("RODIUMAI_API_KEY_MISSING");
   }
@@ -123,6 +130,7 @@ export async function generateWithRodium(input: { prompt: string; brief: CreateB
     model: imageModel,
     prompt: input.prompt,
     brief: input.brief,
+    referenceImageDataUrl: input.referenceImageDataUrl,
   });
 
   const totalTokens = render.usage?.total_tokens ?? 0;
@@ -130,6 +138,8 @@ export async function generateWithRodium(input: { prompt: string; brief: CreateB
   return {
     model: imageModel,
     imageModel,
+    responseModel: render.responseModel,
+    referenceUsed: render.referenceUsed,
     imageUrl: render.imageUrl,
     rawText: render.rawText,
     usage: {
@@ -146,22 +156,42 @@ export function estimateRodiCost(model: string, totalTokens: number) {
   return Number(((totalTokens / 1000) * perThousandTokens).toFixed(3));
 }
 
-async function renderImage(params: {
+export function buildImageGenerationBody(params: {
   model: string;
   prompt: string;
   brief: CreateBriefInput;
+  referenceImageDataUrl?: string;
 }) {
-  const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
+  const exact = isExactCopy(params.brief);
+  if (exact && params.model !== EXACT_COPY_MODEL) throw new Error("EXACT_COPY_WRONG_MODEL");
+  if (exact && !params.referenceImageDataUrl?.startsWith("data:image/")) {
+    throw new Error("EXACT_COPY_REFERENCE_MISSING");
+  }
   const body: Record<string, unknown> = {
-    model: params.model,
+    model: exact ? EXACT_COPY_MODEL : params.model,
     prompt: params.prompt,
     n: 1,
     size: sizeForFormat(params.brief.format),
   };
-  const reference = params.brief.mainImageUrl || params.brief.logoUrl;
-  if (reference?.startsWith("data:image/") && params.model.toLowerCase().includes("gemini")) {
+  const reference = exact
+    ? params.referenceImageDataUrl
+    : params.referenceImageDataUrl || params.brief.mainImageUrl || params.brief.logoUrl;
+  if (reference?.startsWith("data:image/") && String(body.model).toLowerCase().includes("gemini")) {
     body.image = reference;
   }
+  if (exact && body.image !== params.referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
+  return body;
+}
+
+async function renderImage(params: {
+  model: string;
+  prompt: string;
+  brief: CreateBriefInput;
+  referenceImageDataUrl?: string;
+}) {
+  const endpoint = `${env.RODIUMAI_BASE_URL}/images/generations`;
+  const exact = isExactCopy(params.brief);
+  const body = buildImageGenerationBody(params);
 
   const response = await fetch(endpoint, {
     method: "POST",
@@ -172,6 +202,10 @@ async function renderImage(params: {
     throw new Error(`RODIUM_IMAGES_FAILED_${response.status}`);
   }
   const data = (await response.json()) as RodiumResponse;
+  const responseModel = data.model ? String(data.model) : null;
+  if (exact && responseModel && responseModel !== EXACT_COPY_MODEL) {
+    throw new Error("EXACT_COPY_MODEL_MISMATCH");
+  }
   const first = data.data?.[0];
   const imageUrl = first?.url
     ? first.url
@@ -179,7 +213,13 @@ async function renderImage(params: {
       ? `data:image/png;base64,${first.b64_json}`
       : "";
   if (!imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
-  return { imageUrl, rawText: JSON.stringify({ model: data.model }), usage: data.usage };
+  return {
+    imageUrl,
+    rawText: JSON.stringify({ model: responseModel ?? body.model }),
+    usage: data.usage,
+    responseModel,
+    referenceUsed: typeof body.image === "string" && body.image.startsWith("data:image/"),
+  };
 }
 
 export function sizeForFormat(format: string) {
@@ -215,9 +255,10 @@ function textFromChat(data: RodiumResponse) {
   return "";
 }
 
-export async function reviewPosterQuality(input: { imageUrl: string; prompt: string }) {
+export async function reviewPosterQuality(input: { imageUrl: string; prompt: string; referenceImageUrl?: string }) {
   if (!env.RODIUMAI_API_KEY) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const images = [input.referenceImageUrl, input.imageUrl].filter((url): url is string => Boolean(url));
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
       method: "POST",
@@ -229,12 +270,12 @@ export async function reviewPosterQuality(input: { imageUrl: string; prompt: str
             role: "user",
             content: [
               { type: "text", text: input.prompt },
-              { type: "image_url", image_url: { url: input.imageUrl } },
+              ...images.map((url) => ({ type: "image_url", image_url: { url } })),
             ],
           },
         ],
         temperature: 0,
-        max_tokens: 500,
+        max_tokens: 700,
       }),
     });
     if (!response.ok) return "";
