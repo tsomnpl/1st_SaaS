@@ -17,7 +17,7 @@ export default function CreationsPage() {
         <div>
           <h1 className="text-3xl font-extrabold">Créations</h1>
           <p className="mt-2 max-w-xl text-slate-600">
-            {posters.length} domaines. Chaque affiche est la référence choisie dans son dossier Supabase, sans redessin : même image, même texte, même police, même fond.
+            {posters.length} domaines. Chaque affiche garde la photo et la composition de sa référence. Les noms, numéros, dates et lieux réels sont retirés. Les visages, surtout celui de l’anniversaire, sont floutés.
           </p>
         </div>
         <Link href="/create" className="btn-primary">
@@ -37,7 +37,7 @@ export default function CreationsPage() {
         ))}
       </div>
       <p className="text-sm text-slate-500">
-        22 dossiers. Aucune de ces affiches n’a été redessinée.
+        22 dossiers. Les coordonnées personnelles des références ne sont pas affichées.
       </p>
     </div>
   );

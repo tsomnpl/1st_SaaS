@@ -76,7 +76,7 @@ export default function DiscoverPage() {
             <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
           ))}
         </div>
-        <p className="text-sm text-slate-500">Chaque visuel est la référence de son dossier, affichée telle quelle.</p>
+        <p className="text-sm text-slate-500">Chaque visuel reprend la référence de son dossier, sans nom, numéro ni date réelle.</p>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">
@@ -87,13 +87,13 @@ export default function DiscoverPage() {
             <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">Avant</p>
               <p className="mt-3 font-mono text-sm leading-relaxed text-slate-500">
-                Promo ce weekend, burger + boisson, 5000 FCFA, appelle ce numero.
+                Fast food, burgers, pizzas, paninis, sur place ou à emporter, appelle ce numero.
               </p>
             </div>
             <VisualPoster
-              title="PROMO CE WEEKEND"
-              subtitle="Burger + boisson"
-              meta="5 000 FCFA"
+              title="BURGERS"
+              subtitle="Sur place ou à emporter"
+              meta="Avenue des Manguiers"
               imageSrc="/creations/promo-burger.webp"
               className="min-h-[220px]"
             />

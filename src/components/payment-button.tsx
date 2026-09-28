@@ -46,7 +46,7 @@ export function CheckoutForm({ planCode, planName, priceFcfa, mintAmount }: Prop
         </p>
       </div>
       <p className="text-sm text-slate-600">
-        La page Money Fusion demande ensuite le pays et le numéro, puis le moyen de paiement.
+        La page Money Fusion demande le pays, puis les moyens de ce pays. La France n'est pas dans leur catalogue, donc seule la crypto s'affiche. Un pays couvert, comme la Côte d'Ivoire ou le Sénégal, montre ses moyens locaux.
       </p>
       <button type="button" onClick={startPayment} disabled={loading} className="btn-primary w-full">
         {loading ? "Redirection…" : "Payer avec Money Fusion"}
