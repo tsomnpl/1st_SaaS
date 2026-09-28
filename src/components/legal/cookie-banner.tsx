@@ -31,8 +31,8 @@ export function CookieBanner() {
         <p className="text-sm text-slate-600">
           FlyerMint utilise des cookies nécessaires à la connexion. Les statistiques optionnelles
           ne sont chargées que si tu les acceptes.{" "}
-          <a href="/privacy" className="font-semibold text-[#6D28D9]">
-            Confidentialité
+          <a href="/confidentialite#cookies" className="font-semibold text-[#6D28D9]">
+            Politique de cookies
           </a>
         </p>
         <div className="flex gap-2">
