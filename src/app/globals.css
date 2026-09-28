@@ -181,11 +181,13 @@ textarea:focus-visible {
 }
 
 .cover-band {
+  position: relative;
+  z-index: 5;
   background: var(--cover-band);
   color: var(--cover-ink);
   border-top-left-radius: 50% 36px;
   border-top-right-radius: 50% 36px;
-  padding: 2rem 1.25rem 1.5rem;
+  padding: 2.4rem 1.25rem 1.5rem;
   text-align: center;
 }
 
