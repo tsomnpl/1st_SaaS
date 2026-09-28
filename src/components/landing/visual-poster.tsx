@@ -32,7 +32,7 @@ export function VisualPoster({
       <img
         src={imageSrc}
         alt={subtitle ? `${title}, ${subtitle}` : title}
-        className="h-full w-full object-cover"
+        className="h-full w-full object-contain"
         width={896}
         height={1200}
         decoding="async"

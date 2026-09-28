@@ -152,6 +152,8 @@ describe("exact copy prompt and model", () => {
       const prompt = buildPrompt(brief, buildArtDirection(brief));
       expect(prompt).toContain("Modify the supplied reference poster.");
       expect(prompt).toContain("IMAGE EDIT");
+      expect(prompt).toContain("same photograph");
+      expect(prompt).toContain("same font");
       expect(prompt).toContain("The only words allowed");
       expect(prompt).not.toContain("DESIGN LAWS, mandatory");
       expect(prompt).not.toContain("un seul heros");

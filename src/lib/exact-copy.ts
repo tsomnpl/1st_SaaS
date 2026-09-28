@@ -66,6 +66,8 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
   const lines = [
     "Modify the supplied reference poster. Keep its composition and visual structure. Replace only the elements allowed by the new brief.",
     "IMAGE EDIT of the attached poster. Do not generate a new poster.",
+    "Keep the same photograph, the same faces, the same products, the same background, and the same decorations. Do not redraw them.",
+    "Keep the same font, the same letter shapes, the same text color, the same text size, and the same text position. Change only the characters inside a slot the client filled.",
     "Do not create a new design. Do not invent a new grid, a new hierarchy, a new crop, or a new layout.",
     "The original reference is the priority. Do not apply a 2-3 color limit, an official FlyerMint palette, or a single-hero recomposition.",
     ref
@@ -86,7 +88,7 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
       ? "Replace the logo slot with the client logo. Remove the old brand."
       : wantsReplacementIdentity(brief)
         ? "No client logo was provided. Put the word FLYERMINT only in the existing logo slot."
-        : "No replacement identity was requested. Remove the old logo and the old brand name. Do not add a FLYERMINT badge.",
+        : "The client brought no logo. Remove the old logo and the old brand name, and restore the original background in that zone. Do not add a FLYERMINT badge.",
     "Put each new fact in the matching slot of the original:",
     ...provided.map((slot) => `- ${slot.label} replaces the original ${slot.label}: "${slot.value}"`),
     "Delete the old element when the new brief does not provide that fact. Remove these slots completely:",

@@ -5,20 +5,22 @@ import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
 import { formatFcfa, paidPlans } from "@/lib/plans";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import { HeroPosterLoop } from "@/components/landing/hero-poster-loop";
-import { getGeneratedShowcase, toPoster } from "@/lib/showcase";
+import { EXACT_SHOWCASE } from "@/lib/exact-showcase";
 
 export const metadata: Metadata = {
   title: "Découvrir",
   description: "Le parcours FlyerMint : questions, direction artistique, affiche à télécharger.",
 };
 
-export default async function DiscoverPage() {
-  const { generated } = await getGeneratedShowcase();
-  const posters = generated.map((entry) => toPoster(entry, true));
-  const heroPosters = generated
-    .filter((entry) => entry.hero_loop)
-    .map((entry) => toPoster(entry, true))
-    .filter((poster) => poster.imageSrc);
+export default function DiscoverPage() {
+  const heroPosters = EXACT_SHOWCASE.map((poster) => ({
+    id: poster.id,
+    title: poster.title,
+    subtitle: poster.subtitle,
+    meta: poster.meta,
+    cta: poster.cta,
+    imageSrc: poster.src,
+  }));
 
   return (
     <div className="space-y-24 pb-8">
@@ -65,18 +67,18 @@ export default async function DiscoverPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">Showcase</p>
-            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Exemples d&apos;affiches générées.</h2>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">Copie exacte des références.</h2>
           </div>
           <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
             Toute la galerie
           </Link>
         </div>
         <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-          {posters.slice(0, 8).map((poster) => (
-            <VisualPoster key={poster.id} title={poster.title} subtitle={poster.subtitle} meta={poster.meta} imageSrc={poster.imageSrc} />
+          {EXACT_SHOWCASE.map((poster) => (
+            <VisualPoster key={poster.id} title={poster.title} subtitle={poster.subtitle} meta={poster.meta} imageSrc={poster.src} />
           ))}
         </div>
-        <p className="text-sm text-slate-500">Exemples créés avec FlyerMint.</p>
+        <p className="text-sm text-slate-500">Même image, même texte, même police, même fond.</p>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-2">

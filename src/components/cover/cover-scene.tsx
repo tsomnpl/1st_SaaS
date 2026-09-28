@@ -2,38 +2,14 @@ import type { ReactNode } from "react";
 import Image from "next/image";
 import { Bebas_Neue } from "next/font/google";
 import { BrandLogo } from "@/components/brand/logo";
+import { EXACT_SHOWCASE } from "@/lib/exact-showcase";
 
 const display = Bebas_Neue({
   weight: "400",
   subsets: ["latin"],
 });
 
-const POSTERS = [
-  {
-    src: "/creations/cover-sport.webp",
-    width: 896,
-    height: 1200,
-    alt: "Affiche d'exemple FlyerMint, course SPRINT 10K, peloton de coureurs, titre en haut.",
-    className: "cover-side cover-side-left",
-    priority: false,
-  },
-  {
-    src: "/creations/cover-mode.webp",
-    width: 896,
-    height: 1200,
-    alt: "Affiche d'exemple FlyerMint, collection LOOK NEUF, quatre personnes en collage.",
-    className: "cover-side cover-side-right",
-    priority: false,
-  },
-  {
-    src: "/creations/cover-musique.webp",
-    width: 896,
-    height: 1200,
-    alt: "Affiche d'exemple FlyerMint, concert SESSION LIVE, guitariste à droite.",
-    className: "cover-hero",
-    priority: true,
-  },
-] as const;
+const POSTERS = EXACT_SHOWCASE;
 
 const LEAVES = ["leaf-a", "leaf-b", "leaf-c", "leaf-d", "leaf-e"];
 
@@ -80,7 +56,7 @@ export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
             </div>
           ))}
         </div>
-        <p className="cover-caption">Exemples créés avec FlyerMint.</p>
+        <p className="cover-caption">Copie exacte : même image, même texte, même police, même fond.</p>
       </div>
 
       <div className="cover-band">
