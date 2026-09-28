@@ -1,4 +1,5 @@
 import { GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT, STYLE_REFERENCE_PROMPT, DESIGN_RULE_LABELS } from "./design-rules.ts";
+import { designLawsBlock } from "./inspiration.ts";
 import { SHOWCASE_SHEETS, type ShowcaseSheet } from "./showcase-sheets.ts";
 
 export type ShowcaseDesign = {
@@ -65,6 +66,7 @@ export function buildShowcasePrompt(sheet: ShowcaseSheet, hasVisualRef: boolean)
     sheet.prompt,
     "At least one photoreal human who belongs in the scene (not a floating collage). Natural skin, correct hands.",
     "Original artwork only. No real brand names, no copied logos, no celebrity likeness.",
+    designLawsBlock(),
   ].join("\n");
 }
 

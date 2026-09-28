@@ -27,7 +27,13 @@ export const DESIGN_LAWS = [
   "Typo: 2 familles max, chiffres de prix plus forts que le body.",
   "CTA: bouton ou bande contraste, verbe d'action, visible en 2 secondes.",
   "Ne jamais reproduire une affiche de reference: composer un original.",
-];
+] as const;
+
+export function designLawsBlock() {
+  return ["DESIGN LAWS, mandatory on every poster:", ...DESIGN_LAWS.map((law, index) => `${index + 1}. ${law}`)].join(
+    "\n",
+  );
+}
 
 const DOMAIN_PLAYBOOK: Record<(typeof DOMAINS)[number], Omit<InspirationReference, "id" | "domain">> = {
   Evenementiel: {
