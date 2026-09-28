@@ -27,7 +27,7 @@ export default async function ProfilePage() {
         <p className="font-semibold">Kit de marque</p>
         {kit?.colors?.length || kit?.logoUrl ? (
           <p className="mt-1 text-slate-600">
-            Couleurs mémorisées : {kit.colors.join(", ") || "—"}
+            Couleurs mémorisées : {kit.colors.join(", ") || "aucune"}
             {kit.logoUrl ? " · logo enregistré" : ""}
           </p>
         ) : (

@@ -39,7 +39,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
           <h1 className="text-3xl font-extrabold">Dashboard</h1>
-          <p className="mt-1 text-sm text-slate-500">Contrôle du SaaS — données serveur uniquement.</p>
+          <p className="mt-1 text-sm text-slate-500">Contrôle du SaaS, données serveur uniquement.</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/api/admin/export?type=users" className="btn-secondary">Export users</Link>

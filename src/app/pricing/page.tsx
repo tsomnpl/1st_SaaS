@@ -6,7 +6,7 @@ export const metadata: Metadata = {
   title: pageTitle("Tarifs"),
   description: "Packs de Mints FlyerMint. 1 Mint = 1 affiche. Sans fausse réduction.",
   openGraph: {
-    title: "Tarifs — FlyerMint",
+    title: "Tarifs, FlyerMint",
     description: "Packs de Mints FlyerMint. 1 Mint = 1 affiche.",
   },
 };

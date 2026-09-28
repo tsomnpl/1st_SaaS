@@ -34,7 +34,7 @@ export const STYLE_REFERENCE_PROMPT = [
 
 export const STYLE_INSPIRATION_TEXT = [
   "Inspire from the written professional-poster style notes (composition, palette, layout, type).",
-  "OpenAI GPT Image models cannot take a bitmap reference — follow these notes as strictly as a visual brief.",
+  "OpenAI GPT Image models cannot take a bitmap reference, follow these notes as strictly as a visual brief.",
   "Do NOT copy any real brand, logo, or celebrity.",
   "Every visible word must be correctly spelled, sharp, and in a real language. No gibberish, no dummy latin, no warped letters.",
 ].join(" ");

@@ -4,7 +4,7 @@ import { pageTitle } from "@/lib/seo";
 export const metadata: Metadata = {
   title: pageTitle("Confidentialité"),
   description: "Comment FlyerMint traite les données réellement collectées par le service.",
-  openGraph: { title: "Confidentialité — FlyerMint" },
+  openGraph: { title: "Confidentialité, FlyerMint" },
 };
 
 export default function PrivacyPage() {
@@ -22,7 +22,7 @@ export default function PrivacyPage() {
         <li>Briefs de génération, visuels générés, modèle utilisé et statut.</li>
         <li>Soldes et mouvements de Mints (ledger, lots, expiration).</li>
         <li>Paiements Money Fusion : montant, offre, orderId, token, statut, payload webhook (sans secrets).</li>
-        <li>Logs d’actions administrateur (action, cible, motif, résultat — jamais de clés).</li>
+        <li>Logs d’actions administrateur (action, cible, motif, résultat, jamais de clés).</li>
         <li>Préférence de cookies stockée localement dans le navigateur.</li>
       </ul>
       <h2 className="mt-10 text-2xl font-bold">Finalités</h2>

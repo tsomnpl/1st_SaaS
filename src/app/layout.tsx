@@ -6,8 +6,8 @@ import "./globals.css";
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://flyermint-t.vercel.app"),
   title: {
-    default: "FlyerMint — Créez des visuels qui marquent",
-    template: "%s — FlyerMint",
+    default: "FlyerMint, Créez des visuels qui marquent",
+    template: "%s, FlyerMint",
   },
   description:
     "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
@@ -16,15 +16,15 @@ export const metadata: Metadata = {
     apple: "/logo-mark.svg",
   },
   openGraph: {
-    title: "FlyerMint — Créez des visuels qui marquent",
+    title: "FlyerMint, Créez des visuels qui marquent",
     description: "Des affiches professionnelles sans designer, sans prompt.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "FlyerMint — Créez des visuels qui marquent." }],
+    images: [{ url: "/og.png", width: 1200, height: 630, alt: "FlyerMint, Créez des visuels qui marquent." }],
     locale: "fr_FR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "FlyerMint — Créez des visuels qui marquent",
+    title: "FlyerMint, Créez des visuels qui marquent",
     description: "Des affiches professionnelles sans designer, sans prompt.",
     images: ["/og.png"],
   },
@@ -37,7 +37,7 @@ const clerkAppearance = {
     colorPrimary: "#6D28D9",
     colorText: "#1E293B",
     colorBackground: "#FFFFFF",
-    borderRadius: "0.9rem",
+    borderRadius: "8px",
     fontFamily: "Plus Jakarta Sans, sans-serif",
   },
 };

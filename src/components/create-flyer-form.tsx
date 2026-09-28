@@ -129,7 +129,7 @@ export function CreateFlyerForm({
             key={label}
             type="button"
             onClick={() => setStep(index)}
-            className={`rounded-full px-3 py-1 text-xs font-semibold ${
+            className={`rounded-lg px-3 py-1 text-xs font-semibold ${
               index === step ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-500"
             }`}
           >
@@ -224,7 +224,7 @@ export function CreateFlyerForm({
           />
         </label>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Logo (optionnel — mémorisé si tu coches le kit de marque)</span>
+          <span className="font-medium text-slate-700">Logo (optionnel, mémorisé si tu coches le kit de marque)</span>
           {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
           <input
             type="file"
@@ -249,7 +249,7 @@ export function CreateFlyerForm({
           {mainImage ? <p className="mt-2">Ta photo sera conservée comme sujet principal.</p> : null}
           {logoImage ? <p className="mt-2">Ton logo sera réappliqué sur l’affiche.</p> : null}
           {regenerateFromId ? (
-            <p className="mt-2">Même direction artistique, nouveau format — 1 Mint.</p>
+            <p className="mt-2">Même direction artistique, nouveau format, 1 Mint.</p>
           ) : null}
         </div>
         <label className="flex items-center gap-2 text-sm">
@@ -283,7 +283,7 @@ export function CreateFlyerForm({
           </button>
         ) : (
           <button type="submit" disabled={loading || !canGenerate} className="btn-primary">
-            {loading ? "Génération en cours…" : "Générer mon affiche — 1 Mint"}
+            {loading ? "Génération en cours…" : "Générer mon affiche, 1 Mint"}
           </button>
         )}
       </div>
@@ -313,13 +313,13 @@ export function CreateFlyerForm({
                   Voir l’historique
                 </Link>
               </div>
-              <p className="text-xs text-slate-500">Même concept, autre format — 1 Mint chacun :</p>
+              <p className="text-xs text-slate-500">Même concept, autre format, 1 Mint chacun :</p>
               <div className="flex flex-wrap gap-2">
                 {FORMATS.map((item) => (
                   <Link
                     key={item.value}
                     href={`/create?from=${result.generationId}&format=${item.value}`}
-                    className="rounded-full border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-violet-300"
+                    className="rounded-lg border border-slate-200 px-3 py-1 text-xs font-semibold text-slate-600 hover:border-slate-400"
                   >
                     {item.label}
                   </Link>
