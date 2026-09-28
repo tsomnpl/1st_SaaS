@@ -4,6 +4,12 @@ import type { ReferenceSelection } from "@/lib/reference-select";
 export const EXACT_COPY_MODEL = "google/gemini-3-pro-image";
 export const EXACT_COPY_MODE = "EXACT_COPY";
 
+export function acceptedExactCopyResponseModel(model: string) {
+  const id = model.trim().toLowerCase();
+  if (!id || id.includes("lite")) return false;
+  return id === EXACT_COPY_MODEL || id === "gemini-3-pro-image";
+}
+
 export function isExactCopy(brief: Pick<CreateBriefInput, "creativeFreedom">) {
   return brief.creativeFreedom === "copie_exacte";
 }
@@ -56,13 +62,22 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
   const { provided, removed } = exactCopySlots(brief);
   const accent = brief.colors.find((color) => color.trim())?.trim();
   const ref = selection?.selected;
+  const allowedWords = provided.map((slot) => slot.value).join(" | ");
   const lines = [
     "Modify the supplied reference poster. Keep its composition and visual structure. Replace only the elements allowed by the new brief.",
+    "IMAGE EDIT of the attached poster. Do not generate a new poster.",
     "Do not create a new design. Do not invent a new grid, a new hierarchy, a new crop, or a new layout.",
     "The original reference is the priority. Do not apply a 2-3 color limit, an official FlyerMint palette, or a single-hero recomposition.",
     ref
       ? `Reference id ${ref.id}. Storage path ${ref.storagePath}. Domain ${selection?.domain}. Stay on this poster.`
       : "A reference image is attached. Stay on that poster.",
+    ref
+      ? `Preserve this structure: person and framing = ${ref.visual}. Blocks = ${ref.texts}. Background = ${ref.background}.`
+      : "",
+    `The only words allowed anywhere on the poster are: ${allowedWords}.`,
+    "Leave every other zone blank. Do not invent a subtitle, benefit cards, a price, a duration, a level, or a certificate.",
+    "Erase every other word, number, price, date, phone, email, website, brand and slogan.",
+    "Keep the same number of people, the same pose, and the same side of the frame. Do not add a new person or a new product.",
     "Allowed changes: texts, people or faces when a new person is required, and the logo.",
     brief.mainImageUrl
       ? "Replace the person with the client photo. Keep the same position, pose, framing, visual role, and relation to the other elements."
@@ -135,20 +150,62 @@ const FAILED_QC: ExactCopyQc = {
 export function exactCopyQcPrompt(brief: CreateBriefInput, selection: ReferenceSelection | null) {
   const { provided, removed } = exactCopySlots(brief);
   return [
-    "Compare image 1 (REFERENCE) with image 2 (RESULT).",
-    "Reply with JSON only.",
-    "Keys: pass, composition_match, leftover_old_content, brief_content_present, omitted_slots_removed, pretty_but_wrong, issues, repair_prompt.",
-    "composition_match is true only if the person position, proportions, title placement, blocks, rectangles, frames, spacing, colors, typography and format still match the reference.",
-    "leftover_old_content is true if any old word, number, price, date, name, brand, logo or contact from the reference remains and is not in the new brief.",
-    "Do not pass a poster only because it looks pretty. pretty_but_wrong is true when it is attractive but the structure changed or old content remains.",
-    "pass is true only when composition_match, brief_content_present and omitted_slots_removed are true, and leftover_old_content and pretty_but_wrong are false.",
-    `New texts that must appear: ${provided.map((slot) => `${slot.label}=${slot.value}`).join(" | ") || brief.title}.`,
-    `Slots that must be gone: ${removed.join(", ") || "none"}.`,
+    "Image 1 is the REFERENCE. Image 2 is the RESULT.",
+    "Reply with one JSON object and no markdown.",
+    "Keys: visible_text (string), same_layout (boolean).",
+    "visible_text must list every readable word on image 2, including small labels, prices, buttons and the bottom row.",
+    "same_layout is true only if the person stays on the same side, the blocks stay in the same places, and the background colors still match image 1.",
+    "Do not decide if the poster is pretty. Only transcribe image 2 and compare the layout.",
+    `Expected words: ${provided.map((slot) => slot.value).join(" | ") || brief.title}.`,
+    `These slots should no longer contain old words: ${removed.join(", ") || "none"}.`,
     selection?.selected ? `Reference id ${selection.selected.id}.` : "",
-    "repair_prompt: one English instruction to restore the reference structure and delete leftover old content, or empty if pass.",
   ]
     .filter(Boolean)
     .join(" ");
+}
+
+function foldText(value: string) {
+  return value
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+export function judgeExactCopyTranscript(brief: CreateBriefInput, raw: string): ExactCopyQc {
+  const jsonMatch = raw.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) return { ...FAILED_QC };
+  try {
+    const data = JSON.parse(jsonMatch[0]) as { visible_text?: string; same_layout?: boolean };
+    const visible = foldText(String(data.visible_text ?? ""));
+    const allowed = exactCopySlots(brief).provided.map((slot) => foldText(slot.value)).filter(Boolean);
+    let rest = ` ${visible} `;
+    for (const phrase of [...allowed].sort((a, b) => b.length - a.length)) {
+      rest = rest.split(phrase).join(" ");
+    }
+    const leftoverWords = rest
+      .split(/[^a-z0-9]+/)
+      .filter((token) => token.length > 2);
+    const leftoverNumbers = rest.match(/\d+/g) ?? [];
+    const leftover = leftoverWords.length > 0 || leftoverNumbers.length > 0;
+    const present = allowed.every((phrase) => visible.includes(phrase));
+    const composition = data.same_layout === true;
+    const pass = present && !leftover && composition;
+    const issues = [...leftoverWords, ...leftoverNumbers].slice(0, 8);
+    return {
+      pass,
+      composition_match: composition,
+      leftover_old_content: leftover,
+      brief_content_present: present,
+      omitted_slots_removed: !leftover,
+      pretty_but_wrong: !pass,
+      issues,
+      repair_prompt: pass
+        ? ""
+        : `Erase every word except ${allowed.join(" | ")}. Remove these leftovers: ${issues.join(", ")}. Keep the reference layout.`,
+    };
+  } catch {
+    return { ...FAILED_QC };
+  }
 }
 
 export function parseExactCopyQc(raw: string): ExactCopyQc {

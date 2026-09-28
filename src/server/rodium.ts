@@ -1,5 +1,5 @@
 import type { CreateBriefInput } from "@/lib/flyermint";
-import { EXACT_COPY_MODEL, isExactCopy } from "@/lib/exact-copy";
+import { acceptedExactCopyResponseModel, EXACT_COPY_MODEL, isExactCopy } from "@/lib/exact-copy";
 import { env, getAllowedImageModels } from "@/lib/env";
 
 type RodiumResponse = {
@@ -203,7 +203,7 @@ async function renderImage(params: {
   }
   const data = (await response.json()) as RodiumResponse;
   const responseModel = data.model ? String(data.model) : null;
-  if (exact && responseModel && responseModel !== EXACT_COPY_MODEL) {
+  if (exact && responseModel && !acceptedExactCopyResponseModel(responseModel)) {
     throw new Error("EXACT_COPY_MODEL_MISMATCH");
   }
   const first = data.data?.[0];
@@ -257,7 +257,7 @@ function textFromChat(data: RodiumResponse) {
 
 export async function reviewPosterQuality(input: { imageUrl: string; prompt: string; referenceImageUrl?: string }) {
   if (!env.RODIUMAI_API_KEY) return "";
-  const model = env.RODIUMAI_TEXT_MODEL?.trim() || env.RODIUMAI_MODEL?.trim() || "google/gemini-3.5-flash";
+  const model = env.RODIUMAI_TEXT_MODEL?.trim() || "google/gemini-3.5-flash";
   const images = [input.referenceImageUrl, input.imageUrl].filter((url): url is string => Boolean(url));
   try {
     const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
@@ -275,7 +275,7 @@ export async function reviewPosterQuality(input: { imageUrl: string; prompt: str
           },
         ],
         temperature: 0,
-        max_tokens: 700,
+        max_tokens: 2000,
       }),
     });
     if (!response.ok) return "";

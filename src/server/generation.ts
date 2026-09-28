@@ -5,7 +5,7 @@ import {
   exactCopyShouldRegenerate,
   generationProof,
   isExactCopy,
-  parseExactCopyQc,
+  judgeExactCopyTranscript,
 } from "@/lib/exact-copy";
 import {
   buildArtDirection,
@@ -98,7 +98,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         referenceImageUrl: referenceImageDataUrl,
         prompt: exactCopyQcPrompt(brief, selection),
       });
-      qc = parseExactCopyQc(qcRaw);
+      qc = judgeExactCopyTranscript(brief, qcRaw);
       if (exactCopyShouldRegenerate(qc)) {
         prompt = applyExactCopyRepair(prompt, qc);
         const second = await generateWithRodium({ prompt, brief, referenceImageDataUrl });
@@ -115,7 +115,7 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
             referenceImageUrl: referenceImageDataUrl,
             prompt: exactCopyQcPrompt(brief, selection),
           });
-          qc = parseExactCopyQc(secondQc);
+          qc = judgeExactCopyTranscript(brief, secondQc);
         }
       }
     } else {

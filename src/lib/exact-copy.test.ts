@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { DOMAINS } from "@/lib/domains";
 import { buildArtDirection, buildPrompt, createBriefSchema } from "@/lib/flyermint";
-import { EXACT_COPY_MODEL } from "@/lib/exact-copy";
+import { acceptedExactCopyResponseModel, EXACT_COPY_MODEL, judgeExactCopyTranscript } from "@/lib/exact-copy";
 import { joinDomainReferences } from "@/lib/inspiration-source";
 import { selectReferenceInDomain, type DomainReference } from "@/lib/reference-select";
 import { buildImageGenerationBody, selectImageModel } from "@/server/rodium";
@@ -151,6 +151,8 @@ describe("exact copy prompt and model", () => {
       });
       const prompt = buildPrompt(brief, buildArtDirection(brief));
       expect(prompt).toContain("Modify the supplied reference poster.");
+      expect(prompt).toContain("IMAGE EDIT");
+      expect(prompt).toContain("The only words allowed");
       expect(prompt).not.toContain("DESIGN LAWS, mandatory");
       expect(prompt).not.toContain("un seul heros");
       expect(prompt).not.toContain("Maximum 2-3 main colors");
@@ -180,6 +182,10 @@ describe("exact copy prompt and model", () => {
     ]);
     expect(model).toBe(EXACT_COPY_MODEL);
     expect(model).not.toContain("lite");
+    expect(acceptedExactCopyResponseModel("gemini-3-pro-image")).toBe(true);
+    expect(acceptedExactCopyResponseModel("google/gemini-3-pro-image")).toBe(true);
+    expect(acceptedExactCopyResponseModel("google/gemini-3-pro-image-lite")).toBe(false);
+    expect(acceptedExactCopyResponseModel("openai/gpt-image-2")).toBe(false);
 
     const reference = "data:image/jpeg;base64,QUJDRA==";
     const body = buildImageGenerationBody({
@@ -196,6 +202,34 @@ describe("exact copy prompt and model", () => {
 
 describe("exact copy quality check", () => {
   it("rejects a pretty result that keeps old content or changes the composition", () => {
+    const brief = formationBrief();
+    const pretty = judgeExactCopyTranscript(
+      brief,
+      JSON.stringify({
+        visible_text: "Formation Excel Maitrisez le tableur Debutant 3 mois Certificat 150 euros",
+        same_layout: true,
+      }),
+    );
+    expect(pretty.pass).toBe(false);
+    expect(pretty.leftover_old_content).toBe(true);
+    expect(pretty.pretty_but_wrong).toBe(true);
+
+    const drifted = judgeExactCopyTranscript(
+      brief,
+      JSON.stringify({ visible_text: "Formation Excel", same_layout: false }),
+    );
+    expect(drifted.pass).toBe(false);
+    expect(drifted.composition_match).toBe(false);
+
+    const faithful = judgeExactCopyTranscript(
+      brief,
+      JSON.stringify({ visible_text: "Formation Excel", same_layout: true }),
+    );
+    expect(faithful.pass).toBe(true);
+    expect(judgeExactCopyTranscript(brief, "not json").pass).toBe(false);
+  });
+
+  it("still parses an explicit model verdict without trusting pretty alone", () => {
     const pretty = parseExactCopyQc(
       JSON.stringify({
         pass: true,

@@ -7,7 +7,7 @@ import {
   exactCopyShouldRegenerate,
   EXACT_COPY_MODEL,
   generationProof,
-  parseExactCopyQc,
+  judgeExactCopyTranscript,
 } from "../src/lib/exact-copy.ts";
 import { downloadReferenceDataUrl, loadDomainReferences } from "../src/lib/inspiration-source.ts";
 import { selectReferenceInDomain } from "../src/lib/reference-select.ts";
@@ -43,7 +43,31 @@ globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
     const parsed = new URL(url);
     sent.push({ url: `${parsed.origin}${parsed.pathname}?${parsed.searchParams.get("domaine") ?? parsed.pathname}` });
   }
-  return originalFetch(input, init);
+  const response = await originalFetch(input, init);
+  if (url.includes("/chat/completions")) {
+    const requested = init?.body ? (JSON.parse(String(init.body)) as { model?: string }).model : "";
+    console.log("QC_HTTP", response.status, requested, new URL(url).pathname);
+  }
+  if (init?.body && url.includes("/images/generations")) {
+    const clone = response.clone();
+    const payload = (await clone.json()) as { model?: string; data?: Array<{ b64_json?: string; url?: string }> };
+    console.log("RESPONSE_MODEL", payload.model ?? null);
+    const first = payload.data?.[0];
+    if (first?.b64_json) {
+      await mkdir(artifactDir, { recursive: true });
+      await writeFile(
+        path.join(artifactDir, "exact-copy-result.png"),
+        Buffer.from(first.b64_json, "base64"),
+      );
+    } else if (first?.url) {
+      const image = await originalFetch(first.url);
+      if (image.ok) {
+        await mkdir(artifactDir, { recursive: true });
+        await writeFile(path.join(artifactDir, "exact-copy-result.png"), Buffer.from(await image.arrayBuffer()));
+      }
+    }
+  }
+  return response;
 };
 
 const candidates = await loadDomainReferences(brief.domain);
@@ -67,6 +91,21 @@ if (process.env.EXACT_COPY_SELECT_ONLY === "1") {
 }
 
 const referenceImageDataUrl = await downloadReferenceDataUrl(selection.selected.storagePath);
+
+if (process.env.EXACT_COPY_QC_ONLY === "1") {
+  const { readFile } = await import("node:fs/promises");
+  const resultBytes = await readFile(path.join(artifactDir, "exact-copy-result.png"));
+  const qcRawOnly = await reviewPosterQuality({
+    imageUrl: `data:image/png;base64,${resultBytes.toString("base64")}`,
+    referenceImageUrl: referenceImageDataUrl,
+    prompt: exactCopyQcPrompt(brief, selection),
+  });
+  const qcOnly = judgeExactCopyTranscript(brief, qcRawOnly);
+  console.log(qcRawOnly.slice(0, 1000));
+  console.log(JSON.stringify(qcOnly, null, 2));
+  process.exit(qcOnly.pass ? 0 : 2);
+}
+
 const art = buildArtDirection(brief, selection);
 let prompt = buildPrompt(brief, art, selection);
 if (!prompt.includes("Modify the supplied reference poster.")) throw new Error("PROMPT_NOT_EXACT");
@@ -79,8 +118,8 @@ let qcRaw = await reviewPosterQuality({
   referenceImageUrl: referenceImageDataUrl,
   prompt: exactCopyQcPrompt(brief, selection),
 });
-let qc = parseExactCopyQc(qcRaw);
-if (exactCopyShouldRegenerate(qc)) {
+let qc = judgeExactCopyTranscript(brief, qcRaw);
+if (exactCopyShouldRegenerate(qc) && process.env.EXACT_COPY_NO_REPAIR !== "1") {
   prompt = applyExactCopyRepair(prompt, qc);
   const second = await generateWithRodium({ prompt, brief, referenceImageDataUrl });
   regenerationCount = 1;
@@ -91,7 +130,7 @@ if (exactCopyShouldRegenerate(qc)) {
       referenceImageUrl: referenceImageDataUrl,
       prompt: exactCopyQcPrompt(brief, selection),
     });
-    qc = parseExactCopyQc(qcRaw);
+    qc = judgeExactCopyTranscript(brief, qcRaw);
   }
 }
 
