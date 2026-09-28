@@ -98,9 +98,10 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
         referenceImageUrl: referenceImageDataUrl,
         prompt: exactCopyQcPrompt(brief, selection),
       });
-      qc = judgeExactCopyTranscript(brief, qcRaw);
-      if (exactCopyShouldRegenerate(qc)) {
-        prompt = applyExactCopyRepair(prompt, qc);
+      let exactQc = judgeExactCopyTranscript(brief, qcRaw);
+      qc = exactQc;
+      if (exactCopyShouldRegenerate(exactQc)) {
+        prompt = applyExactCopyRepair(prompt, exactQc);
         const second = await generateWithRodium({ prompt, brief, referenceImageDataUrl });
         regenerationCount = 1;
         if (second.imageUrl) {
@@ -115,7 +116,8 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
             referenceImageUrl: referenceImageDataUrl,
             prompt: exactCopyQcPrompt(brief, selection),
           });
-          qc = judgeExactCopyTranscript(brief, secondQc);
+          exactQc = judgeExactCopyTranscript(brief, secondQc);
+          qc = exactQc;
         }
       }
     } else {
