@@ -8,10 +8,10 @@ import { ensureOfficialPlans } from "@/server/plans";
 
 type MoneyFusionInitPayload = {
   totalPrice: number;
-  article: string;
+  article: Array<Record<string, number>>;
   numeroSend: string;
   nomclient: string;
-  personal_Info: string;
+  personal_Info: Array<{ orderId: string; userId: string }>;
   return_url: string;
   webhook_url: string;
 };
@@ -28,11 +28,44 @@ function assertMoneyFusionConfigured() {
   if (!env.NEXT_PUBLIC_APP_URL) throw new Error("NEXT_PUBLIC_APP_URL_MISSING");
 }
 
+export function moneyFusionInitUrl(apiUrl: string) {
+  const url = new URL(apiUrl);
+  const path = url.pathname.replace(/\/+$/, "");
+  if (path.endsWith("/pay") || path.endsWith("/paiement")) {
+    url.pathname = path;
+  } else {
+    url.pathname = `${path}/paiement`.replace(/\/{2,}/g, "/");
+  }
+  url.search = "";
+  url.hash = "";
+  return url.toString();
+}
+
+export function buildMoneyFusionPayload(input: {
+  totalPrice: number;
+  articleName: string;
+  orderId: string;
+  userId: string;
+  nomclient: string;
+  returnUrl: string;
+  webhookUrl: string;
+}): MoneyFusionInitPayload {
+  const articleName = input.articleName.replace(/[^\p{L}\p{N} ]/gu, "").trim().slice(0, 40) || "Pack";
+  const nomclient = input.nomclient.trim().slice(0, 80) || "Client FlyerMint";
+  return {
+    totalPrice: input.totalPrice,
+    article: [{ [articleName]: input.totalPrice }],
+    numeroSend: "00000000",
+    nomclient,
+    personal_Info: [{ orderId: input.orderId, userId: input.userId }],
+    return_url: input.returnUrl,
+    webhook_url: input.webhookUrl,
+  };
+}
+
 export async function initMoneyFusionPayment(params: {
   userId: string;
   planCode: string;
-  numeroSend: string;
-  nomclient: string;
 }) {
   assertMoneyFusionConfigured();
   await ensureOfficialPlans();
@@ -55,17 +88,23 @@ export async function initMoneyFusionPayment(params: {
   });
 
   const appUrl = getAppUrl();
-  const payload: MoneyFusionInitPayload = {
+  const account = await prisma.user.findUnique({
+    where: { id: params.userId },
+    select: { name: true, email: true },
+  });
+  const payload = buildMoneyFusionPayload({
     totalPrice: plan.priceFcfa,
-    article: plan.name,
-    numeroSend: params.numeroSend,
-    nomclient: params.nomclient,
-    personal_Info: payment.orderId,
-    return_url: `${appUrl}/payment/success`,
-    webhook_url: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
-  };
+    articleName: plan.name,
+    orderId: payment.orderId,
+    userId: params.userId,
+    nomclient: account?.name || account?.email?.split("@")[0] || "Client FlyerMint",
+    returnUrl: `${appUrl}/payment/success`,
+    webhookUrl: env.MONEY_FUSION_WEBHOOK_URL ?? `${appUrl}/api/webhooks/moneyfusion`,
+  });
 
-  const endpoint = `${env.MONEY_FUSION_API_URL}/paiement`;
+  const apiUrl = env.MONEY_FUSION_API_URL;
+  if (!apiUrl) throw new Error("MONEY_FUSION_API_URL_MISSING");
+  const endpoint = moneyFusionInitUrl(apiUrl);
   const response = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -112,6 +151,15 @@ export async function verifyMoneyFusionToken(token: string) {
 
 export function classifyPaymentStatus(raw: string): PaymentStatus {
   const normalized = raw.toLowerCase();
+  if (normalized.includes("no paid") || normalized.includes("nopaid") || normalized.includes("unpaid")) {
+    return PaymentStatus.PENDING;
+  }
+  if (normalized.includes("cancel") || normalized.includes("annul")) {
+    return PaymentStatus.CANCELLED;
+  }
+  if (normalized.includes("fail") || normalized.includes("error") || normalized.includes("refus")) {
+    return PaymentStatus.FAILED;
+  }
   if (
     normalized.includes("paid") ||
     normalized.includes("completed") ||
@@ -121,13 +169,13 @@ export function classifyPaymentStatus(raw: string): PaymentStatus {
   ) {
     return PaymentStatus.COMPLETED;
   }
-  if (normalized.includes("cancel") || normalized.includes("annul")) {
-    return PaymentStatus.CANCELLED;
-  }
-  if (normalized.includes("fail") || normalized.includes("error") || normalized.includes("refus")) {
-    return PaymentStatus.FAILED;
-  }
   return PaymentStatus.PENDING;
+}
+
+export function moneyFusionStatusText(payload?: Record<string, unknown>) {
+  const event = typeof payload?.event === "string" ? payload.event : "";
+  const status = payload?.status ?? payload?.statut ?? "";
+  return [event, typeof status === "string" ? status : ""].filter(Boolean).join(" ");
 }
 
 export async function confirmPaymentByToken(token: string, payload?: Record<string, unknown>) {
@@ -137,7 +185,7 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   });
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
 
-  const remoteStatus = String(payload?.status ?? payload?.statut ?? payment.rawStatus ?? "pending");
+  const remoteStatus = moneyFusionStatusText(payload) || String(payment.rawStatus ?? "pending");
   const classified = classifyPaymentStatus(remoteStatus);
   const eventKey = `moneyfusion:${token}:${classified}`;
   const safePayload = sanitizeRecord(payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue;

@@ -33,7 +33,11 @@ export async function readClerkIdentity(clerkUserId: string) {
 
 export async function ensureUserProfile(clerkUserId: string) {
   const identity = await readClerkIdentity(clerkUserId);
-  const admin = isConfiguredAdmin({ clerkUserId, email: identity.email });
+  const admin = isConfiguredAdmin({
+    clerkUserId,
+    email: identity.email,
+    emails: identity.verifiedEmails,
+  });
   return prisma.user.upsert({
     where: { clerkUserId },
     update: {
@@ -53,7 +57,7 @@ export async function ensureUserProfile(clerkUserId: string) {
 export async function requireAdminUser() {
   const clerkUserId = await requireAuth();
   const identity = await readClerkIdentity(clerkUserId);
-  if (!isConfiguredAdmin({ clerkUserId, email: identity.email })) {
+  if (!isConfiguredAdmin({ clerkUserId, email: identity.email, emails: identity.verifiedEmails })) {
     throw new Error("FORBIDDEN");
   }
   const user = await ensureUserProfile(clerkUserId);
@@ -67,7 +71,11 @@ export async function currentUserIsAdmin() {
   const session = await auth();
   if (!session.userId) return false;
   const identity = await readClerkIdentity(session.userId);
-  return isConfiguredAdmin({ clerkUserId: session.userId, email: identity.email });
+  return isConfiguredAdmin({
+    clerkUserId: session.userId,
+    email: identity.email,
+    emails: identity.verifiedEmails,
+  });
 }
 
 export function assertActiveUser(status: UserStatus) {
