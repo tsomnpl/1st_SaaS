@@ -207,8 +207,13 @@ export function CreateFlyerForm({
             { value: "liberte_guidee", label: "Guidée (recommandé)" },
             { value: "liberte_totale", label: "Totale" },
             { value: "design_tres_precis", label: "Très précise" },
+            { value: "copie_exacte", label: "Copie exacte de la référence du domaine" },
           ]}
         />
+        <p className="text-xs text-slate-500 md:col-span-2">
+          Copie exacte : FlyerMint garde la composition d’une vraie affiche du domaine choisi, remplace les textes,
+          et retire les informations que tu n’as pas fournies.
+        </p>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Photo / produit (optionnel)</span>
           <input

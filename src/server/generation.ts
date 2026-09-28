@@ -1,5 +1,13 @@
 import { CreditTransactionType, GenerationStatus, Prisma } from "@prisma/client";
 import {
+  applyExactCopyRepair,
+  exactCopyQcPrompt,
+  exactCopyShouldRegenerate,
+  generationProof,
+  isExactCopy,
+  judgeExactCopyTranscript,
+} from "@/lib/exact-copy";
+import {
   buildArtDirection,
   buildPrompt,
   createBriefSchema,
@@ -8,12 +16,19 @@ import {
   scoreQuality,
   type CreateBriefInput,
 } from "@/lib/flyermint";
+import { downloadReferenceDataUrl, loadDomainReferences } from "@/lib/inspiration-source";
+import { selectReferenceInDomain, type ReferenceSelection } from "@/lib/reference-select";
 import { applyRepair, parseQcReport, qcPrompt, shouldRepair, skippedQcReport } from "@/lib/quality-control";
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { notifyAdmin, sendGenerationFailed, sendGenerationSucceeded } from "@/server/mail";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
+
+async function resolveReferenceSelection(brief: CreateBriefInput): Promise<ReferenceSelection> {
+  const candidates = await loadDomainReferences(brief.domain);
+  return selectReferenceInDomain({ domain: brief.domain, brief, candidates });
+}
 
 export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   const user = await prisma.user.findUnique({ where: { clerkUserId } });
@@ -33,8 +48,15 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     }
   }
 
-  const artDirection = buildArtDirection(brief);
-  let prompt = buildPrompt(brief, artDirection);
+  const selection = await resolveReferenceSelection(brief);
+  const exact = isExactCopy(brief);
+  if (exact && !selection.selected) throw new Error("EXACT_COPY_NO_REFERENCE");
+  const referenceImageDataUrl =
+    exact && selection.selected ? await downloadReferenceDataUrl(selection.selected.storagePath) : undefined;
+  if (exact && !referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
+
+  const artDirection = buildArtDirection(brief, selection);
+  let prompt = buildPrompt(brief, artDirection, selection);
   const qualityScores = scoreQuality(brief, prompt);
 
   const generation = await prisma.$transaction(async (tx) => {
@@ -58,37 +80,82 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
   });
 
   try {
-    const first = await generateWithRodium({ prompt, brief });
+    const first = await generateWithRodium({ prompt, brief, referenceImageDataUrl });
     if (!first.imageUrl) throw new Error("RODIUM_INVALID_IMAGE_RESPONSE");
 
     let imageUrl = first.imageUrl;
     let model = first.model;
+    let responseModel = first.responseModel;
+    let referenceUsed = first.referenceUsed;
     let rodiCost = first.rodiCostEstimate;
-    let qc = skippedQcReport();
+    let qc: unknown = skippedQcReport();
     let repaired = false;
+    let regenerationCount = 0;
 
-    const qcRaw = await reviewPosterQuality({
-      imageUrl,
-      prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
-    });
-    if (qcRaw) {
-      qc = parseQcReport(qcRaw);
-      if (shouldRepair(qc)) {
-        prompt = applyRepair(prompt, qc);
-        const second = await generateWithRodium({ prompt, brief });
+    if (exact) {
+      const qcRaw = await reviewPosterQuality({
+        imageUrl,
+        referenceImageUrl: referenceImageDataUrl,
+        prompt: exactCopyQcPrompt(brief, selection),
+      });
+      qc = judgeExactCopyTranscript(brief, qcRaw);
+      if (exactCopyShouldRegenerate(qc)) {
+        prompt = applyExactCopyRepair(prompt, qc);
+        const second = await generateWithRodium({ prompt, brief, referenceImageDataUrl });
+        regenerationCount = 1;
         if (second.imageUrl) {
           imageUrl = second.imageUrl;
-          model = `${first.model}+repair:${second.model}`;
+          model = second.model;
+          responseModel = second.responseModel;
+          referenceUsed = second.referenceUsed;
           rodiCost = Number((first.rodiCostEstimate + second.rodiCostEstimate).toFixed(3));
           repaired = true;
           const secondQc = await reviewPosterQuality({
             imageUrl,
-            prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+            referenceImageUrl: referenceImageDataUrl,
+            prompt: exactCopyQcPrompt(brief, selection),
           });
-          if (secondQc) qc = parseQcReport(secondQc);
+          qc = judgeExactCopyTranscript(brief, secondQc);
+        }
+      }
+    } else {
+      const qcRaw = await reviewPosterQuality({
+        imageUrl,
+        prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+      });
+      if (qcRaw) {
+        const report = parseQcReport(qcRaw);
+        qc = report;
+        if (shouldRepair(report)) {
+          prompt = applyRepair(prompt, report);
+          const second = await generateWithRodium({ prompt, brief });
+          regenerationCount = 1;
+          if (second.imageUrl) {
+            imageUrl = second.imageUrl;
+            model = `${first.model}+repair:${second.model}`;
+            responseModel = second.responseModel;
+            referenceUsed = second.referenceUsed;
+            rodiCost = Number((first.rodiCostEstimate + second.rodiCostEstimate).toFixed(3));
+            repaired = true;
+            const secondQc = await reviewPosterQuality({
+              imageUrl,
+              prompt: qcPrompt(brief.title, brief.domain, factsForQc(brief)),
+            });
+            if (secondQc) qc = parseQcReport(secondQc);
+          }
         }
       }
     }
+
+    const proof = generationProof({
+      brief,
+      selection,
+      model,
+      responseModel,
+      referenceUsed,
+      qualityCheck: qc,
+      regenerationCount,
+    });
 
     if (brief.rememberBrand) {
       await saveBrandKit(user.id, {
@@ -110,7 +177,10 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
           qc,
           repaired,
           durationMs: Date.now() - generation.createdAt.getTime(),
-          checks: ["human_required", "art_direction", "qc_vision"],
+          checks: exact
+            ? ["exact_copy", "domain_lock", "reference_image", "qc_reference_vs_result"]
+            : ["human_required", "art_direction", "qc_vision", "domain_lock"],
+          generationLog: proof,
         } as Prisma.JsonObject,
         status: GenerationStatus.COMPLETED,
       },

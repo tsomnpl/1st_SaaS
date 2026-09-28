@@ -1,8 +1,10 @@
 import { z } from "zod";
 import { DOMAINS } from "@/lib/domains";
 import { designLawsBlock, GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
+import { buildExactCopyPrompt, exactCopyArtDirection, isExactCopy } from "@/lib/exact-copy";
 import { humanStagingFor } from "@/lib/human-staging";
 import { selectInspirationReferences } from "@/lib/inspiration";
+import type { ReferenceSelection } from "@/lib/reference-select";
 
 function isSafeImageRef(value: string) {
   if (value.startsWith("https://")) return true;
@@ -48,7 +50,7 @@ export const createBriefSchema = z.object({
   mood: optionalText(80),
   format: z.string().min(2).max(40),
   creativeFreedom: z
-    .enum(["liberte_totale", "liberte_guidee", "design_tres_precis"])
+    .enum(["liberte_totale", "liberte_guidee", "design_tres_precis", "copie_exacte"])
     .default("liberte_guidee"),
   mainImageUrl: imageRef,
   logoUrl: imageRef,
@@ -92,12 +94,19 @@ export type ArtDirection = {
   differentiators: string[];
 };
 
-export function buildArtDirection(input: CreateBriefInput): ArtDirection {
-  const palette =
-    input.colors.length > 0 ? input.colors.slice(0, 3) : ["#1E293B", "#6D28D9", "#10B981"];
+export function buildArtDirection(input: CreateBriefInput, selection?: ReferenceSelection | null): ArtDirection {
+  const exact = isExactCopy(input);
+  const palette = exact
+    ? input.colors.filter((color) => color.trim()).slice(0, 1)
+    : input.colors.length > 0
+      ? input.colors.slice(0, 3)
+      : ["#1E293B", "#6D28D9", "#10B981"];
   const inspiration = selectInspirationReferences(input);
   const playbook = inspiration.selected[0];
   const human = humanStagingFor(input.domain);
+  const chosenId = selection?.selected?.id;
+  const exactPatch = exact ? exactCopyArtDirection(input, selection ?? null) : null;
+  const { color_palette: exactPalette, ...exactRest } = exactPatch ?? {};
 
   return {
     concept: `${input.style ?? playbook?.style ?? "moderne"}, direction artistique ${input.domain}`,
@@ -111,7 +120,6 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       input.cta ? `CTA: ${input.cta}` : "Call to action visible",
       "Infos pratiques groupees",
     ],
-    color_palette: palette,
     typography: {
       heading: "Display impact (une famille)",
       body: "Sans lisible (deuxieme famille max)",
@@ -136,25 +144,35 @@ export function buildArtDirection(input: CreateBriefInput): ArtDirection {
       "2-3 couleurs principales maximum",
       ...inspiration.principles,
     ],
-    reference_ids: inspiration.selected.map((ref) => ref.id),
-    avoid: [
-      "zero personne humaine",
-      "peau plastique, visage cireux, mains deformees",
-      "texte colle aux bords ou lettres illegibles",
-      "collage de 5 elements sans hierarchie",
-      "copie directe d'une reference",
-      "faits inventes (date, prix, tel)",
-    ],
+    reference_ids: chosenId ? [chosenId] : inspiration.selected.map((ref) => ref.id),
+    avoid: exact
+      ? [
+          "nouvelle grille",
+          "nouvelle composition",
+          "recoloration totale",
+          "ancien texte, ancien numero, ancienne date, ancien prix, ancien nom, ancienne marque, ancien logo",
+        ]
+      : [
+          "zero personne humaine",
+          "peau plastique, visage cireux, mains deformees",
+          "texte colle aux bords ou lettres illegibles",
+          "collage de 5 elements sans hierarchie",
+          "copie directe d'une reference",
+          "faits inventes (date, prix, tel)",
+        ],
     differentiators: [
       "directeur artistique par domaine, pas un template unique",
       "personne + produit/service + message dans une seule composition",
       "identite reutilisable multi-format",
       "CTA calibre conversion (WhatsApp/telephone si fourni)",
     ],
+    ...(exactPatch ? exactRest : {}),
+    color_palette: exactPalette?.length ? exactPalette : palette,
   };
 }
 
-export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
+export function buildPrompt(input: CreateBriefInput, ad: ArtDirection, selection?: ReferenceSelection | null) {
+  if (isExactCopy(input)) return buildExactCopyPrompt(input, selection ?? null);
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
     input.description && `Offer copy: ${input.description}`,
@@ -188,6 +206,9 @@ export function buildPrompt(input: CreateBriefInput, ad: ArtDirection) {
     `DESIGN: palette ${ad.color_palette.join(", ")}. Type: ${ad.typography.heading} + ${ad.typography.body}. CTA: ${ad.cta}.`,
     `FORMAT: ${ad.format}.`,
     `TITLE TO RENDER EXACTLY: ${input.title}.`,
+    selection?.selected
+      ? `IN-DOMAIN REFERENCE ONLY: domain ${selection.domain}, id ${selection.selected.id}, path ${selection.selected.storagePath}. ${selection.reason} Do not pick a reference from another domain.`
+      : `DOMAIN LOCK: ${input.domain}. Do not switch to another domain.`,
     ...facts,
     designLawsBlock(),
     `Reference principles (inspire, never copy): ${ad.reference_principles.join(" || ")}.`,
