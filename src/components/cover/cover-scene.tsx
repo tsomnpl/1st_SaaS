@@ -58,7 +58,7 @@ export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
         </div>
         <p className="cover-caption">
           Copie exacte : même photo, même composition, même police, même fond. Sur les exemples publics, les
-          visages, dates, lieux et contacts sont retirés.
+          dates, lieux et contacts sont retirés. Les visages restent flous seulement sur anniversaire et mariage.
         </p>
       </div>
 

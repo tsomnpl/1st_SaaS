@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from "react";
 
-const KEY = "fm-cookie-consent";
+export const COOKIE_CONSENT_KEY = "fm-cookie-consent";
+export const COOKIE_CHOICE_EVENT = "fm-cookie-choice";
 
 export function CookieBanner() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(KEY);
+    const stored = window.localStorage.getItem(COOKIE_CONSENT_KEY);
     setVisible(!stored);
     if (stored === "analytics") {
       window.dispatchEvent(new Event("fm-analytics-consent"));
@@ -16,8 +17,9 @@ export function CookieBanner() {
   }, []);
 
   function choose(value: "necessary" | "analytics") {
-    window.localStorage.setItem(KEY, value);
+    window.localStorage.setItem(COOKIE_CONSENT_KEY, value);
     setVisible(false);
+    window.dispatchEvent(new Event(COOKIE_CHOICE_EVENT));
     if (value === "analytics") {
       window.dispatchEvent(new Event("fm-analytics-consent"));
     }

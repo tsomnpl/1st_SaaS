@@ -4,6 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeaderHost } from "@/components/site-header-host";
 import { SiteFrame } from "@/components/chrome/site-frame";
 import { CookieBanner } from "@/components/legal/cookie-banner";
+import { SupportCorner } from "@/components/support/support-corner";
 import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 
 const jakarta = Plus_Jakarta_Sans({
@@ -19,6 +20,7 @@ export function AuthChrome({ children }: { children: ReactNode }) {
         <SiteFrame header={<SiteHeaderHost />} footer={<SiteFooter />}>
           {children}
         </SiteFrame>
+        <SupportCorner />
         <CookieBanner />
         <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
       </body>
