@@ -120,7 +120,7 @@ textarea:focus-visible {
   justify-content: flex-end;
   width: 100%;
   min-height: 420px;
-  overflow: hidden;
+  overflow: visible;
   padding: 0 1rem 0.5rem;
 }
 
@@ -152,10 +152,18 @@ textarea:focus-visible {
 .cover-hero,
 .cover-side {
   position: absolute;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 8px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
   background: #f8fafc;
+}
+
+.cover-hero img,
+.cover-side img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: none;
 }
 
 .cover-hero {
@@ -328,8 +336,22 @@ textarea:focus-visible {
 }
 
 @media (max-width: 767px) {
-  .cover-stage { height: 390px; }
-  .cover-side { display: none; }
+  .cover-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    gap: 0.75rem;
+  }
+  .cover-hero,
+  .cover-side {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: min(100%, 320px);
+    transform: none;
+  }
   .cover-bar .cover-btn { width: auto; padding-inline: 0.75rem; }
 }
 
