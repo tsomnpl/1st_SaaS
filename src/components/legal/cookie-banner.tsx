@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useCopy } from "@/components/chrome/locale-provider";
 
 export const COOKIE_CONSENT_KEY = "fm-cookie-consent";
 export const COOKIE_CHOICE_EVENT = "fm-cookie-choice";
 
 export function CookieBanner() {
+  const t = useCopy();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -31,18 +33,17 @@ export function CookieBanner() {
     <div className="fixed inset-x-0 bottom-0 z-[80] border-t border-slate-200 bg-white/95 p-4 shadow-2xl backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <p className="text-sm text-slate-600">
-          FlyerMint utilise des cookies nécessaires à la connexion. Les statistiques optionnelles
-          ne sont chargées que si tu les acceptes.{" "}
+          {t.cookie.body}{" "}
           <a href="/confidentialite#cookies" className="font-semibold text-[#6D28D9]">
-            Politique de cookies
+            {t.cookie.policy}
           </a>
         </p>
         <div className="flex gap-2">
           <button type="button" className="btn-secondary" onClick={() => choose("necessary")}>
-            Nécessaires
+            {t.cookie.necessary}
           </button>
           <button type="button" className="btn-primary" onClick={() => choose("analytics")}>
-            Accepter les stats
+            {t.cookie.analytics}
           </button>
         </div>
       </div>

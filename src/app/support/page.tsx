@@ -2,15 +2,20 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
 import { formatSupportDate } from "@/lib/support";
+import { getDictionary } from "@/lib/locale";
 import { listUserTickets } from "@/server/support";
 import { requireActiveCurrentUser } from "@/server/users";
 
-export const metadata: Metadata = {
-  title: pageTitle("Support"),
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    title: pageTitle(t.support.title),
+    robots: { index: false, follow: false },
+  };
+}
 
 export default async function SupportPage() {
+  const { t } = await getDictionary();
   const user = await requireActiveCurrentUser();
   const tickets = await listUserTickets(user.id);
 
@@ -18,15 +23,15 @@ export default async function SupportPage() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold">Support</h1>
-          <p className="mt-1 max-w-xl text-slate-600">Tes demandes restent ici, avec leur statut et toute la conversation.</p>
+          <h1 className="text-3xl font-extrabold">{t.support.title}</h1>
+          <p className="mt-1 max-w-xl text-slate-600">{t.support.lead}</p>
         </div>
         <Link href="/support/nouveau" className="btn-primary">
-          Nouveau ticket
+          {t.support.new}
         </Link>
       </div>
       {tickets.length === 0 ? (
-        <div className="card p-8 text-slate-500">Aucun ticket pour le moment.</div>
+        <div className="card p-8 text-slate-500">{t.support.empty}</div>
       ) : (
         <ul className="space-y-3">
           {tickets.map((ticket) => (

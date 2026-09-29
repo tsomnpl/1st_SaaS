@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Bebas_Neue } from "next/font/google";
 import { BrandLogo } from "@/components/brand/logo";
 import { EXACT_SHOWCASE } from "@/lib/exact-showcase";
+import { getDictionary } from "@/lib/locale";
 
 const display = Bebas_Neue({
   weight: "400",
@@ -26,7 +27,8 @@ function MintLeaf({ className }: { className: string }) {
   );
 }
 
-export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
+export async function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
+  const { t } = await getDictionary();
   return (
     <section className="cover-root">
       <header className="cover-bar">
@@ -36,7 +38,7 @@ export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
 
       <div className="cover-stage-wrap">
         <p aria-hidden="true" className={`${display.className} cover-word`}>
-          AFFICHE
+          {t.cover.word}
         </p>
         <div className="cover-stage cover-enter">
           {LEAVES.map((name) => (
@@ -56,20 +58,17 @@ export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
             </div>
           ))}
         </div>
-        <p className="cover-caption">
-          Copie exacte : même photo, même composition, même police, même fond. Sur les exemples publics, les
-          dates, lieux et contacts sont retirés. Les visages restent flous seulement sur anniversaire et mariage.
-        </p>
+        <p className="cover-caption">{t.cover.caption}</p>
       </div>
 
       <div className="cover-band">
-        <h1>Décris ton événement ou ton offre. Reçois une affiche prête à publier.</h1>
-        <p className="cover-lead">Tu réponds à quelques questions, FlyerMint compose l&apos;affiche, tu la télécharges.</p>
+        <h1>{t.cover.title}</h1>
+        <p className="cover-lead">{t.cover.lead}</p>
         {band}
         <ul className="cover-facts">
-          <li>1 Mint offert à l&apos;inscription</li>
-          <li>1 Mint = 1 affiche</li>
-          <li>L&apos;export ne consomme aucun Mint</li>
+          <li>{t.cover.factGift}</li>
+          <li>{t.cover.factMint}</li>
+          <li>{t.cover.factExport}</li>
         </ul>
       </div>
     </section>

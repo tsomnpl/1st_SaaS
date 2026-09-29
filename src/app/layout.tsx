@@ -1,37 +1,41 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { PublicChrome } from "@/components/chrome/public-chrome";
+import { getDictionary } from "@/lib/locale";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://flyermint-t.vercel.app"),
-  title: {
-    default: "FlyerMint, Créez des visuels qui marquent",
-    template: "%s, FlyerMint",
-  },
-  description:
-    "Transforme une idée ou un besoin commercial en affiche professionnelle. Sans designer, sans prompt.",
-  icons: {
-    icon: [
-      { url: "/favicon.ico", sizes: "32x32" },
-      { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
-    ],
-    apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
-  },
-  openGraph: {
-    title: "FlyerMint, Créez des visuels qui marquent",
-    description: "Des affiches professionnelles sans designer, sans prompt.",
-    images: [{ url: "/og.png", width: 1200, height: 630, alt: "FlyerMint, Créez des visuels qui marquent." }],
-    locale: "fr_FR",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "FlyerMint, Créez des visuels qui marquent",
-    description: "Des affiches professionnelles sans designer, sans prompt.",
-    images: ["/og.png"],
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { locale, t } = await getDictionary();
+  const title = `FlyerMint, ${t.footer.slogan}`;
+  return {
+    metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"),
+    title: {
+      default: title,
+      template: "%s, FlyerMint",
+    },
+    description: t.footer.tagline,
+    icons: {
+      icon: [
+        { url: "/favicon.ico", sizes: "32x32" },
+        { url: "/icon-32.png", sizes: "32x32", type: "image/png" },
+      ],
+      apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+    },
+    openGraph: {
+      title,
+      description: t.footer.tagline,
+      images: [{ url: "/og.png", width: 1200, height: 630, alt: title }],
+      locale: locale === "en" ? "en_US" : "fr_FR",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: t.footer.tagline,
+      images: ["/og.png"],
+    },
+  };
+}
 
 export const dynamic = "force-dynamic";
 

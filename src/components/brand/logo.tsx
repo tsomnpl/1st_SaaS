@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useCopy } from "@/components/chrome/locale-provider";
 
 type LogoProps = {
   href?: string | null;
@@ -23,6 +26,7 @@ export function BrandLogo({
   wordmark = "brand",
   className = "",
 }: LogoProps) {
+  const t = useCopy();
   const dim = sizes[size];
   const content = (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
@@ -43,7 +47,7 @@ export function BrandLogo({
         </span>
         {withSlogan ? (
           <span className={`block text-[11px] font-medium ${onDark ? "text-white/70" : "text-slate-500"}`}>
-            Créez des visuels qui marquent.
+            {t.footer.slogan}
           </span>
         ) : null}
       </span>
@@ -52,7 +56,7 @@ export function BrandLogo({
 
   if (!href) return content;
   return (
-    <Link href={href} className="inline-flex" aria-label="FlyerMint, accueil">
+    <Link href={href} className="inline-flex" aria-label={t.footer.home}>
       {content}
     </Link>
   );
