@@ -56,7 +56,10 @@ export function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNode }) {
             </div>
           ))}
         </div>
-        <p className="cover-caption">Copie exacte : même image, même texte, même police, même fond.</p>
+        <p className="cover-caption">
+          Copie exacte : même photo, même composition, même police, même fond. Sur les exemples publics, les
+          visages, dates, lieux et contacts sont retirés.
+        </p>
       </div>
 
       <div className="cover-band">
