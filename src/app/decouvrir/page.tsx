@@ -121,7 +121,7 @@ export default function DiscoverPage() {
             <VisualPoster key={poster.id} title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
           ))}
         </div>
-        <p className="text-sm text-slate-500">Chaque visuel reprend la référence de son dossier, sans nom, numéro ni date réelle. Les visages de ces exemples sont floutés, comme expliqué dans la confidentialité.</p>
+        <p className="text-sm text-slate-500">Chaque visuel reprend la référence de son dossier, sans nom, numéro ni date réelle. Les visages restent flous seulement sur l’anniversaire et le mariage.</p>
       </section>
 
       <section id="comment-ca-marche">

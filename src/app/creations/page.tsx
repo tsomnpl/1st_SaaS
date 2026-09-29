@@ -17,7 +17,7 @@ export default function CreationsPage() {
         <div>
           <h1 className="text-3xl font-extrabold">Créations</h1>
           <p className="mt-2 max-w-xl text-slate-600">
-            {posters.length} domaines. Chaque affiche garde la photo et la composition de sa référence. Les noms, numéros, dates et lieux réels sont retirés. Les visages, surtout celui de l’anniversaire, sont floutés.
+            {posters.length} domaines. Chaque affiche garde la photo et la composition de sa référence. Les noms, numéros, dates et lieux réels sont retirés. Les visages restent flous sur l’anniversaire et le mariage.
           </p>
         </div>
         <Link href="/create" className="btn-primary">

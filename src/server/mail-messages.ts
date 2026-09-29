@@ -110,6 +110,67 @@ export function generationFailedMessage(input: GenerationMail): MailContent {
   );
 }
 
+export function newTicketAdminMessage(input: {
+  ticketNumber: string;
+  subject: string;
+  category: string;
+  priority: string;
+  userLabel: string;
+  preview: string;
+  contextLines: string[];
+  adminUrl: string | null;
+  createdAt: string;
+}): MailContent {
+  return message(`[Nouveau ticket] #${input.ticketNumber}, ${input.category}`, [
+    `Ticket #${input.ticketNumber}`,
+    `Sujet : ${input.subject}`,
+    `Catégorie : ${input.category}`,
+    `Priorité : ${input.priority}`,
+    `Utilisateur : ${input.userLabel}`,
+    `Date : ${input.createdAt}`,
+    `Message : ${input.preview}`,
+    ...input.contextLines,
+    input.adminUrl ? `Ouvrir le ticket : ${input.adminUrl}` : "Le chemin du studio admin n’est pas configuré.",
+  ]);
+}
+
+export function userReplyAdminMessage(input: {
+  ticketNumber: string;
+  preview: string;
+  adminUrl: string | null;
+}): MailContent {
+  return message(`[Réponse ticket] #${input.ticketNumber}`, [
+    `Nouvelle réponse sur le ticket #${input.ticketNumber}.`,
+    input.preview,
+    input.adminUrl ? `Ouvrir le ticket : ${input.adminUrl}` : "Le chemin du studio admin n’est pas configuré.",
+  ]);
+}
+
+export function supportReplyUserMessage(input: {
+  ticketNumber: string;
+  reply: string;
+  ticketUrl: string;
+}): MailContent {
+  return message(`[FlyerMint Support] Réponse à #${input.ticketNumber}`, [
+    `Le support a répondu au ticket #${input.ticketNumber}.`,
+    input.reply,
+    `Voir la réponse : ${input.ticketUrl}`,
+  ]);
+}
+
+export function ticketStatusUserMessage(input: {
+  ticketNumber: string;
+  subject: string;
+  statusLabel: string;
+  ticketUrl: string;
+}): MailContent {
+  return message(`[FlyerMint Support] Ticket #${input.ticketNumber}, ${input.statusLabel}`, [
+    `Ton ticket #${input.ticketNumber} est maintenant : ${input.statusLabel}.`,
+    `Sujet : ${input.subject}`,
+    `Voir le ticket : ${input.ticketUrl}`,
+  ]);
+}
+
 export function importantNoticeMessage(subject: string, text: string): MailContent {
   return message(subject, [text]);
 }

@@ -31,7 +31,7 @@ export default async function AdminSettingsPage() {
       <article className="admin-card space-y-2 p-4 text-sm">
         <h2 className="font-bold">Accès au studio</h2>
         <p>
-          Le studio s’ouvre si le compte Clerk est dans ADMIN_CLERK_USER_IDS, ou si son e-mail vérifié est ADMIN_EMAIL. ADMIN_EMAIL reçoit aussi les notifications.
+          Le studio s’ouvre si le compte Clerk est dans ADMIN_CLERK_USER_IDS, ou si son e-mail est ADMIN_EMAIL ou GMAIL_USER. Un nouveau ticket est envoyé à ces boîtes, et un accusé part vers l’auteur.
         </p>
         <p>
           Dans le tableau de bord Clerk, ouvre Users, choisis le compte, copie l’identifiant qui commence par user_. Plusieurs identifiants se séparent par une virgule.

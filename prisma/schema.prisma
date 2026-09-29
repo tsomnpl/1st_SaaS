@@ -65,6 +65,7 @@ model User {
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
   mintGrantsCreated  PendingMintGrant[]  @relation("MintGrantAdmin")
   mintGrantsRedeemed PendingMintGrant[]  @relation("MintGrantUser")
+  supportTickets    SupportTicket[]
 }
 
 model Plan {
@@ -97,8 +98,9 @@ model Payment {
   creditedAt     DateTime?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
-  plan           Plan          @relation(fields: [planId], references: [id])
-  user           User          @relation(fields: [userId], references: [id])
+  plan           Plan            @relation(fields: [planId], references: [id])
+  user           User            @relation(fields: [userId], references: [id])
+  supportTickets SupportTicket[]
 }
 
 model CreditAccount {
@@ -166,6 +168,7 @@ model Generation {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   user           User             @relation(fields: [userId], references: [id])
+  supportTickets SupportTicket[]
 }
 
 model Reference {
@@ -214,6 +217,123 @@ model PendingMintGrant {
 
   @@index([email, status])
   @@index([adminUserId])
+}
+
+enum SupportCategory {
+  GENERATION
+  PAYMENT
+  ACCOUNT
+  EXPORT
+  PERSONAL_REFERENCE
+  BUG
+  SUGGESTION
+  OTHER
+}
+
+enum SupportPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum SupportStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum SupportAuthorType {
+  USER
+  SUPPORT
+}
+
+enum SupportEmailStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+model SupportSequence {
+  id   Int @id
+  next Int @default(1)
+}
+
+model SupportTicket {
+  id              String            @id @default(cuid())
+  ticketNumber    String            @unique
+  userId          String
+  subject         String
+  category        SupportCategory
+  priority        SupportPriority   @default(MEDIUM)
+  status          SupportStatus     @default(OPEN)
+  generationId    String?
+  paymentId       String?
+  context         Json?
+  clientRequestId String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  resolvedAt      DateTime?
+  closedAt        DateTime?
+  user            User              @relation(fields: [userId], references: [id])
+  generation      Generation?       @relation(fields: [generationId], references: [id])
+  payment         Payment?          @relation(fields: [paymentId], references: [id])
+  messages        SupportMessage[]
+  attachments     SupportAttachment[]
+  emailEvents     SupportEmailEvent[]
+
+  @@unique([userId, clientRequestId])
+  @@index([userId, updatedAt])
+  @@index([status, priority, updatedAt])
+}
+
+model SupportMessage {
+  id          String              @id @default(cuid())
+  ticketId    String
+  authorId    String
+  authorType  SupportAuthorType
+  content     String
+  isInternal  Boolean             @default(false)
+  createdAt   DateTime            @default(now())
+  ticket      SupportTicket       @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  attachments SupportAttachment[]
+
+  @@index([ticketId, createdAt])
+}
+
+model SupportAttachment {
+  id         String          @id @default(cuid())
+  ticketId   String
+  messageId  String?
+  storageKey String          @unique
+  fileName   String
+  mimeType   String
+  size       Int
+  bytes      Bytes
+  createdAt  DateTime        @default(now())
+  ticket     SupportTicket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  message    SupportMessage? @relation(fields: [messageId], references: [id])
+
+  @@index([ticketId])
+}
+
+model SupportEmailEvent {
+  id                String             @id @default(cuid())
+  ticketId          String
+  messageId         String?
+  eventType         String
+  eventKey          String             @unique
+  status            SupportEmailStatus @default(PENDING)
+  providerMessageId String?
+  attempts          Int                @default(0)
+  lastError         String?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  ticket            SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  @@index([ticketId, createdAt])
 }
 
 model WebhookEvent {

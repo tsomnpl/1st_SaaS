@@ -8,9 +8,9 @@ export async function GET(request: Request) {
     await requireAdminUser();
     const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
     if (q.length < 2) {
-      return NextResponse.json({ ok: true, users: [], payments: [], generations: [], transactions: [], references: [] });
+      return NextResponse.json({ ok: true, users: [], payments: [], generations: [], transactions: [], references: [], tickets: [] });
     }
-    const [users, payments, generations, transactions, references] = await Promise.all([
+    const [users, payments, generations, transactions, references, tickets] = await Promise.all([
       prisma.user.findMany({
         where: {
           OR: [
@@ -48,6 +48,15 @@ export async function GET(request: Request) {
         },
         take: 8,
       }),
+      prisma.supportTicket.findMany({
+        where: {
+          OR: [
+            { ticketNumber: { contains: q, mode: "insensitive" } },
+            { subject: { contains: q, mode: "insensitive" } },
+          ],
+        },
+        take: 8,
+      }),
     ]);
     return NextResponse.json({
       ok: true,
@@ -56,6 +65,7 @@ export async function GET(request: Request) {
       generations: generations.map((g) => ({ id: g.id, status: g.status })),
       transactions: transactions.map((t) => ({ id: t.id, type: t.type, reference: t.reference })),
       references: references.map((r) => ({ id: r.id, domain: r.domain, style: r.style })),
+      tickets: tickets.map((ticket) => ({ ticketNumber: ticket.ticketNumber, subject: ticket.subject, status: ticket.status })),
     });
   } catch (error) {
     return safeJsonError(error, 403);

@@ -26,7 +26,9 @@ describe("admin identity", () => {
     expect(isConfiguredAdmin({ email: collected.email, emails: collected.emails, clerkUserId: "user_x" })).toBe(true);
   });
 
-  it("grants admin from the clerk id or the configured email", () => {
+  it("grants admin from the clerk id, the admin inbox, or the gmail sender", () => {
+    process.env.GMAIL_USER = "sender@example.com";
+    expect(isConfiguredAdmin({ email: "sender@example.com", clerkUserId: "user_x" })).toBe(true);
     expect(isConfiguredAdmin({ email: "owner@example.com", clerkUserId: "user_x" })).toBe(true);
     expect(isConfiguredAdmin({ email: "Owner@Example.com", clerkUserId: "user_x" })).toBe(true);
     expect(isConfiguredAdmin({ email: "other@example.com", emails: ["owner@example.com"], clerkUserId: "user_x" })).toBe(true);

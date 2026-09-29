@@ -45,7 +45,7 @@ export default function PrivacyPage() {
       <section>
         <h2 className="text-2xl font-bold">Exemples publics</h2>
         <p className="mt-3 text-slate-700">
-          Les affiches de la galerie Créations et du showcase viennent de références déjà publiées. Les visages y sont floutés, et les noms, numéros, dates et lieux réels sont retirés, pour ne pas remettre en ligne l’identité des personnes visibles sur ces sources. Ce flou ne s’applique pas à une affiche qu’un client génère : sa photo reste nette, et seuls les textes qu’il fournit changent.
+          Les affiches de la galerie Créations et du showcase viennent de références déjà publiées. Les noms, numéros, dates et lieux réels sont retirés. Les visages restent visibles, sauf sur les affiches anniversaire et mariage, où ils restent flous. Ce flou ne s’applique pas à une affiche qu’un client génère : sa photo reste nette, et seuls les textes qu’il fournit changent.
         </p>
       </section>
 

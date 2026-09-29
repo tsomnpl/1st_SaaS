@@ -207,7 +207,7 @@ export function CreateFlyerForm({
         <input type="hidden" name="creativeFreedom" value="copie_exacte" />
         <p className="text-xs text-slate-500 md:col-span-2">
           Chaque affiche est une copie exacte d’une référence du domaine. Ta photo remplace la personne, nette, sans flou.
-          Seuls les textes que tu remplis changent. Le flou des visages ne concerne que les exemples publics.
+          Seuls les textes que tu remplis changent. Le flou des visages reste sur les exemples anniversaire et mariage.
         </p>
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Photo / produit (optionnel)</span>
