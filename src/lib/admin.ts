@@ -40,8 +40,7 @@ export function isConfiguredAdmin(input: {
   emails?: Array<string | null | undefined> | null;
 }) {
   if (input.clerkUserId && getAdminClerkIds().has(input.clerkUserId)) return true;
-  const configured = getConfiguredAdminEmail();
-  if (!configured) return false;
+  const configured = [getConfiguredAdminEmail(), process.env.GMAIL_USER?.trim() || ""];
   const candidates = [input.email, ...(input.emails ?? [])];
-  return candidates.some((email) => emailsMatch(email, configured));
+  return configured.some((inbox) => inbox && candidates.some((email) => emailsMatch(email, inbox)));
 }

@@ -16,6 +16,7 @@ import {
   paymentContext,
   safeFileName,
   supportEmailKey,
+  supportNoticeRecipients,
   visibleToUser,
   type SUPPORT_CATEGORIES,
 } from "@/lib/support";
@@ -25,6 +26,7 @@ import { sendSupportNotice } from "@/server/mail";
 import {
   newTicketAdminMessage,
   supportReplyUserMessage,
+  ticketCreatedMessage,
   ticketStatusUserMessage,
   userReplyAdminMessage,
 } from "@/server/mail-messages";
@@ -42,11 +44,25 @@ function isUnique(error: unknown) {
 }
 
 function supportInbox() {
-  const dedicated = process.env.SUPPORT_EMAIL?.trim() ?? "";
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(dedicated)) return dedicated;
-  const mailbox = process.env.GMAIL_USER?.trim() ?? "";
-  if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(mailbox)) return mailbox;
-  return "";
+  return supportNoticeRecipients(process.env)[0] ?? "";
+}
+
+async function notifyInboxes(input: {
+  ticketId: string;
+  messageId?: string | null;
+  eventType: string;
+  scope: string;
+  content: { subject: string; text: string; html: string };
+  send: SupportSender;
+}) {
+  const recipients = supportNoticeRecipients(process.env);
+  if (recipients.length === 0) {
+    await recordAndSend({ ...input, to: "" });
+    return;
+  }
+  for (const to of recipients) {
+    await recordAndSend({ ...input, to, scope: `${input.scope}:${to.toLowerCase()}` });
+  }
 }
 
 function adminTicketUrl(ticketNumber: string) {
@@ -175,13 +191,26 @@ export async function createSupportTicket(
       adminUrl: adminTicketUrl(ticket.ticketNumber),
       createdAt: formatSupportDate(ticket.createdAt),
     });
-    await recordAndSend({
+    await notifyInboxes({
       ticketId: ticket.id,
       messageId: created.messageId,
       eventType: "TICKET_CREATED",
       scope: created.messageId,
-      to: supportInbox(),
       content,
+      send,
+    });
+    const author = ticket.user.email ?? "";
+    await recordAndSend({
+      ticketId: ticket.id,
+      messageId: created.messageId,
+      eventType: "TICKET_RECEIPT",
+      scope: created.messageId,
+      to: author,
+      content: ticketCreatedMessage({
+        ticketId: ticket.ticketNumber,
+        subject: ticket.subject,
+        message: input.message.slice(0, 800),
+      }),
       send,
     });
   }
@@ -238,12 +267,11 @@ export async function addUserMessage(userId: string, ticketNumber: string, messa
     preview: text.slice(0, 240),
     adminUrl: adminTicketUrl(ticket.ticketNumber),
   });
-  await recordAndSend({
+  await notifyInboxes({
     ticketId: ticket.id,
     messageId: saved.id,
     eventType: "USER_REPLY",
     scope: saved.id,
-    to: supportInbox(),
     content,
     send,
   });
@@ -486,12 +514,35 @@ export async function retrySupportEmail(eventId: string, send: SupportSender = d
   if (event.status === "SENT") return event;
   const content = rebuildMail(event.eventType, event.ticket, event.messageId);
   if (!content) throw new Error("INVALID_SUPPORT");
-  const to = event.eventType === "TICKET_CREATED" || event.eventType === "USER_REPLY" ? supportInbox() : event.ticket.user.email ?? "";
+  const legacyScope = event.eventKey.split(":").slice(2).join(":") || "-";
+  if (event.eventType === "TICKET_CREATED" || event.eventType === "USER_REPLY") {
+    await notifyInboxes({
+      ticketId: event.ticketId,
+      messageId: event.messageId,
+      eventType: event.eventType,
+      scope: legacyScope.split(":")[0] || legacyScope,
+      content,
+      send,
+    });
+    const delivered = await prisma.supportEmailEvent.findFirst({
+      where: { ticketId: event.ticketId, eventType: event.eventType, status: "SENT" },
+    });
+    if (delivered && event.status !== "SENT") {
+      return prisma.supportEmailEvent.update({
+        where: { id: event.id },
+        data: { status: "SENT", lastError: null },
+      });
+    }
+    return prisma.supportEmailEvent.findUnique({ where: { id: event.id } });
+  }
+  const to = event.eventType === "TICKET_RECEIPT" || event.eventType === "SUPPORT_REPLY" || event.eventType.startsWith("STATUS_")
+    ? event.ticket.user.email ?? ""
+    : supportInbox();
   return recordAndSend({
     ticketId: event.ticketId,
     messageId: event.messageId,
     eventType: event.eventType,
-    scope: event.eventKey.split(":").slice(2).join(":") || "-",
+    scope: legacyScope,
     to,
     content,
     send,
@@ -514,6 +565,14 @@ function rebuildMail(
   },
   messageId: string | null,
 ) {
+  if (eventType === "TICKET_RECEIPT") {
+    const first = ticket.messages.find((message) => !message.isInternal);
+    return ticketCreatedMessage({
+      ticketId: ticket.ticketNumber,
+      subject: ticket.subject,
+      message: (first?.content ?? "").slice(0, 800),
+    });
+  }
   if (eventType === "TICKET_CREATED") {
     const first = ticket.messages.find((message) => !message.isInternal);
     return newTicketAdminMessage({

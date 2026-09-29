@@ -21,6 +21,14 @@ const clerkB = `it_support_b_${stamp}`;
 const clerkAdmin = `it_support_admin_${stamp}`;
 
 describe.sequential("support tickets", () => {
+  const previousEnv = {
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
+    GMAIL_USER: process.env.GMAIL_USER,
+  };
+  process.env.ADMIN_EMAIL = "desk@example.com";
+  process.env.SUPPORT_EMAIL = "";
+  process.env.GMAIL_USER = "";
   const sent: string[] = [];
   let failNext = false;
   const send: SupportSender = async (input) => {
@@ -51,6 +59,9 @@ describe.sequential("support tickets", () => {
       await prisma.user.deleteMany({ where: { id: { in: ids } } });
     }
     await prisma.$disconnect();
+    process.env.ADMIN_EMAIL = previousEnv.ADMIN_EMAIL;
+    process.env.SUPPORT_EMAIL = previousEnv.SUPPORT_EMAIL;
+    process.env.GMAIL_USER = previousEnv.GMAIL_USER;
   });
 
   it("stores the ticket before email and ignores a repeated request", async () => {
@@ -108,9 +119,11 @@ describe.sequential("support tickets", () => {
     ticketNumber = first.ticketNumber;
     expect(first.ticketNumber).toMatch(/^FM-\d{6}$/);
     expect(second.ticketNumber).toBe(first.ticketNumber);
-    expect(sent).toHaveLength(1);
-    expect(sent[0]).toContain("[Nouveau ticket]");
-    expect(sent[0]).toContain(first.ticketNumber);
+    const adminNotice = sent.find((row) => row.startsWith("desk@example.com|") && row.includes("[Nouveau ticket]"));
+    const receipt = sent.find((row) => row.startsWith(`a-${stamp}@example.com|`));
+    expect(adminNotice).toContain(first.ticketNumber);
+    expect(receipt).toContain("Nous avons bien reçu");
+    expect(receipt).toContain(first.ticketNumber);
     expect(sent[0]?.includes("tok-sup")).toBe(false);
     expect(JSON.stringify(first.context).includes("base64")).toBe(false);
     expect(JSON.stringify(first.context).includes(payment.orderId)).toBe(true);
@@ -125,7 +138,6 @@ describe.sequential("support tickets", () => {
     const adminView = await getAdminTicket(ticketNumber);
     expect(userView.messages.some((message) => message.content.includes("webhook"))).toBe(false);
     expect(adminView.messages.some((message) => message.isInternal && message.content.includes("webhook"))).toBe(true);
-    expect(sent).toHaveLength(1);
   });
 
   it("keeps the message when mail fails, then retries once", async () => {

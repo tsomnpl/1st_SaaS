@@ -6,6 +6,7 @@ import {
   paymentContext,
   safeFileName,
   supportEmailKey,
+  supportNoticeRecipients,
   visibleToUser,
 } from "@/lib/support";
 
@@ -18,6 +19,19 @@ describe("support helpers", () => {
   it("builds one email key per event", () => {
     expect(supportEmailKey("SUPPORT_REPLY", "ticket", "message")).toBe("SUPPORT_REPLY:ticket:message");
     expect(supportEmailKey("SUPPORT_REPLY", "ticket", "message")).toBe(supportEmailKey("SUPPORT_REPLY", "ticket", "message"));
+  });
+
+  it("notifies the admin inbox and the gmail sender once each", () => {
+    expect(supportNoticeRecipients({
+      ADMIN_EMAIL: "Owner@Example.com",
+      SUPPORT_EMAIL: "",
+      GMAIL_USER: "sender@example.com",
+    })).toEqual(["Owner@Example.com", "sender@example.com"]);
+    expect(supportNoticeRecipients({
+      ADMIN_EMAIL: "owner@example.com",
+      GMAIL_USER: "Owner@Example.com",
+    })).toEqual(["owner@example.com"]);
+    expect(supportNoticeRecipients({})).toEqual([]);
   });
 
   it("hides internal notes from the user view", () => {

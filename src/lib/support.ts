@@ -94,6 +94,26 @@ export function supportEmailKey(eventType: string, ticketId: string, scope = "-"
   return `${eventType}:${ticketId}:${scope}`;
 }
 
+const NOTICE_EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+export function supportNoticeRecipients(env: {
+  ADMIN_EMAIL?: string;
+  SUPPORT_EMAIL?: string;
+  GMAIL_USER?: string;
+}) {
+  const seen = new Set<string>();
+  const recipients: string[] = [];
+  for (const value of [env.ADMIN_EMAIL, env.SUPPORT_EMAIL, env.GMAIL_USER]) {
+    const email = value?.trim() ?? "";
+    if (!NOTICE_EMAIL.test(email)) continue;
+    const key = email.toLowerCase();
+    if (seen.has(key)) continue;
+    seen.add(key);
+    recipients.push(email);
+  }
+  return recipients;
+}
+
 export function visibleToUser<T extends { isInternal: boolean }>(messages: T[]) {
   return messages.filter((message) => !message.isInternal);
 }
