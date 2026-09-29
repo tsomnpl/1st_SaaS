@@ -22,6 +22,7 @@ const STEPS = ["Besoin", "Contenu", "Style", "Récap"] as const;
 export function CreateFlyerForm({
   mintBalance,
   canExport = false,
+  canUsePersonalReference = false,
   brandColors = [],
   brandLogoUrl = "",
   regenerateFromId = "",
@@ -29,6 +30,7 @@ export function CreateFlyerForm({
 }: {
   mintBalance: number;
   canExport?: boolean;
+  canUsePersonalReference?: boolean;
   brandColors?: string[];
   brandLogoUrl?: string;
   regenerateFromId?: string;
@@ -43,6 +45,7 @@ export function CreateFlyerForm({
   const [rememberBrand, setRememberBrand] = useState(true);
   const [mainImage, setMainImage] = useState("");
   const [logoImage, setLogoImage] = useState(brandLogoUrl);
+  const [personalPoster, setPersonalPoster] = useState("");
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const canGenerate = mintBalance > 0 && confirmMint;
@@ -100,6 +103,7 @@ export function CreateFlyerForm({
         .filter(Boolean),
       mainImageUrl: mainImage || undefined,
       logoUrl: logoImage || undefined,
+      personalReferenceUrl: canUsePersonalReference && personalPoster ? personalPoster : undefined,
       rememberBrand,
       regenerateFromId: regenerateFromId || undefined,
       adaptiveData,
@@ -219,6 +223,31 @@ export function CreateFlyerForm({
             }}
           />
         </label>
+        {canUsePersonalReference ? (
+          <label className="space-y-1 text-sm md:col-span-2">
+            <span className="font-medium text-slate-700">Ton affiche de référence</span>
+            <p className="text-xs text-slate-500">
+              FlyerMint reproduit cette affiche. Seuls les textes, la personne et le logo que tu fournis changent.
+              Aucune information manquante n’est inventée.
+            </p>
+            {personalPoster ? <p className="text-xs text-[#10B981]">Affiche de référence prête.</p> : null}
+            <input
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={async (event) => {
+                try {
+                  setPersonalPoster(await readImage(event.target.files?.[0]));
+                } catch (e) {
+                  setError(publicErrorMessage(e));
+                }
+              }}
+            />
+          </label>
+        ) : (
+          <p className="text-xs text-slate-500 md:col-span-2">
+            La référence personnelle, reproduire ta propre affiche, est incluse dans les packs 20 000 et 25 000 FCFA.
+          </p>
+        )}
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">Logo (optionnel, mémorisé si tu coches le kit de marque)</span>
           {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
@@ -242,6 +271,7 @@ export function CreateFlyerForm({
             FlyerMint va composer la direction artistique puis générer l’affiche. Cela consomme{" "}
             <strong>1 Mint</strong>.
           </p>
+          {personalPoster ? <p className="mt-2">Ton affiche sert de référence à reproduire.</p> : null}
           {mainImage ? <p className="mt-2">Ta photo sera conservée comme sujet principal.</p> : null}
           {logoImage ? <p className="mt-2">Ton logo sera réappliqué sur l’affiche.</p> : null}
           {regenerateFromId ? (

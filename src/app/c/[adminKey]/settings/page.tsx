@@ -49,7 +49,7 @@ export default async function AdminSettingsPage() {
           <li>GMAIL_USER : {configured.gmailUser ? "renseigné" : "à renseigner"}</li>
           <li>GMAIL_APP_PASSWORD : {configured.gmailPassword ? "renseigné" : "à renseigner"}</li>
           <li>EMAIL_FROM_NAME : {configured.emailFromName ? "renseigné" : "FlyerMint par défaut"}</li>
-          <li>ADMIN_PRIVATE_PATH : {configured.privatePath ? "renseigné" : "valeur de secours locale"}</li>
+          <li>ADMIN_PRIVATE_PATH : {configured.privatePath ? "renseigné" : "manquant, studio fermé"}</li>
           <li>Analytics : {configured.analytics ? "domaine renseigné" : "désactivé"}</li>
         </ul>
       </article>

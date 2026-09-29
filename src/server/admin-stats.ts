@@ -1,6 +1,6 @@
 import { PaymentStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { getAdminBasePath } from "@/lib/env";
+import { getAdminPrivatePath } from "@/lib/env";
 
 export type AdminPeriod = "1" | "7" | "30" | "90" | "365" | "all";
 
@@ -71,7 +71,8 @@ export async function getAdminStats(period: AdminPeriod = "30") {
   const month = startOfDay(29);
   const from = periodStart(period);
   const days = seriesDays(period);
-  const base = getAdminBasePath();
+  const privatePath = getAdminPrivatePath();
+  const base = privatePath ? `/c/${privatePath}` : "";
 
   const [
     usersTotal,

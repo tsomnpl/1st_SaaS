@@ -120,7 +120,7 @@ textarea:focus-visible {
   justify-content: flex-end;
   width: 100%;
   min-height: 420px;
-  overflow: hidden;
+  overflow: visible;
   padding: 0 1rem 0.5rem;
 }
 
@@ -145,31 +145,39 @@ textarea:focus-visible {
 .cover-stage {
   position: relative;
   z-index: 1;
-  width: min(100%, 920px);
-  height: 460px;
+  width: min(100%, 980px);
+  height: 640px;
 }
 
 .cover-hero,
 .cover-side {
   position: absolute;
-  overflow: hidden;
+  overflow: visible;
   border-radius: 8px;
   box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
   background: #f8fafc;
+}
+
+.cover-hero img,
+.cover-side img {
+  display: block;
+  width: 100%;
+  height: auto;
+  filter: none;
 }
 
 .cover-hero {
   left: 50%;
   bottom: 0;
   z-index: 3;
-  width: min(68%, 280px);
-  transform: translateX(-50%) rotate(-6deg);
+  width: min(42%, 360px);
+  transform: translateX(-50%) rotate(-4deg);
 }
 
 .cover-side {
-  bottom: 28px;
+  bottom: 36px;
   z-index: 2;
-  width: min(30%, 180px);
+  width: min(30%, 250px);
 }
 
 .cover-side-left {
@@ -252,6 +260,7 @@ textarea:focus-visible {
   font-size: 0.95rem;
   font-weight: 700;
   color: var(--cover-ink);
+  white-space: nowrap;
 }
 
 .cover-more {
@@ -328,8 +337,22 @@ textarea:focus-visible {
 }
 
 @media (max-width: 767px) {
-  .cover-stage { height: 390px; }
-  .cover-side { display: none; }
+  .cover-stage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: auto;
+    gap: 0.75rem;
+  }
+  .cover-hero,
+  .cover-side {
+    position: relative;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: min(100%, 320px);
+    transform: none;
+  }
   .cover-bar .cover-btn { width: auto; padding-inline: 0.75rem; }
 }
 
@@ -345,7 +368,7 @@ textarea:focus-visible {
 
 @media (min-width: 768px) {
   .cover-bar { padding: 1.25rem 2rem 0; }
-  .cover-hero { width: min(34%, 250px); }
+  .cover-hero { width: min(34%, 360px); }
   .cover-band { padding: 2.4rem 2rem 1.8rem; }
 }
 

@@ -26,6 +26,7 @@ const MESSAGES: Record<string, string> = {
   EXACT_COPY_NO_REFERENCE: "Aucune référence réelle n’est disponible dans le domaine choisi.",
   EXACT_COPY_REFERENCE_MISSING: "La copie exacte n’a pas pu charger l’image de référence.",
   EXACT_COPY_WRONG_MODEL: "La copie exacte exige le modèle image demandé.",
+  PERSONAL_REFERENCE_LOCKED: "La référence personnelle est réservée aux packs 20 000 et 25 000 FCFA.",
   REFERENCE_LIBRARY_UNAVAILABLE: "La bibliothèque de références n’est pas disponible.",
   REFERENCE_DOWNLOAD_FAILED: "L’image de référence n’a pas pu être lue.",
   REFERENCE_PATH_INVALID: "Le chemin de la référence n’est pas valide.",

@@ -208,6 +208,33 @@ describe("exact copy prompt and model", () => {
     expect(withPhoto.image).toEqual([reference, "data:image/png;base64,UEhPVE8="]);
     expect(String(body.prompt)).toContain("Modify the supplied reference poster.");
   });
+
+  it("reproduces a personal poster with the high quality model and forbids a new design", () => {
+    const poster = "data:image/jpeg;base64,UE9TVEVS";
+    const brief = createBriefSchema.parse({
+      ...formationBrief(),
+      creativeFreedom: "liberte_guidee",
+      personalReferenceUrl: poster,
+      colors: ["#10B981"],
+    });
+    const model = selectImageModel(brief, "Formation Excel", ["google/gemini-3-pro-image-lite"]);
+    expect(model).toBe(EXACT_COPY_MODEL);
+    expect(model).not.toContain("lite");
+    const prompt = buildPrompt({ ...brief, creativeFreedom: "copie_exacte" }, buildArtDirection(brief));
+    expect(prompt).toContain("MODIFY THE ATTACHED POSTER.");
+    expect(prompt).toContain("DO NOT CREATE A NEW DESIGN.");
+    expect(prompt).toContain("Do not invent a phone, address, price, date, name, URL, or offer.");
+    expect(prompt).toContain("Do not copy the logo printed on the reference.");
+    expect(prompt).toContain("Do not recolor the whole poster.");
+    const body = buildImageGenerationBody({
+      model,
+      prompt,
+      brief: { ...brief, creativeFreedom: "copie_exacte" },
+      referenceImageDataUrl: poster,
+    });
+    expect(body.image).toBe(poster);
+    expect(body.model).toBe(EXACT_COPY_MODEL);
+  });
 });
 
 describe("exact copy quality check", () => {

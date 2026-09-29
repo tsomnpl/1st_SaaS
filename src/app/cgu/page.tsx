@@ -37,6 +37,7 @@ export default function TermsPage() {
           <li>Les Mints qui expirent le plus tôt sont consommés en premier.</li>
           <li>Le solde ne peut pas devenir négatif. Il n’est modifié que par le ledger serveur.</li>
           <li>Si la génération échoue pour une raison technique, le Mint consommé est recrédité automatiquement.</li>
+          <li>Les packs à 20 000 et 25 000 FCFA permettent d’envoyer sa propre affiche comme référence à reproduire. Les autres packs utilisent la bibliothèque du domaine. Cette vérification est faite sur le serveur.</li>
           <li>Les autres remboursements ne sont pas automatiques. Ils sont examinés un par un.</li>
         </ul>
       </section>

@@ -63,7 +63,21 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
   const accent = brief.colors.find((color) => color.trim())?.trim();
   const ref = selection?.selected;
   const allowedWords = provided.map((slot) => slot.value).join(" | ");
+  const personal = Boolean(brief.personalReferenceUrl);
   const lines = [
+    personal ? "MODIFY THE ATTACHED POSTER. DO NOT CREATE A NEW DESIGN." : "",
+    personal
+      ? "The attached poster is the client's own reference and the primary visual source. Keep the composition, element positions, zones, rectangles, blocks, hierarchy, subject placement, proportions, typographic organization, original colors, spacing, alignment, buttons, shapes, frames, and layout logic. The result must stay immediately recognizable as the same composition."
+      : "",
+    personal
+      ? "Do not invent a phone, address, price, date, name, URL, or offer. If a zone has no matching fact in the brief, delete that zone or close it without a fake fact."
+      : "",
+    personal
+      ? "Do not copy the logo printed on the reference. Do not replace the reference colors with a FlyerMint palette unless the brief asks for one accent."
+      : "",
+    personal
+      ? "If the reference shows a person, keep the position, framing, posture, scale, and visual role. Do not copy a real identifiable identity. A client photo, when attached, replaces that person in the same place."
+      : "",
     "Modify the supplied reference poster. Keep its composition and visual structure. Replace only the elements allowed by the new brief.",
     "IMAGE EDIT of the attached poster. Do not generate a new poster.",
     "Keep the same photograph, the same faces, the same products, the same background, and the same decorations. Do not redraw them.",
@@ -102,7 +116,7 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     `Format stays ${brief.format}.`,
     "A pretty poster that changes the composition or keeps old content is a failure.",
   ];
-  return lines.join("\n");
+  return lines.filter(Boolean).join("\n");
 }
 
 export function exactCopyArtDirection(brief: CreateBriefInput, selection: ReferenceSelection | null): Partial<ArtDirection> {

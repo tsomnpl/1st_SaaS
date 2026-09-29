@@ -54,6 +54,7 @@ export const createBriefSchema = z.object({
     .default("liberte_guidee"),
   mainImageUrl: imageRef,
   logoUrl: imageRef,
+  personalReferenceUrl: imageRef,
   regenerateFromId: z.string().min(3).max(80).optional(),
   rememberBrand: z.boolean().optional(),
   adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
