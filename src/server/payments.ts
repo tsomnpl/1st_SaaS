@@ -200,7 +200,11 @@ export function moneyFusionStatusText(payload?: Record<string, unknown>) {
   return [event, typeof status === "string" ? status : ""].filter(Boolean).join(" ");
 }
 
-export async function confirmPaymentByToken(token: string, payload?: Record<string, unknown>) {
+export async function confirmPaymentByToken(
+  token: string,
+  payload?: Record<string, unknown>,
+  verify: (token: string) => Promise<Record<string, unknown>> = verifyMoneyFusionToken,
+) {
   const payment = await prisma.payment.findUnique({
     where: { tokenPay: token },
     include: { plan: true, user: { select: { email: true } } },
@@ -208,9 +212,28 @@ export async function confirmPaymentByToken(token: string, payload?: Record<stri
   if (!payment) throw new Error("PAYMENT_NOT_FOUND");
 
   const remoteStatus = moneyFusionStatusText(payload) || String(payment.rawStatus ?? "pending");
-  const classified = classifyPaymentStatus(remoteStatus);
+  let classified = classifyPaymentStatus(remoteStatus);
+  let storedPayload: Record<string, unknown> = payload ?? { token, status: remoteStatus };
+  if (classified === PaymentStatus.COMPLETED) {
+    const remote = await verify(token);
+    const remoteText = moneyFusionStatusText(remote);
+    classified = classifyPaymentStatus(remoteText || "pending");
+    storedPayload = { ...(payload ?? {}), verification: remote };
+    const remoteOrderId = getStringField(remote, ["orderId", "order_id"]);
+    const remoteAmount = getNumericField(remote, ["amount", "totalPrice"]);
+    if (remoteOrderId && !String(remoteOrderId).includes(payment.orderId)) {
+      throw new Error("PAYMENT_ORDER_MISMATCH");
+    }
+    if (typeof remoteAmount === "number" && remoteAmount > 0 && remoteAmount !== payment.amountFcfa) {
+      throw new Error("PAYMENT_AMOUNT_MISMATCH");
+    }
+  }
   const eventKey = `moneyfusion:${token}:${classified}`;
-  const safePayload = sanitizeRecord(payload ?? { token, status: remoteStatus }) as Prisma.InputJsonValue;
+  const safePayload = sanitizeRecord(storedPayload) as Prisma.InputJsonValue;
+  const alreadySeen = await prisma.webhookEvent.findUnique({ where: { eventKey }, select: { id: true } });
+  if (alreadySeen) {
+    return prisma.payment.findUniqueOrThrow({ where: { id: payment.id } });
+  }
 
   try {
     await prisma.webhookEvent.create({
