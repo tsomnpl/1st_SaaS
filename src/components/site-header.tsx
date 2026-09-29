@@ -4,6 +4,8 @@ import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton } from "@cl
 import Link from "next/link";
 import { useState } from "react";
 import { BrandLogo } from "@/components/brand/logo";
+import { AppearanceSwitch } from "@/components/chrome/appearance-switch";
+import { useCopy } from "@/components/chrome/locale-provider";
 
 type Props = {
   mintBalance?: number | null;
@@ -11,15 +13,15 @@ type Props = {
   adminHref?: string;
 };
 
-const publicLinks = [
-  { href: "/decouvrir", label: "Découvrir" },
-  { href: "/creations", label: "Créations" },
-  { href: "/decouvrir#comment-ca-marche", label: "Comment ça marche" },
-  { href: "/pricing", label: "Tarifs" },
-];
-
 export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = "" }: Props) {
+  const t = useCopy();
   const [open, setOpen] = useState(false);
+  const publicLinks = [
+    { href: "/decouvrir", label: t.nav.discover },
+    { href: "/creations", label: t.nav.creations },
+    { href: "/decouvrir#comment-ca-marche", label: t.nav.how },
+    { href: "/pricing", label: t.nav.pricing },
+  ];
 
   return (
     <header className="sticky top-0 z-50 border-b border-white/50 bg-white/75 backdrop-blur-xl">
@@ -34,17 +36,17 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
           ))}
           <SignedIn>
             <Link href="/dashboard" className="transition hover:text-[#6D28D9]">
-              Tableau de bord
+              {t.nav.dashboard}
             </Link>
             <Link href="/history" className="transition hover:text-[#6D28D9]">
-              Historique
+              {t.nav.history}
             </Link>
             <Link href="/profile" className="transition hover:text-[#6D28D9]">
-              Profil
+              {t.nav.profile}
             </Link>
             {showAdmin && adminHref ? (
               <Link href={adminHref} className="transition hover:text-[#6D28D9]">
-                Administration
+                {t.nav.admin}
               </Link>
             ) : null}
             {typeof mintBalance === "number" ? (
@@ -57,33 +59,36 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
           <SignedOut>
             <SignInButton mode="modal">
               <button type="button" className="transition hover:text-[#6D28D9]">
-                Connexion
+                {t.nav.signIn}
               </button>
             </SignInButton>
             <SignUpButton mode="modal">
               <button type="button" className="transition hover:text-[#6D28D9]">
-                Inscription
+                {t.nav.signUp}
               </button>
             </SignUpButton>
           </SignedOut>
           <Link href="/create" className="btn-primary">
-            Créer une affiche
+            {t.nav.create}
           </Link>
         </nav>
 
-        <button
-          type="button"
-          className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white md:hidden"
-          aria-expanded={open}
-          aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
-          onClick={() => setOpen((value) => !value)}
-        >
-          <span className="flex flex-col gap-1.5">
-            <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "translate-y-2 rotate-45" : ""}`} />
-            <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "opacity-0" : ""}`} />
-            <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "-translate-y-2 -rotate-45" : ""}`} />
-          </span>
-        </button>
+        <div className="flex items-center gap-2">
+          <AppearanceSwitch />
+          <button
+            type="button"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white md:hidden"
+            aria-expanded={open}
+            aria-label={open ? t.menu.close : t.menu.open}
+            onClick={() => setOpen((value) => !value)}
+          >
+            <span className="flex flex-col gap-1.5">
+              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "translate-y-2 rotate-45" : ""}`} />
+              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "opacity-0" : ""}`} />
+              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "-translate-y-2 -rotate-45" : ""}`} />
+            </span>
+          </button>
+        </div>
       </div>
 
       {open ? (
@@ -101,34 +106,34 @@ export function SiteHeader({ mintBalance = null, showAdmin = false, adminHref = 
             ))}
             <SignedIn>
               <Link href="/dashboard" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
-                Tableau de bord
+                {t.nav.dashboard}
               </Link>
               <Link href="/history" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
-                Historique
+                {t.nav.history}
               </Link>
               <Link href="/profile" className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
-                Profil
+                {t.nav.profile}
               </Link>
               {showAdmin && adminHref ? (
                 <Link href={adminHref} className="rounded-lg px-2 py-2" onClick={() => setOpen(false)}>
-                  Administration
+                  {t.nav.admin}
                 </Link>
               ) : null}
             </SignedIn>
             <SignedOut>
               <SignInButton mode="modal">
                 <button type="button" className="rounded-lg px-2 py-2 text-left">
-                  Connexion
+                  {t.nav.signIn}
                 </button>
               </SignInButton>
               <SignUpButton mode="modal">
                 <button type="button" className="rounded-lg px-2 py-2 text-left">
-                  Inscription
+                  {t.nav.signUp}
                 </button>
               </SignUpButton>
             </SignedOut>
             <Link href="/create" className="btn-primary mt-2" onClick={() => setOpen(false)}>
-              Créer une affiche
+              {t.nav.create}
             </Link>
           </div>
         </div>

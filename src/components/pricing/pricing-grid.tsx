@@ -1,14 +1,17 @@
 import Link from "next/link";
-import { formatFcfa, paidPlans, planAvailabilityLabel, type PlanSeed } from "@/lib/plans";
+import { formatFcfa, paidPlans, type PlanSeed } from "@/lib/plans";
+import { localizedAvailability, localizePlan } from "@/lib/plan-copy";
+import { getDictionary } from "@/lib/locale";
 
-export function PricingGrid({
+export async function PricingGrid({
   plans,
   ctaHref,
 }: {
   plans?: PlanSeed[];
   ctaHref?: (code: string) => string;
 }) {
-  const items = (plans ?? paidPlans()).filter((plan) => plan.priceFcfa > 0);
+  const { locale, t } = await getDictionary();
+  const items = (plans ?? paidPlans()).filter((plan) => plan.priceFcfa > 0).map((plan) => localizePlan(plan, locale));
 
   return (
     <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
@@ -32,11 +35,9 @@ export function PricingGrid({
               {formatFcfa(plan.priceFcfa)}
             </p>
             <p className="mt-1 text-sm font-medium text-slate-500">
-              {plan.mintAmount} Mints = {plan.mintAmount} affiches
+              {plan.mintAmount} Mints = {plan.mintAmount} {t.pricing.posters}
             </p>
-            <p className="text-sm text-slate-500">
-              {planAvailabilityLabel(plan)}
-            </p>
+            <p className="text-sm text-slate-500">{localizedAvailability(plan, locale)}</p>
             <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
               {plan.features.map((feature) => (
                 <li key={feature} className="flex gap-2">
@@ -51,9 +52,9 @@ export function PricingGrid({
               href={ctaHref ? ctaHref(plan.code) : `/checkout?plan=${plan.code}`}
               className={`mt-6 ${highlighted ? "btn-primary" : "btn-secondary"}`}
             >
-              Acheter, {formatFcfa(plan.priceFcfa)}
+              {t.pricing.buy}, {formatFcfa(plan.priceFcfa)}
             </Link>
-            <p className="mt-3 text-center text-[11px] text-slate-400">1 Mint = 1 affiche</p>
+            <p className="mt-3 text-center text-[11px] text-slate-400">{t.pricing.equals}</p>
           </article>
         );
       })}

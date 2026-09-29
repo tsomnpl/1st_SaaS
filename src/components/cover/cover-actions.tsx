@@ -1,16 +1,18 @@
 import Link from "next/link";
 import { coverAccountLinks } from "@/components/cover/cover-links";
+import { getDictionary } from "@/lib/locale";
 
-export function CoverGuestActions({ variant }: { variant: "bar" | "band" }) {
-  const links = coverAccountLinks(false);
+export async function CoverGuestActions({ variant }: { variant: "bar" | "band" }) {
+  const { t } = await getDictionary();
+  const links = coverAccountLinks(false, t.nav);
   if (variant === "bar") {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
         <Link href="/sign-in" className="cover-text-link">
-          Se connecter
+          {t.nav.signInCover}
         </Link>
         <Link href="/sign-up" className="cover-btn cover-btn-primary">
-          Créer un compte
+          {t.nav.createAccount}
         </Link>
       </div>
     );
@@ -31,8 +33,9 @@ export function CoverGuestActions({ variant }: { variant: "bar" | "band" }) {
   );
 }
 
-export function CoverMemberActions({ variant }: { variant: "bar" | "band" }) {
-  const links = coverAccountLinks(true);
+export async function CoverMemberActions({ variant }: { variant: "bar" | "band" }) {
+  const { t } = await getDictionary();
+  const links = coverAccountLinks(true, t.nav);
   if (variant === "bar") {
     return (
       <div className="flex items-center gap-2 sm:gap-3">
@@ -52,7 +55,7 @@ export function CoverMemberActions({ variant }: { variant: "bar" | "band" }) {
         </Link>
       ))}
       <Link href="/decouvrir" className="cover-text-link cover-more">
-        En savoir plus
+        {t.nav.more}
       </Link>
     </div>
   );

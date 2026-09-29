@@ -10,14 +10,13 @@ import {
   VISUAL_TYPES,
 } from "@/lib/domains";
 import { publicErrorMessage } from "@/lib/errors";
+import { useCopy } from "@/components/chrome/locale-provider";
 
 type Result = {
   generationId: string;
   outputUrl?: string | null;
   repaired?: boolean;
 };
-
-const STEPS = ["Besoin", "Contenu", "Style", "Récap"] as const;
 
 export function CreateFlyerForm({
   mintBalance,
@@ -36,6 +35,8 @@ export function CreateFlyerForm({
   regenerateFromId?: string;
   initialFormat?: string;
 }) {
+  const t = useCopy();
+  const steps = t.form.steps;
   const [step, setStep] = useState(0);
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
   const [loading, setLoading] = useState(false);
@@ -128,7 +129,7 @@ export function CreateFlyerForm({
   return (
     <form onSubmit={onSubmit} className="space-y-5">
       <div className="flex gap-2">
-        {STEPS.map((label, index) => (
+        {steps.map((label, index) => (
           <button
             key={label}
             type="button"
@@ -143,19 +144,19 @@ export function CreateFlyerForm({
       </div>
 
       <div className="card p-5">
-        <p className="text-sm font-medium text-[#6D28D9]">Cette création utilisera 1 Mint.</p>
-        <h2 className="mt-1 text-xl font-bold">Questionnaire intelligent</h2>
-        <p className="mt-1 text-sm text-slate-500">Pas de prompt à écrire. Réponds simplement.</p>
+        <p className="text-sm font-medium text-[#6D28D9]">{t.form.usesMint}</p>
+        <h2 className="mt-1 text-xl font-bold">{t.form.quiz}</h2>
+        <p className="mt-1 text-sm text-slate-500">{t.form.quizLead}</p>
       </div>
 
       <div className={step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Select
           name="visualType"
-          label="Type d’affiche"
+          label={t.form.visualType}
           options={VISUAL_TYPES.map((item) => ({ value: item, label: item }))}
         />
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Domaine</span>
+          <span className="font-medium text-slate-700">{t.form.domain}</span>
           <select
             value={domain}
             onChange={(e) => setDomain(e.target.value as (typeof DOMAINS)[number])}
@@ -168,49 +169,46 @@ export function CreateFlyerForm({
             ))}
           </select>
         </label>
-        <Input name="objective" label="Objectif" placeholder="Attirer du monde samedi" required />
-        <Input name="targetAudience" label="Cible" placeholder="Jeunes actifs, familles…" required />
+        <Input name="objective" label={t.form.objective} placeholder="Attirer du monde samedi" required />
+        <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" required />
       </div>
 
       <div className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="title" label="Titre" placeholder="Formation intensive" required />
-        <Input name="subtitle" label="Sous-titre" placeholder="Places limitées" />
-        <Input name="description" label="Texte / offre" placeholder="Ce que les gens doivent retenir" />
-        <Input name="price" label="Prix" placeholder="25 000 FCFA" />
-        <Input name="oldPrice" label="Ancien prix" placeholder="optionnel" />
-        <Input name="date" label="Date" placeholder="15 octobre" />
-        <Input name="time" label="Heure" placeholder="19h" />
-        <Input name="location" label="Lieu" placeholder="Abidjan" />
-        <Input name="contactPhone" label="Téléphone" placeholder="+225…" />
-        <Input name="whatsapp" label="WhatsApp" placeholder="+225…" />
-        <Input name="cta" label="Appel à l’action" placeholder="Inscris-toi maintenant" />
+        <Input name="title" label={t.form.title} placeholder="Formation intensive" required />
+        <Input name="subtitle" label={t.form.subtitle} placeholder="Places limitées" />
+        <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" />
+        <Input name="price" label={t.form.price} placeholder="25 000 FCFA" />
+        <Input name="oldPrice" label={t.form.oldPrice} placeholder="optionnel" />
+        <Input name="date" label={t.form.date} placeholder="15 octobre" />
+        <Input name="time" label={t.form.time} placeholder="19h" />
+        <Input name="location" label={t.form.place} placeholder="Abidjan" />
+        <Input name="contactPhone" label={t.form.phone} placeholder="+225…" />
+        <Input name="whatsapp" label={t.form.whatsapp} placeholder="+225…" />
+        <Input name="cta" label={t.form.cta} placeholder="Inscris-toi maintenant" />
         {adaptiveFields.map((field) => (
           <Input key={field.key} name={`adaptive_${field.key}`} label={field.label} />
         ))}
       </div>
 
       <div className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="style" label="Style" placeholder="Premium moderne" />
-        <Input name="mood" label="Ambiance" placeholder="Énergique, chic, chaleureux…" />
+        <Input name="style" label={t.form.style} placeholder="Premium moderne" />
+        <Input name="mood" label={t.form.mood} placeholder="Énergique, chic, chaleureux…" />
         <Input
           name="colors"
-          label="Couleurs (séparées par des virgules)"
+          label={t.form.colors}
           placeholder="#1E293B, #6D28D9"
           defaultValue={brandColors.join(", ")}
         />
         <Select
           name="format"
-          label="Format"
+          label={t.form.format}
           options={FORMATS.map((item) => item)}
           defaultValue={initialFormat || undefined}
         />
         <input type="hidden" name="creativeFreedom" value="copie_exacte" />
-        <p className="text-xs text-slate-500 md:col-span-2">
-          Chaque affiche est une copie exacte d’une référence du domaine. Ta photo remplace la personne, nette, sans flou.
-          Seuls les textes que tu remplis changent. Le flou des visages reste sur les exemples anniversaire et mariage.
-        </p>
+        <p className="text-xs text-slate-500 md:col-span-2">{t.form.exact}</p>
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Photo / produit (optionnel)</span>
+          <span className="font-medium text-slate-700">{t.form.photo}</span>
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
@@ -225,12 +223,9 @@ export function CreateFlyerForm({
         </label>
         {canUsePersonalReference ? (
           <label className="space-y-1 text-sm md:col-span-2">
-            <span className="font-medium text-slate-700">Ton affiche de référence</span>
-            <p className="text-xs text-slate-500">
-              FlyerMint reproduit cette affiche. Seuls les textes, la personne et le logo que tu fournis changent.
-              Aucune information manquante n’est inventée.
-            </p>
-            {personalPoster ? <p className="text-xs text-[#10B981]">Affiche de référence prête.</p> : null}
+            <span className="font-medium text-slate-700">{t.form.reference}</span>
+            <p className="text-xs text-slate-500">{t.form.referenceHelp}</p>
+            {personalPoster ? <p className="text-xs text-[#10B981]">{t.form.referenceReady}</p> : null}
             <input
               type="file"
               accept="image/png,image/jpeg,image/webp"
@@ -245,12 +240,12 @@ export function CreateFlyerForm({
           </label>
         ) : (
           <p className="text-xs text-slate-500 md:col-span-2">
-            La référence personnelle, reproduire ta propre affiche, est incluse dans les packs 20 000 et 25 000 FCFA.
+            {t.form.referenceLocked}
           </p>
         )}
         <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">Logo (optionnel, mémorisé si tu coches le kit de marque)</span>
-          {logoImage ? <p className="text-xs text-[#10B981]">Logo prêt. Tu peux le remplacer.</p> : null}
+          <span className="font-medium text-slate-700">{t.form.logo}</span>
+          {logoImage ? <p className="text-xs text-[#10B981]">{t.form.logoReady}</p> : null}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
@@ -267,32 +262,27 @@ export function CreateFlyerForm({
 
       <div className={step === 3 ? "space-y-4" : "hidden"}>
         <div className="card p-5 text-sm text-slate-600">
-          <p>
-            FlyerMint va composer la direction artistique puis générer l’affiche. Cela consomme{" "}
-            <strong>1 Mint</strong>.
-          </p>
-          {personalPoster ? <p className="mt-2">Ton affiche sert de référence à reproduire.</p> : null}
-          {mainImage ? <p className="mt-2">Ta photo sera conservée comme sujet principal.</p> : null}
-          {logoImage ? <p className="mt-2">Ton logo sera réappliqué sur l’affiche.</p> : null}
-          {regenerateFromId ? (
-            <p className="mt-2">Même direction artistique, nouveau format, 1 Mint.</p>
-          ) : null}
+          <p>{t.form.recap}</p>
+          {personalPoster ? <p className="mt-2">{t.form.recapPoster}</p> : null}
+          {mainImage ? <p className="mt-2">{t.form.recapPhoto}</p> : null}
+          {logoImage ? <p className="mt-2">{t.form.recapLogo}</p> : null}
+          {regenerateFromId ? <p className="mt-2">{t.form.recapFormat}</p> : null}
         </div>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={rememberBrand} onChange={(event) => setRememberBrand(event.target.checked)} />
-          Mémoriser mon logo et mes couleurs pour les prochaines affiches.
+          {t.form.remember}
         </label>
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={confirmMint} onChange={(event) => setConfirmMint(event.target.checked)} />
-          Je confirme utiliser 1 Mint pour cette génération.
+          {t.form.confirm}
         </label>
       </div>
 
       {mintBalance <= 0 ? (
         <p className="text-sm text-amber-700">
-          Solde insuffisant.{" "}
+          {t.form.broke}{" "}
           <Link href="/pricing" className="font-semibold text-[#6D28D9] underline">
-            Acheter des Mints
+            {t.nav.buyMints}
           </Link>
         </p>
       ) : null}
@@ -300,16 +290,16 @@ export function CreateFlyerForm({
       <div className="flex flex-wrap gap-3">
         {step > 0 ? (
           <button type="button" className="btn-secondary" onClick={() => setStep((value) => value - 1)}>
-            Retour
+            {t.form.back}
           </button>
         ) : null}
         {step < 3 ? (
           <button type="submit" className="btn-primary">
-            Continuer
+            {t.form.next}
           </button>
         ) : (
           <button type="submit" disabled={loading || !canGenerate} className="btn-primary">
-            {loading ? "Génération en cours…" : "Générer mon affiche, 1 Mint"}
+            {loading ? t.form.generating : t.form.generate}
           </button>
         )}
       </div>
@@ -318,28 +308,26 @@ export function CreateFlyerForm({
 
       {result ? (
         <div className="card space-y-3 p-5">
-          <p className="font-semibold text-[#10B981]">Ton affiche est prête.</p>
-          {result.repaired ? (
-            <p className="text-sm text-slate-600">La première version a été corrigée (personne / texte / composition).</p>
-          ) : null}
+          <p className="font-semibold text-[#10B981]">{t.form.ready}</p>
+          {result.repaired ? <p className="text-sm text-slate-600">{t.form.repaired}</p> : null}
           {result.outputUrl ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.outputUrl} alt="Affiche générée" className="w-full rounded-xl border border-slate-200" />
+              <img src={result.outputUrl} alt={t.form.posterAlt} className="w-full rounded-xl border border-slate-200" />
               <div className="flex flex-wrap gap-3">
                 <a href={result.outputUrl} download className="btn-primary">
-                  Télécharger
+                  {t.form.download}
                 </a>
                 {canExport ? (
                   <a href={`/api/generations/${result.generationId}/export`} className="btn-secondary">
-                    Pack éditable
+                    {t.form.editable}
                   </a>
                 ) : null}
                 <Link href="/history" className="btn-secondary">
-                  Voir l’historique
+                  {t.form.seeHistory}
                 </Link>
               </div>
-              <p className="text-xs text-slate-500">Même concept, autre format, 1 Mint chacun :</p>
+              <p className="text-xs text-slate-500">{t.form.otherFormat}</p>
               <div className="flex flex-wrap gap-2">
                 {FORMATS.map((item) => (
                   <Link
@@ -353,7 +341,7 @@ export function CreateFlyerForm({
               </div>
             </>
           ) : (
-            <p className="text-sm text-slate-600">La génération est enregistrée, mais l’image n’est pas encore disponible.</p>
+            <p className="text-sm text-slate-600">{t.form.imagePending}</p>
           )}
         </div>
       ) : null}

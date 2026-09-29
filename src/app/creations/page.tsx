@@ -1,27 +1,32 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
+import { getDictionary } from "@/lib/locale";
 import { VisualPoster } from "@/components/landing/visual-poster";
 import posters from "@/lib/exact-domain-posters.json";
 
-export const metadata: Metadata = {
-  title: pageTitle("Créations"),
-  description: "Exemples d’affiches FlyerMint par domaine.",
-  openGraph: { title: "Créations, FlyerMint" },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    title: pageTitle(t.creations.title),
+    description: t.creations.note,
+    openGraph: { title: `${t.creations.title}, FlyerMint` },
+  };
+}
 
-export default function CreationsPage() {
+export default async function CreationsPage() {
+  const { t } = await getDictionary();
   return (
     <div className="space-y-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold">Créations</h1>
+          <h1 className="text-3xl font-extrabold">{t.creations.title}</h1>
           <p className="mt-2 max-w-xl text-slate-600">
-            {posters.length} domaines. Chaque affiche garde la photo et la composition de sa référence. Les noms, numéros, dates et lieux réels sont retirés. Les visages restent flous sur l’anniversaire et le mariage.
+            {posters.length} {t.creations.intro}
           </p>
         </div>
         <Link href="/create" className="btn-primary">
-          Créer une affiche
+          {t.nav.create}
         </Link>
       </div>
       <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
@@ -37,7 +42,7 @@ export default function CreationsPage() {
         ))}
       </div>
       <p className="text-sm text-slate-500">
-        22 dossiers. Les coordonnées personnelles des références ne sont pas affichées.
+        {t.creations.note}
       </p>
     </div>
   );

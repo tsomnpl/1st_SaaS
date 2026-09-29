@@ -1,17 +1,22 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { pageTitle } from "@/lib/seo";
+import { getDictionary } from "@/lib/locale";
 
-export const metadata: Metadata = {
-  title: pageTitle("Historique"),
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const { t } = await getDictionary();
+  return {
+    title: pageTitle(t.history.title),
+    robots: { index: false, follow: false },
+  };
+}
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { ReportProblem } from "@/components/support/report-problem";
 import { userHasEditableExport } from "@/server/generation";
 
 export default async function HistoryPage() {
+  const { locale, t } = await getDictionary();
   const user = await requireActiveCurrentUser();
   const canExport = await userHasEditableExport(user.id);
   const generations = await prisma.generation.findMany({
@@ -24,16 +29,16 @@ export default async function HistoryPage() {
     <div className="space-y-6">
       <div className="flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold">Historique</h1>
-          <p className="mt-1 text-slate-600">Tes affiches, prêtes à télécharger.</p>
+          <h1 className="text-3xl font-extrabold">{t.history.title}</h1>
+          <p className="mt-1 text-slate-600">{t.history.lead}</p>
         </div>
         <Link href="/create" className="btn-primary">
-          Créer une affiche
+          {t.nav.create}
         </Link>
       </div>
 
       {generations.length === 0 ? (
-        <div className="card p-8 text-center text-slate-500">Aucune création pour l’instant.</div>
+        <div className="card p-8 text-center text-slate-500">{t.history.empty}</div>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {generations.map((generation) => {
@@ -45,18 +50,18 @@ export default async function HistoryPage() {
                   <img src={generation.outputUrl} alt="" className="aspect-[3/4] w-full object-cover" />
                 ) : (
                   <div className="flex aspect-[3/4] items-center justify-center bg-slate-50 text-sm text-slate-400">
-                    {generation.status === "FAILED" ? "Génération échouée" : "En cours"}
+                    {generation.status === "FAILED" ? t.history.failed : t.history.pending}
                   </div>
                 )}
                 <div className="space-y-2 p-4">
-                  <p className="font-semibold">{brief.title ?? "Sans titre"}</p>
+                  <p className="font-semibold">{brief.title ?? t.history.untitled}</p>
                   <p className="text-xs text-slate-500">
-                    {brief.domain ?? "n/a"} · {new Date(generation.createdAt).toLocaleDateString("fr-FR")}
+                    {brief.domain ?? "n/a"} · {new Date(generation.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "fr-FR")}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {generation.outputUrl ? (
                       <a href={generation.outputUrl} download className="text-sm font-semibold text-[#6D28D9]">
-                        Télécharger
+                        {t.history.download}
                       </a>
                     ) : null}
                     {canExport && generation.outputUrl ? (
@@ -64,7 +69,7 @@ export default async function HistoryPage() {
                         href={`/api/generations/${generation.id}/export`}
                         className="text-sm font-semibold text-slate-600"
                       >
-                        Pack éditable
+                        {t.history.editable}
                       </a>
                     ) : null}
                     {generation.outputUrl ? (
@@ -72,7 +77,7 @@ export default async function HistoryPage() {
                         href={`/create?from=${generation.id}&format=whatsapp_status`}
                         className="text-sm font-semibold text-slate-600"
                       >
-                        Décliner en statut WhatsApp
+                        {t.history.whatsapp}
                       </Link>
                     ) : null}
                     <ReportProblem generationId={generation.id} />
