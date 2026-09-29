@@ -9,6 +9,7 @@ type SearchPayload = {
   generations: Array<{ id: string; status: string }>;
   transactions: Array<{ id: string; type: string; reference: string | null }>;
   references: Array<{ id: string; domain: string; style: string | null }>;
+  tickets?: Array<{ ticketNumber: string; subject: string; status: string }>;
 };
 
 export function AdminSearch({ basePath }: { basePath: string }) {
@@ -36,7 +37,8 @@ export function AdminSearch({ basePath }: { basePath: string }) {
       !data.payments.length &&
       !data.generations.length &&
       !data.transactions.length &&
-      !data.references.length);
+      !data.references.length &&
+      !(data.tickets ?? []).length);
 
   return (
     <div className="relative w-full max-w-xl">
@@ -68,6 +70,11 @@ export function AdminSearch({ basePath }: { basePath: string }) {
           {data?.transactions.map((tx) => (
             <Link key={tx.id} href={`${basePath}/mints`} className="block rounded-lg px-2 py-1.5 hover:bg-slate-50" onClick={() => setOpen(false)}>
               Transaction · {tx.type} · {tx.reference ?? tx.id.slice(0, 8)}
+            </Link>
+          ))}
+          {(data?.tickets ?? []).map((ticket) => (
+            <Link key={ticket.ticketNumber} href={`${basePath}/support/${ticket.ticketNumber}`} className="block rounded-lg px-2 py-1.5 hover:bg-slate-50" onClick={() => setOpen(false)}>
+              Ticket · #{ticket.ticketNumber} · {ticket.subject}
             </Link>
           ))}
           {data?.references.map((ref) => (

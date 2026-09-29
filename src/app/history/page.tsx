@@ -8,6 +8,7 @@ export const metadata: Metadata = {
 };
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
+import { ReportProblem } from "@/components/support/report-problem";
 import { userHasEditableExport } from "@/server/generation";
 
 export default async function HistoryPage() {
@@ -74,6 +75,7 @@ export default async function HistoryPage() {
                         Décliner en statut WhatsApp
                       </Link>
                     ) : null}
+                    <ReportProblem generationId={generation.id} />
                   </div>
                 </div>
               </article>

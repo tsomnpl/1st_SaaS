@@ -52,6 +52,7 @@ function isProtectedPath(pathname: string) {
     "/history",
     "/profile",
     "/checkout",
+    "/support",
     "/api/",
   ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
 }
@@ -73,9 +74,12 @@ function withSecurity(response: NextResponse, req: NextRequest) {
 
 function applySensitiveRateLimit(req: NextRequest) {
   const { pathname } = req.nextUrl;
-  const rules: Array<{ match: (path: string) => boolean; limit: number; windowMs: number; name: string }> = [
+  const rules: Array<{ match: (path: string, method: string) => boolean; limit: number; windowMs: number; name: string }> = [
     { match: (path) => path === "/api/generate", limit: 8, windowMs: 60_000, name: "generate" },
     { match: (path) => path === "/api/payments/init", limit: 8, windowMs: 60_000, name: "pay-init" },
+    { match: (path, method) => method === "POST" && path === "/api/support/tickets", limit: 6, windowMs: 600_000, name: "support-create" },
+    { match: (path, method) => method === "POST" && /^\/api\/support\/tickets\/[^/]+\/messages$/.test(path), limit: 20, windowMs: 600_000, name: "support-message" },
+    { match: (path, method) => method === "POST" && /^\/api\/support\/tickets\/[^/]+\/attachments$/.test(path), limit: 8, windowMs: 600_000, name: "support-upload" },
     { match: (path) => path.startsWith("/api/admin/export"), limit: 8, windowMs: 60_000, name: "admin-export" },
     { match: (path) => path.startsWith("/api/admin/"), limit: 40, windowMs: 60_000, name: "admin" },
     { match: (path) => path.includes("webhook"), limit: 80, windowMs: 60_000, name: "webhook" },
@@ -84,7 +88,7 @@ function applySensitiveRateLimit(req: NextRequest) {
     { match: (path) => path === "/api/mints/balance", limit: 40, windowMs: 60_000, name: "balance" },
   ];
   for (const rule of rules) {
-    if (!rule.match(pathname)) continue;
+    if (!rule.match(pathname, req.method)) continue;
     const result = rateLimit({
       key: clientKey(req, rule.name),
       limit: rule.limit,

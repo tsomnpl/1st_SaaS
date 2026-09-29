@@ -97,7 +97,15 @@ export async function notifyAdmin(subject: string, text: string, userEmail?: str
   return sendImportantNotice({ to: admin, subject, text });
 }
 
-async function deliver(to: string, content: { subject: string; text: string; html: string }): Promise<MailResult> {
+export function sendSupportNotice(input: { to: string; subject: string; text: string; html: string }) {
+  return deliver(input.to, input, "FlyerMint Support");
+}
+
+async function deliver(
+  to: string,
+  content: { subject: string; text: string; html: string },
+  fromName?: string,
+): Promise<MailResult> {
   const config = readMailConfig();
   if (!config) return { ok: false, error: "MAIL_NOT_CONFIGURED" };
   if (!RECIPIENT.test(to)) return { ok: false, error: "MAIL_RECIPIENT_INVALID" };
@@ -105,7 +113,7 @@ async function deliver(to: string, content: { subject: string; text: string; htm
   try {
     const transport = createTransport(gmailSmtpSettings(config.user, config.password));
     const info = await transport.sendMail({
-      from: formatFrom(config.fromName, config.user),
+      from: formatFrom(fromName || config.fromName, config.user),
       to: message.to,
       subject: message.subject,
       text: message.text,

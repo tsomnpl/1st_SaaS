@@ -14,6 +14,7 @@ const LINKS = [
   ["Paiements", "/payments"],
   ["Plans", "/plans"],
   ["Références", "/references"],
+  ["Support", "/support"],
   ["IA / Rodium", "/rodium"],
   ["Analytics", "/analytics"],
   ["Logs", "/logs"],

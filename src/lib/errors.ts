@@ -30,6 +30,10 @@ const MESSAGES: Record<string, string> = {
   REFERENCE_LIBRARY_UNAVAILABLE: "La bibliothèque de références n’est pas disponible.",
   REFERENCE_DOWNLOAD_FAILED: "L’image de référence n’a pas pu être lue.",
   REFERENCE_PATH_INVALID: "Le chemin de la référence n’est pas valide.",
+  INVALID_SUPPORT: "Le ticket n’est pas valide. Vérifie le sujet, la catégorie et le message.",
+  INVALID_ATTACHMENT: "La pièce jointe doit être une image JPG, PNG ou WEBP de 2 Mo maximum.",
+  ATTACHMENT_LIMIT: "Ce ticket a déjà le nombre maximum de pièces jointes.",
+  SUPPORT_SEQUENCE_FAILED: "Le numéro de ticket n’a pas pu être attribué.",
 };
 
 export function publicErrorMessage(error: unknown) {
