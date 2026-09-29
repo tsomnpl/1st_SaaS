@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { PaymentStatus } from "@prisma/client";
+import { DiscardPaymentButton, DiscardPendingPaymentsButton } from "@/components/admin/discard-payment-button";
 import { prisma } from "@/lib/prisma";
 import { getAdminBasePath } from "@/lib/env";
 
@@ -13,6 +15,9 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
     include: { plan: true, user: true },
   });
   const webhooks = await prisma.webhookEvent.count();
+  const discardable = await prisma.payment.count({
+    where: { status: { in: [PaymentStatus.PENDING, PaymentStatus.FAILED] }, creditedAt: null },
+  });
   const base = getAdminBasePath();
 
   return (
@@ -22,7 +27,10 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
           <h1 className="text-3xl font-extrabold">Paiements</h1>
           <p className="text-sm text-slate-500">{webhooks} événements webhook enregistrés.</p>
         </div>
-        <a href="/api/admin/export?type=payments" className="btn-secondary">Export CSV</a>
+        <div className="flex flex-wrap gap-2">
+          <DiscardPendingPaymentsButton count={discardable} />
+          <a href="/api/admin/export?type=payments" className="btn-secondary">Export CSV</a>
+        </div>
       </div>
       <div className="flex flex-wrap gap-2 text-sm">
         {["", "PENDING", "COMPLETED", "CANCELLED", "FAILED"].map((value) => (
@@ -46,6 +54,7 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
               <th className="px-3 py-2">Token</th>
               <th className="px-3 py-2">Statut</th>
               <th className="px-3 py-2">Date</th>
+              <th className="px-3 py-2">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -62,6 +71,13 @@ export default async function AdminPaymentsPage({ searchParams }: { searchParams
                 <td className="px-3 py-2">{payment.tokenPay ?? "n/a"}</td>
                 <td className="px-3 py-2">{payment.status}</td>
                 <td className="px-3 py-2">{payment.createdAt.toLocaleString("fr-FR")}</td>
+                <td className="px-3 py-2">
+                  {(payment.status === "PENDING" || payment.status === "FAILED") && !payment.creditedAt ? (
+                    <DiscardPaymentButton paymentId={payment.id} />
+                  ) : (
+                    <span className="text-slate-400">Conservé</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>

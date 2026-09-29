@@ -7,6 +7,7 @@ const MESSAGES: Record<string, string> = {
   PLAN_INVALID: "Cette offre n’est plus disponible.",
   PAYMENT_INIT_FAILED: "Le paiement n’a pas pu démarrer. Réessaie.",
   PAYMENT_NOT_FOUND: "Paiement introuvable.",
+  PAYMENT_NOT_DISCARDABLE: "Ce paiement a déjà crédité des Mints, ou il n’est plus en attente.",
   MONEY_FUSION_API_URL_MISSING: "Le paiement n’est pas encore configuré.",
   NEXT_PUBLIC_APP_URL_MISSING: "L’adresse du site n’est pas configurée.",
   RODIUMAI_API_KEY_MISSING: "La génération n’est pas disponible pour le moment.",
