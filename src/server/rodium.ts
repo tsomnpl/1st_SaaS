@@ -47,7 +47,7 @@ export function isLikelyImageModel(modelId: string) {
 }
 
 export function selectImageModel(brief: CreateBriefInput, finalPrompt: string, available: string[] = []) {
-  if (isExactCopy(brief)) return EXACT_COPY_MODEL;
+  if (brief.personalReferenceUrl || isExactCopy(brief)) return EXACT_COPY_MODEL;
 
   const premiumKeywords = ["premium", "lux", "luxe", "haut de gamme", "editorial"];
   const promptText = `${brief.style ?? ""} ${brief.mood ?? ""} ${brief.objective} ${finalPrompt}`.toLowerCase();

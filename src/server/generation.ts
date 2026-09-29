@@ -17,6 +17,11 @@ import {
   type CreateBriefInput,
 } from "@/lib/flyermint";
 import { downloadReferenceDataUrl, loadDomainReferences } from "@/lib/inspiration-source";
+import {
+  assertPersonalReferenceAccess,
+  PERSONAL_REFERENCE_PLAN_CODES,
+  personalReferenceSelection,
+} from "@/lib/personal-reference";
 import { selectReferenceInDomain, type ReferenceSelection } from "@/lib/reference-select";
 import { applyRepair, parseQcReport, qcPrompt, shouldRepair, skippedQcReport } from "@/lib/quality-control";
 import { prisma } from "@/lib/prisma";
@@ -48,12 +53,20 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
     }
   }
   brief = { ...brief, creativeFreedom: "copie_exacte" };
+  if (brief.personalReferenceUrl) {
+    assertPersonalReferenceAccess(await userHasPersonalReference(user.id), brief.personalReferenceUrl);
+  }
 
-  const selection = await resolveReferenceSelection(brief);
+  const selection = brief.personalReferenceUrl
+    ? personalReferenceSelection(brief.domain)
+    : await resolveReferenceSelection(brief);
   const exact = isExactCopy(brief);
   if (exact && !selection.selected) throw new Error("EXACT_COPY_NO_REFERENCE");
-  const referenceImageDataUrl =
-    exact && selection.selected ? await downloadReferenceDataUrl(selection.selected.storagePath) : undefined;
+  const referenceImageDataUrl = brief.personalReferenceUrl
+    ? brief.personalReferenceUrl
+    : exact && selection.selected
+      ? await downloadReferenceDataUrl(selection.selected.storagePath)
+      : undefined;
   if (exact && !referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
 
   const artDirection = buildArtDirection(brief, selection);
@@ -239,6 +252,18 @@ export async function runGeneration(clerkUserId: string, unsafeInput: unknown) {
 
     throw error;
   }
+}
+
+export async function userHasPersonalReference(userId: string) {
+  const paid = await prisma.payment.findFirst({
+    where: {
+      userId,
+      status: "COMPLETED",
+      plan: { code: { in: [...PERSONAL_REFERENCE_PLAN_CODES] } },
+    },
+    select: { id: true },
+  });
+  return Boolean(paid);
 }
 
 export async function userHasEditableExport(userId: string) {

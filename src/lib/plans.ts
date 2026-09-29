@@ -8,6 +8,7 @@ export type PlanSeed = {
   mintAmount: number;
   durationDays: number | null;
   editableExport: boolean;
+  personalReference: boolean;
   sortOrder: number;
   highlighted?: boolean;
   features: string[];
@@ -24,6 +25,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     mintAmount: 1,
     durationDays: null,
     editableExport: false,
+    personalReference: false,
     sortOrder: 0,
     features: ["1 Mint offert à l’inscription", "1 Mint = 1 affiche", "Questionnaire intelligent"],
   },
@@ -37,6 +39,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     mintAmount: 2,
     durationDays: null,
     editableExport: false,
+    personalReference: false,
     sortOrder: 1,
     features: [
       "2 Mints = 2 affiches",
@@ -56,6 +59,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     mintAmount: 2,
     durationDays: null,
     editableExport: false,
+    personalReference: false,
     sortOrder: 2,
     features: [
       "2 Mints = 2 affiches",
@@ -74,6 +78,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     mintAmount: 5,
     durationDays: null,
     editableExport: false,
+    personalReference: false,
     sortOrder: 3,
     features: [
       "5 Mints = 5 affiches",
@@ -92,6 +97,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     mintAmount: 10,
     durationDays: null,
     editableExport: false,
+    personalReference: false,
     sortOrder: 4,
     highlighted: true,
     features: [
@@ -107,11 +113,12 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     name: "Pack Pro",
     shortName: "Pro",
     headline: "Volume + pack éditable",
-    description: "Quinze affiches et un export des textes pour retoucher hors IA.",
+    description: "Quinze affiches, un export des textes, et la reproduction de ta propre affiche.",
     priceFcfa: 20000,
     mintAmount: 15,
     durationDays: null,
     editableExport: true,
+    personalReference: true,
     sortOrder: 5,
     features: [
       "15 Mints = 15 affiches",
@@ -119,6 +126,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
       "1 Mint = 1 affiche",
       "Export image inclus",
       "Pack éditable (image + textes + HTML)",
+      "Référence personnelle : reproduire ta propre affiche",
     ],
   },
   {
@@ -126,11 +134,12 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
     name: "Pack Atelier",
     shortName: "Atelier",
     headline: "Le plus de Mints",
-    description: "Vingt affiches, sans expiration, avec pack éditable.",
+    description: "Vingt affiches, sans expiration, avec pack éditable et référence personnelle.",
     priceFcfa: 25000,
     mintAmount: 20,
     durationDays: null,
     editableExport: true,
+    personalReference: true,
     sortOrder: 6,
     features: [
       "20 Mints = 20 affiches",
@@ -138,6 +147,7 @@ export const OFFICIAL_PLANS: PlanSeed[] = [
       "1 Mint = 1 affiche",
       "Export image inclus",
       "Pack éditable (image + textes + HTML)",
+      "Référence personnelle : reproduire ta propre affiche",
     ],
   },
 ];
