@@ -22,7 +22,8 @@ export default async function AdminLayout({
   params: Params;
 }) {
   const { adminKey } = await params;
-  if (adminKey !== getAdminPrivatePath()) {
+  const expectedPath = getAdminPrivatePath();
+  if (!expectedPath || adminKey !== expectedPath) {
     notFound();
   }
 
@@ -37,18 +38,19 @@ export default async function AdminLayout({
     redirect(`/sign-in?redirect_url=${encodeURIComponent(getAdminBasePath())}`);
   }
 
+  let admin;
   try {
-    const admin = await requireAdminUser();
-    await logAdminSession(admin.id);
-    return (
-      <AdminShell
-        basePath={getAdminBasePath()}
-        adminLabel={admin.name ?? admin.email ?? "Administrateur"}
-      >
-        {children}
-      </AdminShell>
-    );
+    admin = await requireAdminUser();
   } catch {
     forbidden();
   }
+  await logAdminSession(admin.id);
+  return (
+    <AdminShell
+      basePath={getAdminBasePath()}
+      adminLabel={admin.name ?? admin.email ?? "Administrateur"}
+    >
+      {children}
+    </AdminShell>
+  );
 }

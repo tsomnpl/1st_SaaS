@@ -56,12 +56,19 @@ export const env = envSchema.parse({
 
 export { getAdminClerkIds } from "@/lib/admin";
 
+export function resolveAdminPrivatePath(raw: string | null | undefined) {
+  const value = raw?.trim() ?? "";
+  return value.length > 0 ? value : null;
+}
+
 export function getAdminPrivatePath() {
-  return env.ADMIN_PRIVATE_PATH?.trim() || "ops-k7m2qx";
+  return resolveAdminPrivatePath(process.env.ADMIN_PRIVATE_PATH);
 }
 
 export function getAdminBasePath() {
-  return `/c/${getAdminPrivatePath()}`;
+  const path = getAdminPrivatePath();
+  if (!path) throw new Error("ADMIN_PATH_UNCONFIGURED");
+  return `/c/${path}`;
 }
 
 export function getAllowedImageModels() {
