@@ -43,8 +43,16 @@ function isUnique(error: unknown) {
   return error instanceof Prisma.PrismaClientKnownRequestError && error.code === "P2002";
 }
 
+function inboxEnv() {
+  return {
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    SUPPORT_EMAIL: process.env.SUPPORT_EMAIL,
+    GMAIL_USER: process.env.GMAIL_USER,
+  };
+}
+
 function supportInbox() {
-  return supportNoticeRecipients(process.env)[0] ?? "";
+  return supportNoticeRecipients(inboxEnv())[0] ?? "";
 }
 
 async function notifyInboxes(input: {
@@ -55,7 +63,7 @@ async function notifyInboxes(input: {
   content: { subject: string; text: string; html: string };
   send: SupportSender;
 }) {
-  const recipients = supportNoticeRecipients(process.env);
+  const recipients = supportNoticeRecipients(inboxEnv());
   if (recipients.length === 0) {
     await recordAndSend({ ...input, to: "" });
     return;
@@ -527,7 +535,7 @@ export async function retrySupportEmail(eventId: string, send: SupportSender = d
     const delivered = await prisma.supportEmailEvent.findFirst({
       where: { ticketId: event.ticketId, eventType: event.eventType, status: "SENT" },
     });
-    if (delivered && event.status !== "SENT") {
+    if (delivered) {
       return prisma.supportEmailEvent.update({
         where: { id: event.id },
         data: { status: "SENT", lastError: null },
