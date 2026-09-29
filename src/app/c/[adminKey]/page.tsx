@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AdminAlerts } from "@/components/admin/admin-alerts";
 import { AdminPeriodNav } from "@/components/admin/admin-period-nav";
 import { BarChart, Sparkline } from "@/components/admin/admin-charts";
 import { getAdminStats, type AdminPeriod } from "@/server/admin-stats";
@@ -48,15 +49,7 @@ export default async function AdminHomePage({ searchParams }: { searchParams: Se
         </div>
       </div>
       <AdminPeriodNav baseHref={base} current={safePeriod} />
-      {stats.alerts.length ? (
-        <div className="space-y-2">
-          {stats.alerts.map((alert) => (
-            <Link key={alert!.text} href={alert!.href ?? base} className="block rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-              {alert!.text}
-            </Link>
-          ))}
-        </div>
-      ) : null}
+      <AdminAlerts alerts={stats.alerts.map((alert) => ({ id: alert.id, text: alert.text, href: alert.href }))} />
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {cards.map(([title, value, spark, color]) => (
           <article key={title} className="admin-card p-4">

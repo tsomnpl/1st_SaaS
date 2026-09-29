@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { DiscardPaymentButton } from "@/components/admin/discard-payment-button";
 import { prisma } from "@/lib/prisma";
 import { getAdminBasePath } from "@/lib/env";
 
@@ -25,7 +26,12 @@ export default async function AdminPaymentDetailPage({ params }: { params: Param
       <Link href={`${getAdminBasePath()}/payments`} className="text-sm text-[#6D28D9]">
         ← Paiements
       </Link>
-      <h1 className="text-3xl font-extrabold">{payment.orderId}</h1>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-3xl font-extrabold">{payment.orderId}</h1>
+        {(payment.status === "PENDING" || payment.status === "FAILED") && !payment.creditedAt ? (
+          <DiscardPaymentButton paymentId={payment.id} />
+        ) : null}
+      </div>
       <div className="grid gap-3 md:grid-cols-2">
         {[
           ["Utilisateur", payment.user.email ?? payment.userId],

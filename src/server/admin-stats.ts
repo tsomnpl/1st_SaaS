@@ -175,21 +175,21 @@ export async function getAdminStats(period: AdminPeriod = "30") {
 
   const alerts = [
     errorRate >= 0.3 && generations.length >= 5
-      ? { tone: "orange", text: "Taux d’erreur de génération inhabituellement élevé.", href: `${base}/rodium` }
+      ? { id: "generation-errors", tone: "orange", text: "Taux d’erreur de génération inhabituellement élevé.", href: `${base}/rodium` }
       : null,
     pendingPayments.length >= 5
-      ? { tone: "orange", text: "Plusieurs paiements restent en attente.", href: `${base}/payments` }
+      ? { id: "pending-payments", tone: "orange", text: "Plusieurs paiements restent en attente.", href: `${base}/payments` }
       : null,
     mintsConsumed >= 50
-      ? { tone: "mint", text: "Forte consommation de Mints constatée.", href: `${base}/mints` }
+      ? { id: "mint-consumption", tone: "mint", text: "Forte consommation de Mints constatée.", href: `${base}/mints` }
       : null,
     avgDurationMs >= 45_000 && successGens.length >= 3
-      ? { tone: "orange", text: "Temps moyen de génération élevé.", href: `${base}/rodium` }
+      ? { id: "generation-duration", tone: "orange", text: "Temps moyen de génération élevé.", href: `${base}/rodium` }
       : null,
     failedPayments.length >= 5
-      ? { tone: "orange", text: "Erreurs de paiement détectées.", href: `${base}/payments` }
+      ? { id: "payment-errors", tone: "orange", text: "Erreurs de paiement détectées.", href: `${base}/payments` }
       : null,
-  ].filter(Boolean);
+  ].filter((alert) => alert !== null);
 
   const activity = [
     ...recentLogs.map((log) => ({
