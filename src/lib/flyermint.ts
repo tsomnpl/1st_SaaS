@@ -1,5 +1,7 @@
 import { z } from "zod";
+import { countdownFitsPoster, type EventCountdown } from "@/lib/countdown";
 import { DOMAINS } from "@/lib/domains";
+import { seasonalPromptBlock, type SeasonalArtNote } from "@/lib/seasonal";
 import { designLawsBlock, GLOBAL_DESIGN_PROMPT, STYLE_INSPIRATION_TEXT } from "@/lib/design-rules";
 import { buildExactCopyPrompt, exactCopyArtDirection, isExactCopy } from "@/lib/exact-copy";
 import { humanStagingFor } from "@/lib/human-staging";
@@ -57,6 +59,9 @@ export const createBriefSchema = z.object({
   personalReferenceUrl: imageRef,
   regenerateFromId: z.string().min(3).max(80).optional(),
   rememberBrand: z.boolean().optional(),
+  market: z.enum(["TG", "BJ"]).optional(),
+  seasonalSlug: z.string().max(80).optional(),
+  seasonalDecline: z.boolean().optional(),
   adaptiveData: z.record(z.string(), z.string().max(400)).default({}),
 });
 
@@ -93,9 +98,21 @@ export type ArtDirection = {
   reference_ids: string[];
   avoid: string[];
   differentiators: string[];
+  countdown: EventCountdown | null;
+  countdownOnPoster: boolean;
+  seasonal: SeasonalArtNote | null;
 };
 
-export function buildArtDirection(input: CreateBriefInput, selection?: ReferenceSelection | null): ArtDirection {
+export type ArtDirectionContext = {
+  countdown?: EventCountdown | null;
+  seasonal?: SeasonalArtNote | null;
+};
+
+export function buildArtDirection(
+  input: CreateBriefInput,
+  selection?: ReferenceSelection | null,
+  context?: ArtDirectionContext,
+): ArtDirection {
   const exact = isExactCopy(input);
   const palette = exact
     ? input.colors.filter((color) => color.trim()).slice(0, 1)
@@ -108,6 +125,7 @@ export function buildArtDirection(input: CreateBriefInput, selection?: Reference
   const chosenId = selection?.selected?.id;
   const exactPatch = exact ? exactCopyArtDirection(input, selection ?? null) : null;
   const { color_palette: exactPalette, ...exactRest } = exactPatch ?? {};
+  const countdown = context?.countdown ?? null;
 
   return {
     concept: `${input.style ?? playbook?.style ?? "moderne"}, direction artistique ${input.domain}`,
@@ -169,11 +187,30 @@ export function buildArtDirection(input: CreateBriefInput, selection?: Reference
     ],
     ...(exactPatch ? exactRest : {}),
     color_palette: exactPalette?.length ? exactPalette : palette,
+    countdown,
+    countdownOnPoster: countdownFitsPoster(input.domain, input.visualType, input.objective, countdown),
+    seasonal: context?.seasonal ?? null,
   };
 }
 
+function directionNotes(ad: ArtDirection) {
+  const lines: string[] = [];
+  if (ad.countdownOnPoster && ad.countdown) {
+    lines.push(
+      `CALCULATED COUNTDOWN (server, timezone ${ad.countdown.timezone}, do not recount the days): ${ad.countdown.label}. Use it only if the layout already has room for a time cue. Do not print a negative delay. Do not invent another date.`,
+    );
+  }
+  const seasonal = seasonalPromptBlock(ad.seasonal);
+  if (seasonal) lines.push(seasonal);
+  return lines;
+}
+
 export function buildPrompt(input: CreateBriefInput, ad: ArtDirection, selection?: ReferenceSelection | null) {
-  if (isExactCopy(input)) return buildExactCopyPrompt(input, selection ?? null);
+  const base = isExactCopy(input) ? buildExactCopyPrompt(input, selection ?? null) : freePrompt(input, ad, selection);
+  return [base, ...directionNotes(ad)].filter(Boolean).join("\n");
+}
+
+function freePrompt(input: CreateBriefInput, ad: ArtDirection, selection?: ReferenceSelection | null) {
   const facts = [
     input.subtitle && `Subtitle: ${input.subtitle}`,
     input.description && `Offer copy: ${input.description}`,

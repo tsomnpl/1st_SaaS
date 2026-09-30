@@ -23,6 +23,7 @@ export default async function HistoryPage() {
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: 40,
+    include: { group: { select: { selectedGenerationId: true } } },
   });
 
   return (
@@ -57,6 +58,8 @@ export default async function HistoryPage() {
                   <p className="font-semibold">{brief.title ?? t.history.untitled}</p>
                   <p className="text-xs text-slate-500">
                     {brief.domain ?? "n/a"} · {new Date(generation.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "fr-FR")}
+                    {generation.variant ? ` · Variante ${generation.variant}` : ""}
+                    {generation.group?.selectedGenerationId === generation.id ? " · Choisie" : ""}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {generation.outputUrl ? (

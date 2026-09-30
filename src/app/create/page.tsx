@@ -4,7 +4,8 @@ import { CreateFlyerForm } from "@/components/create-flyer-form";
 import { pageTitle } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
-import { userHasEditableExport, userHasPersonalReference } from "@/server/generation";
+import { userHasEditableExport, userHasPersonalReference, userHasTwoVariants } from "@/server/generation";
+import { listOpenSeasonalOffers } from "@/server/seasonal";
 import { getBrandKit } from "@/server/brand-kit";
 import { FORMATS } from "@/lib/domains";
 
@@ -28,11 +29,13 @@ export default async function CreatePage({
     throw error;
   }
   const query = await searchParams;
-  const [account, canExport, canUsePersonalReference, kit] = await Promise.all([
+  const [account, canExport, canUsePersonalReference, canUseTwoVariants, kit, seasonalOffers] = await Promise.all([
     prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null),
     userHasEditableExport(user.id).catch(() => false),
     userHasPersonalReference(user.id).catch(() => false),
+    userHasTwoVariants(user.id).catch(() => false),
     getBrandKit(user.id),
+    listOpenSeasonalOffers().catch(() => []),
   ]);
   const balance = account?.balance ?? 0;
   const allowedFormat = FORMATS.some((item) => item.value === query.format) ? query.format : "";
@@ -54,6 +57,8 @@ export default async function CreatePage({
         brandLogoUrl={kit?.logoUrl ?? ""}
         regenerateFromId={query.from ?? ""}
         initialFormat={allowedFormat ?? ""}
+        canUseTwoVariants={canUseTwoVariants}
+        seasonalOffers={seasonalOffers}
       />
     </div>
   );

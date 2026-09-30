@@ -1,13 +1,19 @@
 import { prisma } from "@/lib/prisma";
+import { OBSERVED_VARIANT_SAMPLE, summarizeVariantCosts } from "@/lib/variants";
 import { listRodiumImageModels } from "@/server/rodium";
 import { getAdminStats } from "@/server/admin-stats";
 
 export default async function AdminRodiumPage() {
-  const [stats, models, recent] = await Promise.all([
+  const [stats, models, recent, variantRows] = await Promise.all([
     getAdminStats("30"),
     listRodiumImageModels().catch(() => []),
     prisma.generation.findMany({ orderBy: { createdAt: "desc" }, take: 20 }),
+    prisma.generation.findMany({
+      where: { variant: { not: null } },
+      select: { variant: true, status: true, rodiCost: true },
+    }),
   ]);
+  const variants = summarizeVariantCosts(variantRows);
 
   return (
     <div className="space-y-4">
@@ -53,6 +59,15 @@ export default async function AdminRodiumPage() {
         </div>
         <p className="mt-3 text-sm text-slate-600">
           Modèles image détectés : {models.length ? models.join(", ") : "liste indisponible (clé absente ou /models silencieux)."}
+        </p>
+      </section>
+      <section className="admin-card space-y-2 p-4 text-sm">
+        <h2 className="font-bold">Deux variantes</h2>
+        <p>Générations A : {variants.countA}. Générations B : {variants.countB}.</p>
+        <p>Coût total RODI : {variants.totalRodi}. Moyenne A : {variants.avgA ?? "n/a"}. Moyenne B : {variants.avgB ?? "n/a"}. Maximum : {variants.max ?? "n/a"}.</p>
+        <p>Échecs A : {variants.failedA}. Échecs B : {variants.failedB}.</p>
+        <p>
+          Mesure du {OBSERVED_VARIANT_SAMPLE.measuredOn} avant cette fonction : {OBSERVED_VARIANT_SAMPLE.generations} générations, {OBSERVED_VARIANT_SAMPLE.completedWithCost} réussie à {OBSERVED_VARIANT_SAMPLE.maximum} RODI, {OBSERVED_VARIANT_SAMPLE.failed} échecs. Aucun taux RODI vers FCFA n&apos;est enregistré. La marge de deux appels pour 1 Mint n&apos;est pas prouvée. Les prix des packs ne sont pas modifiés.
         </p>
       </section>
       <section className="admin-card p-4">

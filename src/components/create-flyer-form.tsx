@@ -10,12 +10,30 @@ import {
   VISUAL_TYPES,
 } from "@/lib/domains";
 import { publicErrorMessage } from "@/lib/errors";
+import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
 import { useCopy } from "@/components/chrome/locale-provider";
+
+type SeasonalOffer = {
+  slug: string;
+  name: string;
+  markets: string[];
+  domains: string[];
+};
+
+type VariantView = {
+  id: string;
+  variant: "A" | "B" | null;
+  outputUrl: string | null;
+  rodiCost: number | null;
+};
 
 type Result = {
   generationId: string;
   outputUrl?: string | null;
   repaired?: boolean;
+  selectedVariantId?: string;
+  variants?: VariantView[];
+  countdown?: { label: string; type: string } | null;
 };
 
 export function CreateFlyerForm({
@@ -26,6 +44,8 @@ export function CreateFlyerForm({
   brandLogoUrl = "",
   regenerateFromId = "",
   initialFormat = "",
+  canUseTwoVariants = false,
+  seasonalOffers = [],
 }: {
   mintBalance: number;
   canExport?: boolean;
@@ -34,6 +54,8 @@ export function CreateFlyerForm({
   brandLogoUrl?: string;
   regenerateFromId?: string;
   initialFormat?: string;
+  canUseTwoVariants?: boolean;
+  seasonalOffers?: SeasonalOffer[];
 }) {
   const t = useCopy();
   const steps = t.form.steps;
@@ -47,8 +69,27 @@ export function CreateFlyerForm({
   const [mainImage, setMainImage] = useState("");
   const [logoImage, setLogoImage] = useState(brandLogoUrl);
   const [personalPoster, setPersonalPoster] = useState("");
+  const [market, setMarket] = useState<"" | "TG" | "BJ">("");
+  const [seasonalChoice, setSeasonalChoice] = useState<"accept" | "decline">("decline");
+  const countryMarkets = useMemo(() => {
+    const found = new Set<"TG" | "BJ">();
+    for (const offer of seasonalOffers) {
+      if (!campaignMatchesDomain(offer.domains, domain) || offer.markets.includes("GLOBAL")) continue;
+      for (const item of offer.markets) {
+        if (item === "TG" || item === "BJ") found.add(item);
+      }
+    }
+    return [...found];
+  }, [seasonalOffers, domain]);
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
+  const seasonalOffer = useMemo(
+    () =>
+      seasonalOffers.find(
+        (offer) => campaignMatchesDomain(offer.domains, domain) && campaignMatchesMarket(offer.markets, market || null),
+      ) ?? null,
+    [seasonalOffers, domain, market],
+  );
   const canGenerate = mintBalance > 0 && confirmMint;
 
   async function readImage(file: File | undefined) {
@@ -107,6 +148,9 @@ export function CreateFlyerForm({
       personalReferenceUrl: canUsePersonalReference && personalPoster ? personalPoster : undefined,
       rememberBrand,
       regenerateFromId: regenerateFromId || undefined,
+      market: market || undefined,
+      seasonalSlug: seasonalOffer && seasonalChoice === "accept" ? seasonalOffer.slug : undefined,
+      seasonalDecline: !(seasonalOffer && seasonalChoice === "accept"),
       adaptiveData,
     };
 
@@ -179,7 +223,10 @@ export function CreateFlyerForm({
         <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" />
         <Input name="price" label={t.form.price} placeholder="25 000 FCFA" />
         <Input name="oldPrice" label={t.form.oldPrice} placeholder="optionnel" />
-        <Input name="date" label={t.form.date} placeholder="15 octobre" />
+        <div className="space-y-1">
+          <Input name="date" label={t.form.date} placeholder="30 septembre 2026" />
+          <p className="text-xs text-slate-500">{t.form.dateHint}</p>
+        </div>
         <Input name="time" label={t.form.time} placeholder="19h" />
         <Input name="location" label={t.form.place} placeholder="Abidjan" />
         <Input name="contactPhone" label={t.form.phone} placeholder="+225…" />
@@ -261,6 +308,41 @@ export function CreateFlyerForm({
       </div>
 
       <div className={step === 3 ? "space-y-4" : "hidden"}>
+        {canUseTwoVariants && !regenerateFromId ? <p className="text-sm text-slate-600">{t.form.twoVariants}</p> : null}
+        {countryMarkets.length > 0 && !seasonalOffer ? (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-slate-500">Pays</span>
+            {countryMarkets.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-600"
+                onClick={() => setMarket(item)}
+              >
+                {item === "TG" ? t.form.marketTogo : t.form.marketBenin}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        {seasonalOffer ? (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-semibold">{seasonalOffer.name}</span>
+            <button
+              type="button"
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "accept" ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"}`}
+              onClick={() => setSeasonalChoice("accept")}
+            >
+              {t.form.seasonalUse}
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "decline" ? "bg-[#1E293B] text-white" : "bg-slate-100 text-slate-600"}`}
+              onClick={() => setSeasonalChoice("decline")}
+            >
+              {t.form.seasonalSkip}
+            </button>
+          </div>
+        ) : null}
         <div className="card p-5 text-sm text-slate-600">
           <p>{t.form.recap}</p>
           {personalPoster ? <p className="mt-2">{t.form.recapPoster}</p> : null}
@@ -309,17 +391,62 @@ export function CreateFlyerForm({
       {result ? (
         <div className="card space-y-3 p-5">
           <p className="font-semibold text-[#10B981]">{t.form.ready}</p>
+          {result.countdown?.label ? <p className="text-sm text-slate-600">{result.countdown.label}</p> : null}
           {result.repaired ? <p className="text-sm text-slate-600">{t.form.repaired}</p> : null}
+          {result.variants && result.variants.length > 1 ? (
+            <div className="grid gap-4 md:grid-cols-2">
+              {result.variants.map((variant) => {
+                const selected = (result.selectedVariantId ?? result.generationId) === variant.id;
+                const label = variant.variant === "B" ? t.form.variantB : t.form.variantA;
+                return (
+                  <article key={variant.id} className="space-y-2">
+                    <p className="text-sm font-semibold">{label}</p>
+                    {variant.outputUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={variant.outputUrl} alt={label} className="w-full rounded-xl border border-slate-200" />
+                    ) : (
+                      <p className="text-sm text-amber-700">{t.form.variantMissing}</p>
+                    )}
+                    {variant.outputUrl ? (
+                      <button
+                        type="button"
+                        className={selected ? "btn-primary" : "btn-secondary"}
+                        onClick={async () => {
+                          const response = await fetch(`/api/generations/${variant.id}/select`, { method: "POST" });
+                          const data = (await response.json()) as { ok: boolean };
+                          if (!data.ok) return;
+                          setResult((current) =>
+                            current
+                              ? {
+                                  ...current,
+                                  generationId: variant.id,
+                                  selectedVariantId: variant.id,
+                                  outputUrl: variant.outputUrl,
+                                }
+                              : current,
+                          );
+                        }}
+                      >
+                        {selected ? t.form.chosen : t.form.chooseVariant}
+                      </button>
+                    ) : null}
+                  </article>
+                );
+              })}
+            </div>
+          ) : null}
           {result.outputUrl ? (
             <>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={result.outputUrl} alt={t.form.posterAlt} className="w-full rounded-xl border border-slate-200" />
+              {!(result.variants && result.variants.length > 1) ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={result.outputUrl} alt={t.form.posterAlt} className="w-full rounded-xl border border-slate-200" />
+              ) : null}
               <div className="flex flex-wrap gap-3">
                 <a href={result.outputUrl} download className="btn-primary">
                   {t.form.download}
                 </a>
                 {canExport ? (
-                  <a href={`/api/generations/${result.generationId}/export`} className="btn-secondary">
+                  <a href={`/api/generations/${result.selectedVariantId ?? result.generationId}/export`} className="btn-secondary">
                     {t.form.editable}
                   </a>
                 ) : null}
