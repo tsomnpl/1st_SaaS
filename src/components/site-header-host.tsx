@@ -30,6 +30,7 @@ export async function SiteHeaderHost() {
   }
   return (
     <SiteHeader
+      signedIn={Boolean(session.userId)}
       mintBalance={mintBalance}
       showAdmin={showAdmin}
       adminHref={showAdmin && getAdminPrivatePath() ? `/c/${getAdminPrivatePath()}` : ""}

@@ -81,6 +81,8 @@ model User {
   generationGroups   GenerationGroup[]
   referralsMade      Referral[]          @relation("Referrer")
   referralReceived   Referral?           @relation("Referred")
+  promoRedemptions   PromoRedemption[]
+  notifications      Notification[]
 }
 
 model Plan {
@@ -401,6 +403,47 @@ model SupportEmailEvent {
   ticket            SupportTicket      @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   @@index([ticketId, createdAt])
+}
+
+model PromoCode {
+  id          String            @id @default(cuid())
+  code        String            @unique
+  mintAmount  Int
+  maxUses     Int
+  usedCount   Int               @default(0)
+  active      Boolean           @default(true)
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  redemptions PromoRedemption[]
+}
+
+model PromoRedemption {
+  id          String    @id @default(cuid())
+  promoCodeId String
+  userId      String
+  mintAmount  Int
+  createdAt   DateTime  @default(now())
+  promoCode   PromoCode @relation(fields: [promoCodeId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([promoCodeId, userId])
+  @@index([userId])
+}
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  dedupeKey String?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, dedupeKey])
+  @@index([userId, readAt, createdAt])
 }
 
 model WebhookEvent {

@@ -31,6 +31,7 @@ import { TWO_VARIANT_MINT_COST, TWO_VARIANT_PLAN_CODES, variantLayoutInstruction
 import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { notifyAdmin, sendGenerationFailed, sendGenerationSucceeded } from "@/server/mail";
+import { notifyUser } from "@/server/notifications";
 import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 import { resolveSeasonalForBrief } from "@/server/seasonal";
@@ -267,7 +268,15 @@ async function prepareBrief(userId: string, unsafeInput: unknown, now: Date) {
   return { user, brief, selection, referenceImageDataUrl, exact, artDirection, countdown, pair };
 }
 
-async function notifyFailure(email: string | null, title: string, generationId: string) {
+async function notifyFailure(userId: string, email: string | null, title: string, generationId: string) {
+  await notifyUser({
+    userId,
+    type: "GENERATION",
+    title: "Génération non aboutie",
+    body: "Ton Mint a été rendu. Tu peux relancer la création.",
+    href: "/create",
+    dedupeKey: `generation-failed:${generationId}`,
+  });
   if (!email) return;
   await sendGenerationFailed({ to: email, title, generationId });
   await notifyAdmin(
@@ -275,6 +284,19 @@ async function notifyFailure(email: string | null, title: string, generationId: 
     `La génération ${generationId} a échoué. Le Mint a été recrédité.`,
     email,
   );
+}
+
+async function notifyReady(userId: string, email: string | null, title: string, generationId: string) {
+  await notifyUser({
+    userId,
+    type: "GENERATION",
+    title: "Ton affiche est prête",
+    body: title ? `« ${title} » est disponible.` : "Ton affiche est disponible.",
+    href: "/history",
+    dedupeKey: `generation:${generationId}`,
+  });
+  if (!email) return;
+  await sendGenerationSucceeded({ to: email, title, generationId });
 }
 
 function rememberBrandLater(userId: string, brief: CreateBriefInput) {
@@ -345,9 +367,7 @@ async function runSingle(prepared: Awaited<ReturnType<typeof prepareBrief>>): Pr
         status: GenerationStatus.COMPLETED,
       },
     });
-    if (user.email) {
-      await sendGenerationSucceeded({ to: user.email, title: brief.title, generationId: updated.id });
-    }
+    await notifyReady(user.id, user.email, brief.title, updated.id);
     return {
       generationId: updated.id,
       outputUrl: updated.outputUrl,
@@ -361,7 +381,7 @@ async function runSingle(prepared: Awaited<ReturnType<typeof prepareBrief>>): Pr
     };
   } catch (error) {
     await refundGenerationOnce(user.id, generation.id);
-    await notifyFailure(user.email, brief.title, generation.id);
+    await notifyFailure(user.id, user.email, brief.title, generation.id);
     throw error;
   }
 }
@@ -403,7 +423,7 @@ async function runVariantPair(prepared: Awaited<ReturnType<typeof prepareBrief>>
     renderedA = await renderPoster({ prompt: promptA, brief, selection, referenceImageDataUrl, exact });
   } catch (error) {
     await refundGenerationOnce(user.id, opened.generation.id);
-    await notifyFailure(user.email, brief.title, opened.generation.id);
+    await notifyFailure(user.id, user.email, brief.title, opened.generation.id);
     throw error;
   }
 
@@ -460,9 +480,7 @@ async function runVariantPair(prepared: Awaited<ReturnType<typeof prepareBrief>>
       },
     });
     await rememberBrandLater(user.id, brief);
-    if (user.email) {
-      await sendGenerationSucceeded({ to: user.email, title: brief.title, generationId: savedA.id });
-    }
+    await notifyReady(user.id, user.email, brief.title, savedA.id);
     return pairResult(savedA, savedB, opened.group.id, qualityScores, directionA, renderedA.repaired || renderedB.repaired);
   } catch {
     await prisma.generation.update({

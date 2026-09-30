@@ -35,6 +35,12 @@ const MESSAGES: Record<string, string> = {
   INVALID_ATTACHMENT: "La pièce jointe doit être une image JPG, PNG ou WEBP de 2 Mo maximum.",
   ATTACHMENT_LIMIT: "Ce ticket a déjà le nombre maximum de pièces jointes.",
   SUPPORT_SEQUENCE_FAILED: "Le numéro de ticket n’a pas pu être attribué.",
+  PROMO_INVALID: "Ce code promo n’est pas valide.",
+  PROMO_NOT_FOUND: "Ce code promo n’existe pas.",
+  PROMO_INACTIVE: "Ce code promo n’est plus actif.",
+  PROMO_ALREADY_USED: "Tu as déjà utilisé ce code.",
+  PROMO_EXHAUSTED: "Ce code a atteint son nombre d’utilisations.",
+  PROMO_TAKEN: "Ce code existe déjà.",
 };
 
 export function publicErrorMessage(error: unknown) {

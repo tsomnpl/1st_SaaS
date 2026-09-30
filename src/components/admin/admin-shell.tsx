@@ -16,6 +16,7 @@ const LINKS = [
   ["Références", "/references"],
   ["Saisonnier", "/saisonnier"],
   ["Parrainage", "/parrainage"],
+  ["Codes promo", "/promo"],
   ["Support", "/support"],
   ["IA / Rodium", "/rodium"],
   ["Analytics", "/analytics"],
