@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { pageTitle } from "@/lib/seo";
 import { PricingGrid } from "@/components/pricing/pricing-grid";
+import { PromoBox } from "@/components/pricing/promo-box";
 import { getDictionary } from "@/lib/locale";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,6 +31,7 @@ export default async function PricingPage() {
         <p className="mt-3 text-slate-600">{t.pricing.lead}</p>
       </section>
       <PricingGrid plans={plans} />
+      <PromoBox />
     </div>
   );
 }

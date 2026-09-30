@@ -4,6 +4,7 @@ import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { notifyAdmin, sendPaymentConfirmed, sendPaymentFailed } from "@/server/mail";
+import { adminAlertsHref, notifyAdmins, notifyUser } from "@/server/notifications";
 import { isLaunchOfferOpen, LAUNCH_OFFER_CODE } from "@/lib/plans";
 import { ensureOfficialPlans } from "@/server/plans";
 
@@ -353,23 +354,49 @@ async function emailPaymentOutcome(
   const email =
     knownEmail ??
     (await prisma.user.findUnique({ where: { id: userId }, select: { email: true } }))?.email;
-  if (!email) return;
-  const payload = { to: email, ...details };
+  const payload = email ? { to: email, ...details } : null;
   if (kind === "confirmed") {
-    await sendPaymentConfirmed(payload);
-    await notifyAdmin(
-      `Paiement confirmé, ${details.orderId}`,
-      `Commande ${details.orderId}, ${details.amountFcfa} FCFA, ${details.mintAmount} Mints.`,
-      email,
-    );
+    if (payload) await sendPaymentConfirmed(payload);
+    await notifyUser({
+      userId,
+      type: "PAYMENT",
+      title: "Tes Mints sont arrivés",
+      body: `${details.mintAmount} Mint${details.mintAmount > 1 ? "s" : ""} ont été ajoutés après le paiement ${details.planName}.`,
+      href: "/dashboard",
+      dedupeKey: `payment:${details.orderId}`,
+    });
+    await notifyAdmins({
+      type: "ADMIN",
+      title: "Paiement confirmé",
+      body: `${details.amountFcfa} FCFA, ${details.mintAmount} Mints, commande ${details.orderId}.`,
+      href: `${adminAlertsHref()}/payments`,
+      dedupeKey: `payment-admin:${details.orderId}`,
+    });
+    if (email) {
+      await notifyAdmin(
+        `Paiement confirmé, ${details.orderId}`,
+        `Commande ${details.orderId}, ${details.amountFcfa} FCFA, ${details.mintAmount} Mints.`,
+        email,
+      );
+    }
     return;
   }
-  await sendPaymentFailed(payload);
-  await notifyAdmin(
-    `Paiement non abouti, ${details.orderId}`,
-    `Commande ${details.orderId}, ${details.amountFcfa} FCFA. Aucun Mint ajouté.`,
-    email,
-  );
+  await notifyUser({
+    userId,
+    type: "PAYMENT",
+    title: "Paiement non abouti",
+    body: `La commande ${details.planName} n’a pas ajouté de Mints.`,
+    href: "/pricing",
+    dedupeKey: `payment-failed:${details.orderId}`,
+  });
+  if (payload) await sendPaymentFailed(payload);
+  if (email) {
+    await notifyAdmin(
+      `Paiement non abouti, ${details.orderId}`,
+      `Commande ${details.orderId}, ${details.amountFcfa} FCFA. Aucun Mint ajouté.`,
+      email,
+    );
+  }
 }
 
 function getStringField(payload: Record<string, unknown> | undefined, keys: string[]) {

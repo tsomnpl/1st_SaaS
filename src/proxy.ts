@@ -101,6 +101,8 @@ function applySensitiveRateLimit(req: NextRequest) {
     { match: (path) => path === "/api/me/referral", limit: 30, windowMs: 60_000, name: "referral" },
     { match: (path) => path === "/api/me/brand-kit", limit: 20, windowMs: 60_000, name: "brand-kit" },
     { match: (path) => path === "/api/mints/balance", limit: 40, windowMs: 60_000, name: "balance" },
+    { match: (path, method) => method === "POST" && path === "/api/promo/redeem", limit: 8, windowMs: 60_000, name: "promo" },
+    { match: (path) => path === "/api/me/notifications", limit: 40, windowMs: 60_000, name: "notices" },
   ];
   for (const rule of rules) {
     if (!rule.match(pathname, req.method)) continue;

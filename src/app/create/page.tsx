@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { CreateFlyerForm } from "@/components/create-flyer-form";
+import { LiveMintLine } from "@/components/live-mint-line";
 import { pageTitle } from "@/lib/seo";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
@@ -45,11 +46,12 @@ export default async function CreatePage({
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight">Créer une affiche</h1>
         <p className="mt-2 text-slate-600">
-          Solde : <span className="font-semibold text-[#6D28D9]">{balance} Mint{balance > 1 ? "s" : ""}</span>
+          Solde : <LiveMintLine initial={balance} />
           . 1 Mint = 1 affiche. Direction artistique + personne réelle + contrôle qualité inclus.
         </p>
       </div>
       <CreateFlyerForm
+        key={`${balance}-${query.from ?? ""}-${allowedFormat ?? ""}`}
         mintBalance={balance}
         canExport={canExport}
         canUsePersonalReference={canUsePersonalReference}

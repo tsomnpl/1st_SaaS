@@ -23,6 +23,7 @@ import {
 import { writeAdminLog } from "@/server/admin-audit";
 import type { MailResult } from "@/server/mail";
 import { sendSupportNotice } from "@/server/mail";
+import { adminAlertsHref, notifyAdmins, notifyUser } from "@/server/notifications";
 import {
   newTicketAdminMessage,
   supportReplyUserMessage,
@@ -207,6 +208,13 @@ export async function createSupportTicket(
       content,
       send,
     });
+    await notifyAdmins({
+      type: "TICKET_NEW",
+      title: "Nouveau ticket",
+      body: `${ticket.ticketNumber} · ${ticket.subject}`,
+      href: `${adminAlertsHref()}/support`,
+      dedupeKey: `ticket-new:${ticket.ticketNumber}`,
+    });
     const author = ticket.user.email ?? "";
     await recordAndSend({
       ticketId: ticket.id,
@@ -282,6 +290,13 @@ export async function addUserMessage(userId: string, ticketNumber: string, messa
     scope: saved.id,
     content,
     send,
+  });
+  await notifyAdmins({
+    type: "TICKET_NEW",
+    title: "Réponse sur un ticket",
+    body: `${ticket.ticketNumber}`,
+    href: `${adminAlertsHref()}/support`,
+    dedupeKey: `ticket-reply:${saved.id}`,
   });
   return getUserTicket(userId, ticketNumber);
 }
@@ -492,6 +507,14 @@ export async function addAdminReply(adminUserId: string, ticketNumber: string, m
     to: ticket.user.email ?? "",
     content,
     send,
+  });
+  await notifyUser({
+    userId: ticket.userId,
+    type: "TICKET_REPLY",
+    title: "Réponse du support",
+    body: `Ticket ${ticket.ticketNumber}`,
+    href: `/support/${ticket.ticketNumber}`,
+    dedupeKey: `support-reply:${saved.id}`,
   });
   return getAdminTicket(ticketNumber);
 }

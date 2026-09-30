@@ -29,6 +29,20 @@ const fr = {
     chooseOffer: "Choisir une offre",
     buyMints: "Acheter des Mints",
   },
+  notices: {
+    bell: "Notifications",
+    empty: "Rien de nouveau pour le moment.",
+    mark: "Tout marquer comme lu",
+  },
+  promo: {
+    kicker: "Code promo",
+    title: "Tu as un code ?",
+    lead: "Entre-le ici. Il ajoute des Mints aux premières personnes, dans la limite fixée.",
+    placeholder: "TON CODE",
+    apply: "Utiliser le code",
+    signIn: "Connecte-toi pour utiliser un code promo.",
+    added: "{mints} Mint ajoutés. Nouveau solde : {balance}.",
+  },
   footer: {
     tagline: "Transforme une idée en affiche professionnelle. Sans designer, sans prompt.",
     slogan: "Créez des visuels qui marquent.",
@@ -186,6 +200,7 @@ const fr = {
     exact:
       "Chaque affiche est une copie exacte d’une référence du domaine. Ta photo remplace la personne, nette, sans flou. Seuls les textes que tu remplis changent. Le flou des visages reste sur les exemples anniversaire et mariage.",
     photo: "Photo / produit (optionnel)",
+    photoReady: "Image prête. Tu peux la remplacer.",
     reference: "Ton affiche de référence",
     referenceHelp:
       "FlyerMint reproduit cette affiche. Seuls les textes, la personne et le logo que tu fournis changent. Aucune information manquante n’est inventée.",
@@ -203,6 +218,8 @@ const fr = {
     broke: "Solde insuffisant.",
     back: "Retour",
     next: "Continuer",
+    stepNeed: "Indique l’objectif et la cible avant de continuer.",
+    stepTitle: "Ajoute un titre avant de continuer.",
     generating: "Génération en cours…",
     generate: "Générer mon affiche, 1 Mint",
     download: "Télécharger",
@@ -237,6 +254,20 @@ const en: typeof fr = {
     gallery: "Full gallery",
     chooseOffer: "Choose a pack",
     buyMints: "Buy Mints",
+  },
+  notices: {
+    bell: "Notifications",
+    empty: "Nothing new right now.",
+    mark: "Mark all as read",
+  },
+  promo: {
+    kicker: "Promo code",
+    title: "Have a code?",
+    lead: "Enter it here. It adds Mints for the first people, up to the limit set.",
+    placeholder: "YOUR CODE",
+    apply: "Use the code",
+    signIn: "Sign in to use a promo code.",
+    added: "{mints} Mints added. New balance: {balance}.",
   },
   footer: {
     tagline: "Turn an idea into a professional poster. No designer, no prompt.",
@@ -395,6 +426,7 @@ const en: typeof fr = {
     exact:
       "Each poster is an exact copy of a reference in that field. Your photo replaces the person, sharp, with no blur. Only the text you fill in changes. Face blur stays on the birthday and wedding examples.",
     photo: "Photo / product (optional)",
+    photoReady: "Image ready. You can replace it.",
     reference: "Your reference poster",
     referenceHelp:
       "FlyerMint reproduces this poster. Only the text, the person and the logo you provide change. Missing information is not invented.",
@@ -412,6 +444,8 @@ const en: typeof fr = {
     broke: "Not enough Mints.",
     back: "Back",
     next: "Continue",
+    stepNeed: "Add the goal and the audience before continuing.",
+    stepTitle: "Add a title before continuing.",
     generating: "Generating…",
     generate: "Generate my poster, 1 Mint",
     download: "Download",

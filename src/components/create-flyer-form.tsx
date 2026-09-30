@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   ADAPTIVE_FIELDS,
@@ -12,6 +12,7 @@ import {
 import { publicErrorMessage } from "@/lib/errors";
 import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
 import { useCopy } from "@/components/chrome/locale-provider";
+import { publishWalletChange } from "@/lib/wallet-events";
 
 type SeasonalOffer = {
   slug: string;
@@ -60,6 +61,9 @@ export function CreateFlyerForm({
   const t = useCopy();
   const steps = t.form.steps;
   const [step, setStep] = useState(0);
+  const [balanceLeft, setBalanceLeft] = useState(mintBalance);
+  const formRef = useRef<HTMLFormElement>(null);
+  const skipScroll = useRef(true);
   const [domain, setDomain] = useState<(typeof DOMAINS)[number]>("Evenementiel");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -90,7 +94,37 @@ export function CreateFlyerForm({
       ) ?? null,
     [seasonalOffers, domain, market],
   );
-  const canGenerate = mintBalance > 0 && confirmMint;
+  const canGenerate = balanceLeft > 0 && confirmMint;
+
+  useEffect(() => {
+    if (skipScroll.current) {
+      skipScroll.current = false;
+      return;
+    }
+    formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [step]);
+
+  function goNext() {
+    const form = formRef.current;
+    if (!form) return;
+    if (step === 0) {
+      const objective = String(new FormData(form).get("objective") ?? "").trim();
+      const audience = String(new FormData(form).get("targetAudience") ?? "").trim();
+      if (!objective || !audience) {
+        setError(t.form.stepNeed);
+        return;
+      }
+    }
+    if (step === 1) {
+      const title = String(new FormData(form).get("title") ?? "").trim();
+      if (!title) {
+        setError(t.form.stepTitle);
+        return;
+      }
+    }
+    setError(null);
+    setStep((value) => value + 1);
+  }
 
   async function readImage(file: File | undefined) {
     if (!file) return "";
@@ -107,7 +141,20 @@ export function CreateFlyerForm({
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (step < 3) {
-      setStep((value) => value + 1);
+      goNext();
+      return;
+    }
+    const objective = String(new FormData(event.currentTarget).get("objective") ?? "").trim();
+    const audience = String(new FormData(event.currentTarget).get("targetAudience") ?? "").trim();
+    const titleValue = String(new FormData(event.currentTarget).get("title") ?? "").trim();
+    if (!objective || !audience) {
+      setStep(0);
+      setError(t.form.stepNeed);
+      return;
+    }
+    if (!titleValue) {
+      setStep(1);
+      setError(t.form.stepTitle);
       return;
     }
     setLoading(true);
@@ -163,6 +210,8 @@ export function CreateFlyerForm({
       const data = (await response.json()) as { ok: boolean; error?: string } & Result;
       if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
       setResult(data);
+      setBalanceLeft((value) => Math.max(0, value - 1));
+      publishWalletChange();
     } catch (e) {
       setError(publicErrorMessage(e));
     } finally {
@@ -171,7 +220,7 @@ export function CreateFlyerForm({
   }
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
+    <form ref={formRef} onSubmit={onSubmit} className="scroll-mt-24 space-y-5">
       <div className="flex gap-2">
         {steps.map((label, index) => (
           <button
@@ -193,7 +242,7 @@ export function CreateFlyerForm({
         <p className="mt-1 text-sm text-slate-500">{t.form.quizLead}</p>
       </div>
 
-      <div className={step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+      <div data-step="0" className={step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Select
           name="visualType"
           label={t.form.visualType}
@@ -213,12 +262,12 @@ export function CreateFlyerForm({
             ))}
           </select>
         </label>
-        <Input name="objective" label={t.form.objective} placeholder="Attirer du monde samedi" required />
-        <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" required />
+        <Input name="objective" label={t.form.objective} placeholder="Attirer du monde samedi" />
+        <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" />
       </div>
 
-      <div className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="title" label={t.form.title} placeholder="Formation intensive" required />
+      <div data-step="1" className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+        <Input name="title" label={t.form.title} placeholder="Formation intensive" />
         <Input name="subtitle" label={t.form.subtitle} placeholder="Places limitées" />
         <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" />
         <Input name="price" label={t.form.price} placeholder="25 000 FCFA" />
@@ -254,57 +303,48 @@ export function CreateFlyerForm({
         />
         <input type="hidden" name="creativeFreedom" value="copie_exacte" />
         <p className="text-xs text-slate-500 md:col-span-2">{t.form.exact}</p>
-        <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">{t.form.photo}</span>
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={async (event) => {
-              try {
-                setMainImage(await readImage(event.target.files?.[0]));
-              } catch (e) {
-                setError(publicErrorMessage(e));
-              }
-            }}
-          />
-        </label>
+        <UploadBox
+          label={t.form.photo}
+          ready={mainImage ? t.form.photoReady : null}
+          onFile={async (file) => {
+            try {
+              setMainImage(await readImage(file));
+            } catch (e) {
+              setError(publicErrorMessage(e));
+            }
+          }}
+        />
         {canUsePersonalReference ? (
-          <label className="space-y-1 text-sm md:col-span-2">
-            <span className="font-medium text-slate-700">{t.form.reference}</span>
-            <p className="text-xs text-slate-500">{t.form.referenceHelp}</p>
-            {personalPoster ? <p className="text-xs text-[#10B981]">{t.form.referenceReady}</p> : null}
-            <input
-              type="file"
-              accept="image/png,image/jpeg,image/webp"
-              onChange={async (event) => {
+          <div className="md:col-span-2">
+            <UploadBox
+              label={t.form.reference}
+              hint={t.form.referenceHelp}
+              ready={personalPoster ? t.form.referenceReady : null}
+              onFile={async (file) => {
                 try {
-                  setPersonalPoster(await readImage(event.target.files?.[0]));
+                  setPersonalPoster(await readImage(file));
                 } catch (e) {
                   setError(publicErrorMessage(e));
                 }
               }}
             />
-          </label>
+          </div>
         ) : (
           <p className="text-xs text-slate-500 md:col-span-2">
             {t.form.referenceLocked}
           </p>
         )}
-        <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">{t.form.logo}</span>
-          {logoImage ? <p className="text-xs text-[#10B981]">{t.form.logoReady}</p> : null}
-          <input
-            type="file"
-            accept="image/png,image/jpeg,image/webp"
-            onChange={async (event) => {
-              try {
-                setLogoImage(await readImage(event.target.files?.[0]));
-              } catch (e) {
-                setError(publicErrorMessage(e));
-              }
-            }}
-          />
-        </label>
+        <UploadBox
+          label={t.form.logo}
+          ready={logoImage ? t.form.logoReady : null}
+          onFile={async (file) => {
+            try {
+              setLogoImage(await readImage(file));
+            } catch (e) {
+              setError(publicErrorMessage(e));
+            }
+          }}
+        />
       </div>
 
       <div className={step === 3 ? "space-y-4" : "hidden"}>
@@ -360,7 +400,7 @@ export function CreateFlyerForm({
         </label>
       </div>
 
-      {mintBalance <= 0 ? (
+      {balanceLeft <= 0 ? (
         <p className="text-sm text-amber-700">
           {t.form.broke}{" "}
           <Link href="/pricing" className="font-semibold text-[#6D28D9] underline">
@@ -376,7 +416,7 @@ export function CreateFlyerForm({
           </button>
         ) : null}
         {step < 3 ? (
-          <button type="submit" className="btn-primary">
+          <button type="button" className="btn-primary" onClick={goNext}>
             {t.form.next}
           </button>
         ) : (
@@ -403,7 +443,7 @@ export function CreateFlyerForm({
                     <p className="text-sm font-semibold">{label}</p>
                     {variant.outputUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
-                      <img src={variant.outputUrl} alt={label} className="w-full rounded-xl border border-slate-200" />
+                      <img src={variant.outputUrl} alt={label} className="mx-auto max-h-80 w-auto max-w-xs rounded-xl border border-slate-200 object-contain" />
                     ) : (
                       <p className="text-sm text-amber-700">{t.form.variantMissing}</p>
                     )}
@@ -439,7 +479,7 @@ export function CreateFlyerForm({
             <>
               {!(result.variants && result.variants.length > 1) ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={result.outputUrl} alt={t.form.posterAlt} className="w-full rounded-xl border border-slate-200" />
+                <img src={result.outputUrl} alt={t.form.posterAlt} className="mx-auto max-h-[28rem] w-auto max-w-sm rounded-xl border border-slate-200 object-contain" />
               ) : null}
               <div className="flex flex-wrap gap-3">
                 <a href={result.outputUrl} download className="btn-primary">
@@ -473,6 +513,34 @@ export function CreateFlyerForm({
         </div>
       ) : null}
     </form>
+  );
+}
+
+function UploadBox({
+  label,
+  hint,
+  ready,
+  onFile,
+}: {
+  label: string;
+  hint?: string;
+  ready?: string | null;
+  onFile: (file?: File) => void;
+}) {
+  return (
+    <label className="flex cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border border-[#6D28D9]/30 bg-[#F5F3FF] px-4 py-6 text-center transition hover:border-[#6D28D9] hover:bg-[#EDE9FE]">
+      <span className="text-sm font-semibold text-[#6D28D9]">{label}</span>
+      {hint ? <span className="text-xs text-slate-500">{hint}</span> : null}
+      <span className={`text-xs font-medium ${ready ? "text-[#047857]" : "text-slate-500"}`}>
+        {ready ?? "JPG, PNG, WEBP"}
+      </span>
+      <input
+        type="file"
+        accept="image/png,image/jpeg,image/webp"
+        className="sr-only"
+        onChange={(event) => onFile(event.target.files?.[0])}
+      />
+    </label>
   );
 }
 
