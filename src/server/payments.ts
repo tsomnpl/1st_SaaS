@@ -5,8 +5,9 @@ import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
 import { notifyAdmin, sendPaymentConfirmed, sendPaymentFailed } from "@/server/mail";
 import { adminAlertsHref, notifyAdmins, notifyUser } from "@/server/notifications";
-import { isLaunchOfferOpen, LAUNCH_OFFER_CODE } from "@/lib/plans";
-import { ensureOfficialPlans } from "@/server/plans";
+import { LAUNCH_OFFER_CODE } from "@/lib/plans";
+import { isStarterOfferLive } from "@/lib/starter-offer";
+import { closeExpiredStarterOffer, ensureOfficialPlans } from "@/server/plans";
 
 type MoneyFusionInitPayload = {
   totalPrice: number;
@@ -71,12 +72,13 @@ export async function initMoneyFusionPayment(params: {
 }) {
   assertMoneyFusionConfigured();
   await ensureOfficialPlans();
+  await closeExpiredStarterOffer();
 
   const plan = await prisma.plan.findUnique({ where: { code: params.planCode } });
   if (!plan || !plan.active || plan.priceFcfa <= 0) {
     throw new Error("PLAN_INVALID");
   }
-  if (plan.code === LAUNCH_OFFER_CODE && !isLaunchOfferOpen()) {
+  if (plan.code === LAUNCH_OFFER_CODE && !isStarterOfferLive(plan)) {
     throw new Error("PLAN_INVALID");
   }
 

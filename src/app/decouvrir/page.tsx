@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { DOMAIN_LABELS, DOMAINS } from "@/lib/domains";
-import { formatFcfa, visiblePaidPlans } from "@/lib/plans";
+import { formatFcfa } from "@/lib/plans";
+import { loadSellablePlans } from "@/server/plans";
 import { localizedAvailability, localizePlan } from "@/lib/plan-copy";
 import { getDictionary } from "@/lib/locale";
 import { VisualPoster } from "@/components/landing/visual-poster";
@@ -18,6 +19,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DiscoverPage() {
   const { locale, t } = await getDictionary();
+  const sellablePlans = await loadSellablePlans();
   const heroPosters = posters.map((poster) => ({
     id: poster.id,
     title: poster.label,
@@ -156,7 +158,7 @@ export default async function DiscoverPage() {
           </Link>
         </div>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {visiblePaidPlans().map((seed) => {
+          {sellablePlans.map((seed) => {
             const plan = localizePlan(seed, locale);
             return (
             <Link

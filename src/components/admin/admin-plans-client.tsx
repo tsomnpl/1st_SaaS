@@ -1,6 +1,8 @@
 "use client";
 
 import { useState } from "react";
+import { OfferCountdown } from "@/components/pricing/offer-countdown";
+import { isStarterOfferLive } from "@/lib/starter-offer";
 
 type PlanRow = {
   id: string;
@@ -11,12 +13,14 @@ type PlanRow = {
   durationDays: number | null;
   editableExport: boolean;
   active: boolean;
+  offerDays: number | null;
+  offerEndsAt: string | null;
 };
 
 export function AdminPlansClient({ plans }: { plans: PlanRow[] }) {
   const [status, setStatus] = useState<string | null>(null);
 
-  async function patch(plan: PlanRow, patchData: Partial<PlanRow>) {
+  async function patch(plan: PlanRow, patchData: Partial<PlanRow> & { offerDays?: number }) {
     const summary = Object.entries(patchData)
       .map(([key, value]) => `${key}=${String(value)}`)
       .join(", ");
@@ -49,6 +53,7 @@ export function AdminPlansClient({ plans }: { plans: PlanRow[] }) {
               {plan.active ? "Actif" : "Inactif"}
             </span>
           </div>
+          {plan.code === "STARTER_2K" ? <StarterOfferControls plan={plan} onPatch={patch} /> : null}
           <div className="mt-3 flex flex-wrap gap-2">
             <button type="button" className="btn-secondary px-3 py-1" onClick={() => patch(plan, { active: !plan.active })}>
               {plan.active ? "Désactiver" : "Activer"}
@@ -67,6 +72,78 @@ export function AdminPlansClient({ plans }: { plans: PlanRow[] }) {
           </div>
         </article>
       ))}
+    </div>
+  );
+}
+
+function StarterOfferControls({
+  plan,
+  onPatch,
+}: {
+  plan: PlanRow;
+  onPatch: (plan: PlanRow, patchData: Partial<PlanRow> & { offerDays?: number }) => Promise<void>;
+}) {
+  const [days, setDays] = useState(String(plan.offerDays ?? 30));
+  const [mints, setMints] = useState(String(plan.mintAmount));
+  const live = isStarterOfferLive(plan);
+
+  return (
+    <div className="mt-4 space-y-3 rounded-xl bg-[#F5F3FF] p-4">
+      <p className="text-sm font-semibold text-[#6D28D9]">Offre 2 000 FCFA</p>
+      <p className="text-sm text-slate-600">
+        {live
+          ? "Elle est en ligne. À la fin du décompte elle se coupe seule. Tu pourras la relancer."
+          : "Elle est arrêtée. Choisis le nombre de jours, puis active-la quand tu lances."}
+      </p>
+      {live && plan.offerEndsAt ? (
+        <OfferCountdown endsAt={plan.offerEndsAt} prefix="Fin dans" doneLabel="Offre terminée" />
+      ) : null}
+      <div className="flex flex-wrap gap-3">
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Nombre de jours</span>
+          <input
+            value={days}
+            onChange={(event) => setDays(event.target.value)}
+            inputMode="numeric"
+            className="w-28 rounded-xl border border-slate-200 bg-white px-3 py-2"
+          />
+        </label>
+        <label className="space-y-1 text-sm">
+          <span className="font-medium">Mints donnés</span>
+          <input
+            value={mints}
+            onChange={(event) => setMints(event.target.value)}
+            inputMode="numeric"
+            className="w-28 rounded-xl border border-slate-200 bg-white px-3 py-2"
+          />
+        </label>
+      </div>
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          className="btn-primary px-3 py-1"
+          onClick={() => {
+            const offerDays = Number(days);
+            const mintAmount = Number(mints);
+            if (!Number.isInteger(offerDays) || offerDays < 1) return;
+            if (!Number.isInteger(mintAmount) || mintAmount < 1) return;
+            void onPatch(plan, { offerDays, mintAmount });
+          }}
+        >
+          {live ? "Relancer" : "Activer"}
+        </button>
+        <button
+          type="button"
+          className="btn-secondary px-3 py-1"
+          onClick={() => {
+            const mintAmount = Number(mints);
+            if (!Number.isInteger(mintAmount) || mintAmount < 1) return;
+            void onPatch(plan, { mintAmount });
+          }}
+        >
+          Enregistrer les Mints
+        </button>
+      </div>
     </div>
   );
 }

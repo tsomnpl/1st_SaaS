@@ -11,6 +11,9 @@ export type PlanSeed = {
   personalReference: boolean;
   sortOrder: number;
   highlighted?: boolean;
+  bestSeller?: boolean;
+  offerEndsAt?: string | null;
+  offerDays?: number | null;
   features: string[];
 };
 
