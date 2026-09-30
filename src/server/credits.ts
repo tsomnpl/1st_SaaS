@@ -1,4 +1,5 @@
 import {
+  CreditTransaction,
   CreditTransactionType,
   Prisma,
   PrismaClient,
@@ -25,16 +26,25 @@ export async function ensureCreditAccount(userId: string, tx?: Prisma.Transactio
   });
 }
 
+async function lockCreditAccount(userId: string, client: Prisma.TransactionClient) {
+  await ensureCreditAccount(userId, client);
+  await client.$queryRaw`SELECT "id" FROM "CreditAccount" WHERE "userId" = ${userId} FOR UPDATE`;
+  return client.creditAccount.findUniqueOrThrow({ where: { userId } });
+}
+
 export async function grantCredits(
   userId: string,
   amount: number,
   type: CreditTransactionType,
   options: CreditOptions = {},
   expiresAt: Date | null = null,
-) {
+): Promise<{ transaction: CreditTransaction; balanceAfter: number }> {
+  if (!options.tx) {
+    return prisma.$transaction((tx) => grantCredits(userId, amount, type, { ...options, tx }, expiresAt));
+  }
   if (amount <= 0) throw new Error("INVALID_CREDIT_AMOUNT");
   const client = getClient(options.tx);
-  const account = await ensureCreditAccount(userId, options.tx);
+  const account = await lockCreditAccount(userId, options.tx);
   const balanceBefore = account.balance;
   const balanceAfter = balanceBefore + amount;
 
@@ -72,10 +82,13 @@ export async function grantCredits(
 export async function consumeOneMint(
   userId: string,
   options: CreditOptions = {},
-) {
+): Promise<{ transaction: CreditTransaction; balanceAfter: number }> {
+  if (!options.tx) {
+    return prisma.$transaction((tx) => consumeOneMint(userId, { ...options, tx }));
+  }
   const client = getClient(options.tx);
   await expireCredits(new Date(), options.tx);
-  const account = await ensureCreditAccount(userId, options.tx);
+  const account = await lockCreditAccount(userId, options.tx);
   if (account.balance < 1) throw new Error("INSUFFICIENT_MINTS");
 
   const now = new Date();
@@ -122,10 +135,13 @@ export async function removeCredits(
   userId: string,
   amount: number,
   options: CreditOptions = {},
-) {
+): Promise<{ removed: number; balanceAfter: number; transaction: CreditTransaction }> {
+  if (!options.tx) {
+    return prisma.$transaction((tx) => removeCredits(userId, amount, { ...options, tx }));
+  }
   if (amount <= 0) throw new Error("INVALID_REMOVE_AMOUNT");
   const client = getClient(options.tx);
-  const account = await ensureCreditAccount(userId, options.tx);
+  const account = await lockCreditAccount(userId, options.tx);
   if (account.balance < amount) {
     throw new Error("BALANCE_WOULD_BE_NEGATIVE");
   }

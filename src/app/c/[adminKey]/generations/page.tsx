@@ -8,6 +8,12 @@ function briefField(brief: unknown, key: string) {
   return typeof value === "string" ? value : "";
 }
 
+function countdownLabel(artDirection: unknown) {
+  if (!artDirection || typeof artDirection !== "object") return "";
+  const countdown = (artDirection as { countdown?: { label?: string } | null }).countdown;
+  return countdown?.label ?? "";
+}
+
 export default async function AdminGenerationsPage({ searchParams }: { searchParams: SearchParams }) {
   const params = await searchParams;
   const generations = await prisma.generation.findMany({
@@ -20,7 +26,7 @@ export default async function AdminGenerationsPage({ searchParams }: { searchPar
     },
     orderBy: { createdAt: "desc" },
     take: 120,
-    include: { user: true },
+    include: { user: true, group: true },
   });
 
   return (
@@ -50,6 +56,14 @@ export default async function AdminGenerationsPage({ searchParams }: { searchPar
               {briefField(generation.brief, "domain") || "domaine n/a"} · {briefField(generation.brief, "title")} · RODI{" "}
               {generation.rodiCost ?? 0} · Mint {generation.mintCost} ·{" "}
               {Math.round((generation.updatedAt.getTime() - generation.createdAt.getTime()) / 1000)}s
+              {briefField(generation.brief, "date") ? ` · date ${briefField(generation.brief, "date")}` : ""}
+              {countdownLabel(generation.artDirection) ? ` · ${countdownLabel(generation.artDirection)}` : ""}
+              {generation.variant ? ` · variante ${generation.variant}` : ""}
+              {generation.group ? ` · groupe ${generation.group.id}` : ""}
+              {generation.group?.selectedGenerationId === generation.id ? " · sélectionnée" : ""}
+              {generation.group
+                ? ` · RODI A ${generation.group.rodiCostA ?? 0} · RODI B ${generation.group.rodiCostB ?? 0} · total ${generation.group.rodiCostTotal ?? 0}`
+                : ""}
               {briefField(generation.brief, "regenerateFromId") ? " · régénération" : ""}
             </p>
           </article>

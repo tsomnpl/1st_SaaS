@@ -10,19 +10,26 @@ export async function generateMetadata(): Promise<Metadata> {
     robots: { index: false, follow: false },
   };
 }
+import { ReferralCard } from "@/components/referral-card";
 import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 
 export default async function DashboardPage() {
   const { t } = await getDictionary();
   const user = await requireActiveCurrentUser();
-  const [account, lastGenerations] = await Promise.all([
+  const [account, lastGenerations, referrals] = await Promise.all([
     prisma.creditAccount.findUnique({ where: { userId: user.id } }),
     prisma.generation.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 5,
     }),
+    prisma.referral.findMany({
+      where: { referrerUserId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { id: true, status: true, rewardedAt: true },
+    }).catch(() => []),
   ]);
 
   const balance = account?.balance ?? 0;
@@ -63,6 +70,19 @@ export default async function DashboardPage() {
           ))}
         </div>
       </section>
+
+      {user.referralCode ? (
+        <ReferralCard
+          code={user.referralCode}
+          invited={referrals.length}
+          rewarded={referrals.filter((row) => row.status === "REWARDED").length}
+          rows={referrals.map((row) => ({
+            id: row.id,
+            status: row.status,
+            rewardedAt: row.rewardedAt ? row.rewardedAt.toISOString() : null,
+          }))}
+        />
+      ) : null}
     </div>
   );
 }

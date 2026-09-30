@@ -17,6 +17,10 @@ export async function POST(request: Request) {
       generationId: result.generationId,
       outputUrl: result.outputUrl,
       repaired: result.repaired,
+      groupId: result.groupId,
+      selectedVariantId: result.selectedVariantId,
+      variants: result.variants,
+      countdown: result.countdown,
     });
   } catch (error) {
     return NextResponse.json(

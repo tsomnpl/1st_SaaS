@@ -41,6 +41,17 @@ enum GenerationStatus {
   FAILED
 }
 
+enum GenerationVariant {
+  A
+  B
+}
+
+enum ReferralStatus {
+  PENDING
+  REWARDED
+  REJECTED
+}
+
 enum PendingMintGrantStatus {
   PENDING
   REDEEMED
@@ -54,6 +65,7 @@ model User {
   name               String?
   role               UserRole            @default(USER)
   status             UserStatus          @default(ACTIVE)
+  referralCode       String?             @unique
   createdAt          DateTime            @default(now())
   updatedAt          DateTime            @updatedAt
   creditAccount      CreditAccount?
@@ -65,7 +77,10 @@ model User {
   adminLogs          AdminLog[]          @relation("AdminActorLogs")
   mintGrantsCreated  PendingMintGrant[]  @relation("MintGrantAdmin")
   mintGrantsRedeemed PendingMintGrant[]  @relation("MintGrantUser")
-  supportTickets    SupportTicket[]
+  supportTickets     SupportTicket[]
+  generationGroups   GenerationGroup[]
+  referralsMade      Referral[]          @relation("Referrer")
+  referralReceived   Referral?           @relation("Referred")
 }
 
 model Plan {
@@ -152,23 +167,75 @@ model BrandKit {
   user      User     @relation(fields: [userId], references: [id])
 }
 
+model GenerationGroup {
+  id                   String       @id @default(cuid())
+  userId               String
+  selectedGenerationId String?
+  mintCost             Int          @default(1)
+  rodiCostA            Float?
+  rodiCostB            Float?
+  rodiCostTotal        Float?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+  user                 User         @relation(fields: [userId], references: [id])
+  generations          Generation[]
+
+  @@index([userId, createdAt])
+}
+
 model Generation {
-  id             String           @id @default(cuid())
+  id             String             @id @default(cuid())
   userId         String
-  mintCost       Int              @default(1)
+  mintCost       Int                @default(1)
   brief          Json
   artDirection   Json
   prompt         String
   model          String
   rodiCost       Float?
-  status         GenerationStatus @default(PENDING)
+  status         GenerationStatus   @default(PENDING)
   outputUrl      String?
   qualityScore   Float?
   qualityDetails Json?
-  createdAt      DateTime         @default(now())
-  updatedAt      DateTime         @updatedAt
-  user           User             @relation(fields: [userId], references: [id])
+  groupId        String?
+  variant        GenerationVariant?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+  user           User               @relation(fields: [userId], references: [id])
+  group          GenerationGroup?   @relation(fields: [groupId], references: [id])
   supportTickets SupportTicket[]
+
+  @@index([groupId])
+}
+
+model Referral {
+  id             String         @id @default(cuid())
+  referrerUserId String
+  referredUserId String         @unique
+  code           String
+  status         ReferralStatus @default(PENDING)
+  rewardedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  referrer       User           @relation("Referrer", fields: [referrerUserId], references: [id])
+  referred       User           @relation("Referred", fields: [referredUserId], references: [id])
+
+  @@index([referrerUserId, createdAt])
+}
+
+model SeasonalCampaign {
+  id           String    @id @default(cuid())
+  name         String
+  slug         String    @unique
+  startDate    DateTime?
+  endDate      DateTime?
+  markets      String[]
+  domains      String[]
+  styleProfile Json
+  referenceIds String[]
+  active       Boolean   @default(false)
+  priority     Int       @default(0)
+  movable      Boolean   @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 }
 
 model Reference {

@@ -1,6 +1,7 @@
 import { clerkMiddleware } from "@clerk/nextjs/server";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { REFERRAL_COOKIE, normalizeReferralCode } from "@/lib/referral-code";
 import { applySecurityHeaders } from "@/lib/security-headers";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 
@@ -57,6 +58,19 @@ function isProtectedPath(pathname: string) {
   ].some((prefix) => pathname === prefix.replace(/\/$/, "") || pathname.startsWith(prefix));
 }
 
+function rememberReferral(req: NextRequest, response: NextResponse) {
+  const code = normalizeReferralCode(req.nextUrl.searchParams.get("ref"));
+  if (!code) return response;
+  response.cookies.set(REFERRAL_COOKIE, code, {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 60 * 60 * 24 * 30,
+  });
+  return response;
+}
+
 function withSecurity(response: NextResponse, req: NextRequest) {
   applySecurityHeaders(response.headers);
   if (process.env.NODE_ENV === "production") {
@@ -66,10 +80,10 @@ function withSecurity(response: NextResponse, req: NextRequest) {
     if (proto === "http" && !local) {
       const httpsUrl = req.nextUrl.clone();
       httpsUrl.protocol = "https:";
-      return NextResponse.redirect(httpsUrl, 308);
+      return rememberReferral(req, NextResponse.redirect(httpsUrl, 308));
     }
   }
-  return response;
+  return rememberReferral(req, response);
 }
 
 function applySensitiveRateLimit(req: NextRequest) {
