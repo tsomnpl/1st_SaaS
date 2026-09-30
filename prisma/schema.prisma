@@ -94,6 +94,8 @@ model Plan {
   durationDays   Int?
   editableExport Boolean   @default(false)
   active         Boolean   @default(true)
+  offerDays      Int?
+  offerEndsAt    DateTime?
   sortOrder      Int       @default(0)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt

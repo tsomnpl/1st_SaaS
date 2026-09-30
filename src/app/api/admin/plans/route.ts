@@ -4,6 +4,8 @@ import { requireAdminUser } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { safeJsonError } from "@/lib/safe-api";
 import { writeAdminLog } from "@/server/admin-audit";
+import { LAUNCH_OFFER_CODE } from "@/lib/plans";
+import { starterOfferDeadline } from "@/lib/starter-offer";
 import { ensureOfficialPlans } from "@/server/plans";
 
 const updateSchema = z.object({
@@ -15,6 +17,7 @@ const updateSchema = z.object({
   durationDays: z.number().int().min(1).max(3650).nullable().optional(),
   editableExport: z.boolean().optional(),
   active: z.boolean().optional(),
+  offerDays: z.number().int().min(1).max(365).optional(),
 });
 
 export async function GET() {
@@ -35,6 +38,9 @@ export async function PATCH(request: Request) {
     const before = await prisma.plan.findUnique({ where: { id: body.planId } });
     if (!before) throw new Error("NOT_FOUND");
 
+    if (body.offerDays != null && before.code !== LAUNCH_OFFER_CODE) throw new Error("PLAN_INVALID");
+    const relaunch = body.offerDays != null;
+
     const updated = await prisma.plan.update({
       where: { id: body.planId },
       data: {
@@ -43,7 +49,9 @@ export async function PATCH(request: Request) {
         mintAmount: body.mintAmount,
         durationDays: body.durationDays,
         editableExport: body.editableExport,
-        active: body.active,
+        active: relaunch ? true : body.active,
+        offerDays: relaunch ? body.offerDays : undefined,
+        offerEndsAt: relaunch ? starterOfferDeadline(body.offerDays ?? 1) : undefined,
       },
     });
 

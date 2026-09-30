@@ -118,6 +118,9 @@ const fr = {
     posters: "affiches",
     equals: "1 Mint = 1 affiche",
     editable: "pack éditable",
+    bestSeller: "Plus vendu",
+    endsIn: "Fin de l’offre dans",
+    offerDone: "Offre terminée",
   },
   dashboard: {
     yours: "Tes Mints",
@@ -344,6 +347,9 @@ const en: typeof fr = {
     posters: "posters",
     equals: "1 Mint = 1 poster",
     editable: "editable pack",
+    bestSeller: "Best seller",
+    endsIn: "Offer ends in",
+    offerDone: "Offer ended",
   },
   dashboard: {
     yours: "Your Mints",

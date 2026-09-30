@@ -1,9 +1,10 @@
 import { prisma } from "@/lib/prisma";
-import { ensureOfficialPlans } from "@/server/plans";
+import { closeExpiredStarterOffer, ensureOfficialPlans } from "@/server/plans";
 import { AdminPlansClient } from "@/components/admin/admin-plans-client";
 
 export default async function AdminPlansPage() {
   await ensureOfficialPlans();
+  await closeExpiredStarterOffer();
   const plans = await prisma.plan.findMany({ orderBy: { sortOrder: "asc" } });
   return (
     <div className="space-y-4">
@@ -19,6 +20,8 @@ export default async function AdminPlansPage() {
           durationDays: plan.durationDays,
           editableExport: plan.editableExport,
           active: plan.active,
+          offerDays: plan.offerDays,
+          offerEndsAt: plan.offerEndsAt ? plan.offerEndsAt.toISOString() : null,
         }))}
       />
     </div>
