@@ -71,6 +71,16 @@ export function CreateFlyerForm({
   const [personalPoster, setPersonalPoster] = useState("");
   const [market, setMarket] = useState<"" | "TG" | "BJ">("");
   const [seasonalChoice, setSeasonalChoice] = useState<"accept" | "decline">("decline");
+  const countryMarkets = useMemo(() => {
+    const found = new Set<"TG" | "BJ">();
+    for (const offer of seasonalOffers) {
+      if (!campaignMatchesDomain(offer.domains, domain) || offer.markets.includes("GLOBAL")) continue;
+      for (const item of offer.markets) {
+        if (item === "TG" || item === "BJ") found.add(item);
+      }
+    }
+    return [...found];
+  }, [seasonalOffers, domain]);
 
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const seasonalOffer = useMemo(
@@ -218,18 +228,6 @@ export function CreateFlyerForm({
           <p className="text-xs text-slate-500">{t.form.dateHint}</p>
         </div>
         <Input name="time" label={t.form.time} placeholder="19h" />
-        <label className="space-y-1 text-sm">
-          <span className="font-medium text-slate-700">{t.form.market}</span>
-          <select
-            value={market}
-            onChange={(event) => setMarket(event.target.value as "" | "TG" | "BJ")}
-            className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2"
-          >
-            <option value="">{t.form.marketUnset}</option>
-            <option value="TG">{t.form.marketTogo}</option>
-            <option value="BJ">{t.form.marketBenin}</option>
-          </select>
-        </label>
         <Input name="location" label={t.form.place} placeholder="Abidjan" />
         <Input name="contactPhone" label={t.form.phone} placeholder="+225…" />
         <Input name="whatsapp" label={t.form.whatsapp} placeholder="+225…" />
@@ -311,26 +309,38 @@ export function CreateFlyerForm({
 
       <div className={step === 3 ? "space-y-4" : "hidden"}>
         {canUseTwoVariants && !regenerateFromId ? <p className="text-sm text-slate-600">{t.form.twoVariants}</p> : null}
+        {countryMarkets.length > 0 && !seasonalOffer ? (
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="text-slate-500">Pays</span>
+            {countryMarkets.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className="rounded-lg bg-slate-100 px-3 py-2 text-sm font-semibold text-slate-600"
+                onClick={() => setMarket(item)}
+              >
+                {item === "TG" ? t.form.marketTogo : t.form.marketBenin}
+              </button>
+            ))}
+          </div>
+        ) : null}
         {seasonalOffer ? (
-          <div className="card space-y-3 p-5">
-            <p className="text-sm font-semibold text-[#6D28D9]">{t.form.seasonalTitle}</p>
-            <p className="text-lg font-bold">{seasonalOffer.name}</p>
-            <div className="flex flex-wrap gap-3">
-              <button
-                type="button"
-                className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "accept" ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"}`}
-                onClick={() => setSeasonalChoice("accept")}
-              >
-                {t.form.seasonalUse}
-              </button>
-              <button
-                type="button"
-                className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "decline" ? "bg-[#1E293B] text-white" : "bg-slate-100 text-slate-600"}`}
-                onClick={() => setSeasonalChoice("decline")}
-              >
-                {t.form.seasonalSkip}
-              </button>
-            </div>
+          <div className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="font-semibold">{seasonalOffer.name}</span>
+            <button
+              type="button"
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "accept" ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"}`}
+              onClick={() => setSeasonalChoice("accept")}
+            >
+              {t.form.seasonalUse}
+            </button>
+            <button
+              type="button"
+              className={`rounded-lg px-3 py-2 text-sm font-semibold ${seasonalChoice === "decline" ? "bg-[#1E293B] text-white" : "bg-slate-100 text-slate-600"}`}
+              onClick={() => setSeasonalChoice("decline")}
+            >
+              {t.form.seasonalSkip}
+            </button>
           </div>
         ) : null}
         <div className="card p-5 text-sm text-slate-600">

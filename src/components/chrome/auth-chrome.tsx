@@ -4,7 +4,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { SiteHeaderHost } from "@/components/site-header-host";
 import { SiteFrame } from "@/components/chrome/site-frame";
 import { CookieBanner } from "@/components/legal/cookie-banner";
-import { SupportCorner } from "@/components/support/support-corner";
+import { CornerDock } from "@/components/chrome/corner-dock";
 import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 import { LocaleProvider } from "@/components/chrome/locale-provider";
 import { THEME_BOOT } from "@/lib/i18n";
@@ -28,7 +28,7 @@ export async function AuthChrome({ children }: { children: ReactNode }) {
           <SiteFrame header={<SiteHeaderHost />} footer={<SiteFooter />}>
             {children}
           </SiteFrame>
-          <SupportCorner />
+          <CornerDock referral />
           <CookieBanner />
           <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
         </LocaleProvider>

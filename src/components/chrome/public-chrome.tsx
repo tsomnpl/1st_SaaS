@@ -5,7 +5,7 @@ import { BrandLogo } from "@/components/brand/logo";
 import { SiteFooter } from "@/components/site-footer";
 import { SiteFrame } from "@/components/chrome/site-frame";
 import { CookieBanner } from "@/components/legal/cookie-banner";
-import { SupportCorner } from "@/components/support/support-corner";
+import { CornerDock } from "@/components/chrome/corner-dock";
 import { AnalyticsLoader } from "@/components/legal/analytics-loader";
 import { AppearanceSwitch } from "@/components/chrome/appearance-switch";
 import { LocaleProvider } from "@/components/chrome/locale-provider";
@@ -63,7 +63,7 @@ export async function PublicChrome({ children }: { children: ReactNode }) {
           >
             {children}
           </SiteFrame>
-          <SupportCorner />
+          <CornerDock />
           <CookieBanner />
           <AnalyticsLoader domain={process.env.NEXT_PUBLIC_ANALYTICS_DOMAIN} />
         </LocaleProvider>

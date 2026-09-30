@@ -98,6 +98,7 @@ function applySensitiveRateLimit(req: NextRequest) {
     { match: (path) => path.startsWith("/api/admin/"), limit: 40, windowMs: 60_000, name: "admin" },
     { match: (path) => path.includes("webhook"), limit: 80, windowMs: 60_000, name: "webhook" },
     { match: (path) => path === "/api/me/bootstrap", limit: 20, windowMs: 60_000, name: "bootstrap" },
+    { match: (path) => path === "/api/me/referral", limit: 30, windowMs: 60_000, name: "referral" },
     { match: (path) => path === "/api/me/brand-kit", limit: 20, windowMs: 60_000, name: "brand-kit" },
     { match: (path) => path === "/api/mints/balance", limit: 40, windowMs: 60_000, name: "balance" },
   ];
