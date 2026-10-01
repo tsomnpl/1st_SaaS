@@ -9,8 +9,10 @@ import {
   FORMATS,
   VISUAL_TYPES,
 } from "@/lib/domains";
+import { briefFromAsk } from "@/lib/ask-brief";
 import { publicErrorMessage } from "@/lib/errors";
 import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
+import { MintAsk } from "@/components/mint-ask";
 import { useCopy } from "@/components/chrome/locale-provider";
 import { publishWalletChange } from "@/lib/wallet-events";
 
@@ -60,6 +62,8 @@ export function CreateFlyerForm({
 }) {
   const t = useCopy();
   const steps = t.form.steps;
+  const [mode, setMode] = useState<"form" | "ask">("form");
+  const [askText, setAskText] = useState("");
   const [step, setStep] = useState(0);
   const [balanceLeft, setBalanceLeft] = useState(mintBalance);
   const formRef = useRef<HTMLFormElement>(null);
@@ -86,6 +90,12 @@ export function CreateFlyerForm({
     return [...found];
   }, [seasonalOffers, domain]);
 
+  const askBrief = useMemo(() => briefFromAsk(askText), [askText]);
+  const askPreview = askBrief
+    ? [t.form.askExact, DOMAIN_LABELS[askBrief.domain], askBrief.title, askBrief.price, askBrief.date]
+        .filter(Boolean)
+        .join(" · ")
+    : "";
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const seasonalOffer = useMemo(
     () =>
@@ -138,8 +148,48 @@ export function CreateFlyerForm({
     });
   }
 
+  async function runGeneration(payload: Record<string, unknown>) {
+    setLoading(true);
+    setError(null);
+    setResult(null);
+    try {
+      const response = await fetch("/api/generate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = (await response.json()) as { ok: boolean; error?: string } & Result;
+      if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
+      setResult(data);
+      setBalanceLeft((value) => Math.max(0, value - 1));
+      publishWalletChange();
+    } catch (e) {
+      setError(publicErrorMessage(e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function submitAsk() {
+    const brief = briefFromAsk(askText);
+    if (!brief) {
+      setError(t.form.askEmpty);
+      return;
+    }
+    await runGeneration({
+      ...brief,
+      mainImageUrl: mainImage || undefined,
+      logoUrl: logoImage || undefined,
+      personalReferenceUrl: canUsePersonalReference && personalPoster ? personalPoster : undefined,
+      rememberBrand: Boolean(logoImage),
+      regenerateFromId: regenerateFromId || undefined,
+      seasonalDecline: true,
+    });
+  }
+
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (mode === "ask") return;
     if (step < 3) {
       goNext();
       return;
@@ -157,9 +207,6 @@ export function CreateFlyerForm({
       setError(t.form.stepTitle);
       return;
     }
-    setLoading(true);
-    setError(null);
-    setResult(null);
 
     const form = new FormData(event.currentTarget);
     const adaptiveData = Object.fromEntries(
@@ -201,27 +248,59 @@ export function CreateFlyerForm({
       adaptiveData,
     };
 
-    try {
-      const response = await fetch("/api/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      const data = (await response.json()) as { ok: boolean; error?: string } & Result;
-      if (!data.ok) throw new Error(data.error ?? "GENERATION_FAILED");
-      setResult(data);
-      setBalanceLeft((value) => Math.max(0, value - 1));
-      publishWalletChange();
-    } catch (e) {
-      setError(publicErrorMessage(e));
-    } finally {
-      setLoading(false);
-    }
+    await runGeneration(payload);
   }
 
   return (
     <form ref={formRef} onSubmit={onSubmit} className="scroll-mt-24 space-y-5">
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
+        <button
+          type="button"
+          onClick={() => setMode("form")}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${mode === "form" ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"}`}
+        >
+          {t.form.choiceForm}
+        </button>
+        <button
+          type="button"
+          onClick={() => setMode("ask")}
+          className={`rounded-lg px-3 py-1.5 text-sm font-semibold ${mode === "ask" ? "bg-[#6D28D9] text-white" : "bg-slate-100 text-slate-600"}`}
+        >
+          {t.form.choiceAsk}
+        </button>
+      </div>
+
+      {mode === "ask" ? (
+        <MintAsk
+          value={askText}
+          onChange={setAskText}
+          preview={askPreview}
+          attached={{ photo: Boolean(mainImage), logo: Boolean(logoImage), reference: Boolean(personalPoster) }}
+          canReference={canUsePersonalReference}
+          confirmMint={confirmMint}
+          onConfirmMint={setConfirmMint}
+          loading={loading}
+          canSend={balanceLeft > 0 && confirmMint && !loading && askText.trim().length >= 2}
+          onSend={() => void submitAsk()}
+          onAttach={async (kind, file) => {
+            try {
+              const image = await readImage(file);
+              if (kind === "photo") setMainImage(image);
+              if (kind === "logo") setLogoImage(image);
+              if (kind === "reference") setPersonalPoster(image);
+            } catch (e) {
+              setError(publicErrorMessage(e));
+            }
+          }}
+          onClear={(kind) => {
+            if (kind === "photo") setMainImage("");
+            if (kind === "logo") setLogoImage("");
+            if (kind === "reference") setPersonalPoster("");
+          }}
+        />
+      ) : null}
+
+      <div className={mode === "form" ? "flex gap-2" : "hidden"}>
         {steps.map((label, index) => (
           <button
             key={label}
@@ -236,13 +315,13 @@ export function CreateFlyerForm({
         ))}
       </div>
 
-      <div className="card p-5">
+      <div className={mode === "form" ? "card p-5" : "hidden"}>
         <p className="text-sm font-medium text-[#6D28D9]">{t.form.usesMint}</p>
         <h2 className="mt-1 text-xl font-bold">{t.form.quiz}</h2>
         <p className="mt-1 text-sm text-slate-500">{t.form.quizLead}</p>
       </div>
 
-      <div data-step="0" className={step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+      <div data-step="0" className={mode === "form" && step === 0 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Select
           name="visualType"
           label={t.form.visualType}
@@ -266,7 +345,7 @@ export function CreateFlyerForm({
         <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" />
       </div>
 
-      <div data-step="1" className={step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+      <div data-step="1" className={mode === "form" && step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Input name="title" label={t.form.title} placeholder="Formation intensive" />
         <Input name="subtitle" label={t.form.subtitle} placeholder="Places limitées" />
         <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" />
@@ -286,7 +365,7 @@ export function CreateFlyerForm({
         ))}
       </div>
 
-      <div className={step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
+      <div className={mode === "form" && step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
         <Input name="style" label={t.form.style} placeholder="Premium moderne" />
         <Input name="mood" label={t.form.mood} placeholder="Énergique, chic, chaleureux…" />
         <Input
@@ -347,7 +426,7 @@ export function CreateFlyerForm({
         />
       </div>
 
-      <div className={step === 3 ? "space-y-4" : "hidden"}>
+      <div className={mode === "form" && step === 3 ? "space-y-4" : "hidden"}>
         {canUseTwoVariants && !regenerateFromId ? <p className="text-sm text-slate-600">{t.form.twoVariants}</p> : null}
         {countryMarkets.length > 0 && !seasonalOffer ? (
           <div className="flex flex-wrap items-center gap-2 text-sm">
@@ -409,7 +488,7 @@ export function CreateFlyerForm({
         </p>
       ) : null}
 
-      <div className="flex flex-wrap gap-3">
+      <div className={mode === "form" ? "flex flex-wrap gap-3" : "hidden"}>
         {step > 0 ? (
           <button type="button" className="btn-secondary" onClick={() => setStep((value) => value - 1)}>
             {t.form.back}
