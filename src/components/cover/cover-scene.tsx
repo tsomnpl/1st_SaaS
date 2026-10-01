@@ -32,7 +32,7 @@ export async function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNod
   return (
     <section className="cover-root">
       <header className="cover-bar">
-        <BrandLogo size="sm" wordmark="ink" />
+        <BrandLogo size="sm" wordmark="ink" className="cover-logo" />
         {bar}
       </header>
 

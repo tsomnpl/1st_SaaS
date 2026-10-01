@@ -7,7 +7,7 @@ export async function CoverGuestActions({ variant }: { variant: "bar" | "band" }
   const links = coverAccountLinks(false, t.nav);
   if (variant === "bar") {
     return (
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="cover-bar-links">
         <Link href="/sign-in" className="cover-text-link">
           {t.nav.signInCover}
         </Link>
@@ -38,7 +38,7 @@ export async function CoverMemberActions({ variant }: { variant: "bar" | "band" 
   const links = coverAccountLinks(true, t.nav);
   if (variant === "bar") {
     return (
-      <div className="flex items-center gap-2 sm:gap-3">
+      <div className="cover-bar-links">
         {links.map((link) => (
           <Link key={link.href} href={link.href} className={`cover-btn cover-btn-${link.kind}`}>
             {link.label}
