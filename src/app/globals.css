@@ -364,6 +364,20 @@ details.menu-disclosure:not([open]) > :not(summary) {
   color: var(--cover-ink);
 }
 
+html:not(.dark) a.cover-btn-secondary[href="/dashboard"] {
+  background: #ffffff;
+  color: #000000;
+  border-color: #000000;
+}
+
+.header-scroll {
+  scrollbar-width: none;
+}
+
+.header-scroll::-webkit-scrollbar {
+  display: none;
+}
+
 .cover-text-link {
   font-size: 0.95rem;
   font-weight: 700;

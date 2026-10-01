@@ -28,8 +28,10 @@ export function SiteHeader(props: Props) {
 
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <BrandLogo size="sm" />
+      <div className={`mx-auto flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3 ${props.showAdmin ? "max-w-[1500px]" : "max-w-6xl"}`}>
+        <div className="shrink-0">
+          <BrandLogo size="sm" />
+        </div>
         <Suspense fallback={null}>
           <DesktopNav {...props} />
         </Suspense>
@@ -114,12 +116,29 @@ function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, a
           }}
         />
       ) : null}
-      <nav className="hidden min-w-0 flex-1 flex-nowrap items-center justify-end gap-1.5 xl:flex">
-          <AppearanceSwitch />
-          {publicLinks.map((link, index) => (
-            <NavPill key={link.href} href={link.href} label={link.label} index={index} />
+      <div className={`hidden min-w-0 flex-1 items-center gap-1.5 xl:flex ${showAdmin ? "" : "justify-end"}`}>
+        {showAdmin ? (
+          <div className="flex shrink-0 items-center gap-1.5">
+            <AppearanceSwitch />
+            <NavPill href="/decouvrir" label={t.nav.discover} index={0} />
+          </div>
+        ) : null}
+        <nav
+          className={`flex min-w-0 flex-nowrap items-center ${
+            showAdmin ? "header-scroll flex-1 gap-1 overflow-x-auto overflow-y-hidden" : "justify-end gap-1.5"
+          }`}
+        >
+          {showAdmin ? null : <AppearanceSwitch />}
+          {(showAdmin ? publicLinks.slice(1) : publicLinks).map((link, index) => (
+            <NavPill
+              key={link.href}
+              href={link.href}
+              label={link.label}
+              index={showAdmin ? index + 1 : index}
+              compact={showAdmin}
+            />
           ))}
-          {!signedIn ? (
+          {!live ? (
             <>
               <Link href="/sign-in" className="guest-only whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 py-1.5 text-xs font-semibold text-white">
                 {t.nav.signIn}
@@ -128,34 +147,52 @@ function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, a
                 {t.nav.signUp}
               </Link>
             </>
-          ) : null}
-          <SignedIn>
-            <style>{".guest-only{display:none !important}"}</style>
-            {accountLinks.map((link, index) => (
-              <NavPill key={link.href} href={link.href} label={link.label} index={index + publicLinks.length} badge={link.badge} />
-            ))}
-            {typeof balance === "number" ? (
-              <span className="rounded-xl border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700">
-                {balance} Mint{balance > 1 ? "s" : ""}
-              </span>
-            ) : null}
-            <NotificationBell
-              label={t.notices.bell}
-              empty={t.notices.empty}
-              mark={t.notices.mark}
-              locale={locale}
-              open={bellOpen}
-              count={counts.total}
-              items={items}
-              onToggle={() => setBellOpen((value) => !value)}
-              onMark={() => void markRead()}
-            />
-            <UserButton />
-          </SignedIn>
-          <Link href="/create" className="btn-primary whitespace-nowrap px-3 py-1.5 text-xs">
+          ) : (
+            <>
+              <style>{".guest-only{display:none !important}"}</style>
+              {accountLinks.map((link, index) => (
+                <NavPill
+                  key={link.href}
+                  href={link.href}
+                  label={link.label}
+                  index={index + publicLinks.length}
+                  badge={link.badge}
+                  compact={showAdmin}
+                />
+              ))}
+              {typeof balance === "number" ? (
+                <span className={`shrink-0 rounded-xl border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-700 ${showAdmin ? "px-2.5" : "px-3"}`}>
+                  {balance} Mint{balance > 1 ? "s" : ""}
+                </span>
+              ) : null}
+              <NotificationBell
+                label={t.notices.bell}
+                empty={t.notices.empty}
+                mark={t.notices.mark}
+                locale={locale}
+                open={bellOpen}
+                count={counts.total}
+                items={items}
+                onToggle={() => setBellOpen((value) => !value)}
+                onMark={() => void markRead()}
+              />
+              <SignedIn>
+                <UserButton />
+              </SignedIn>
+            </>
+          )}
+          {showAdmin ? null : (
+            <Link href="/create" className="btn-primary shrink-0 whitespace-nowrap px-3 py-1.5 text-xs">
+              {t.nav.create}
+            </Link>
+          )}
+        </nav>
+        {showAdmin ? (
+          <Link href="/create" className="btn-primary shrink-0 whitespace-nowrap px-3 py-1.5 text-xs">
             {t.nav.create}
           </Link>
-        </nav>
+        ) : null}
+      </div>
     </>
   );
 }
@@ -246,17 +283,19 @@ function NavPill({
   label,
   index,
   badge = 0,
+  compact = false,
   onClick,
 }: {
   href: string;
   label: string;
   index: number;
   badge?: number;
+  compact?: boolean;
   onClick?: () => void;
 }) {
   const tone = index % 2 === 0 ? "bg-[#6D28D9] text-white hover:bg-[#5B21B6]" : "bg-[#10B981] text-[#1E293B] hover:brightness-110";
   return (
-    <Link href={href} onClick={onClick} className={`relative whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ${tone}`}>
+    <Link href={href} onClick={onClick} className={`relative shrink-0 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold ${compact ? "px-2" : "px-2.5"} ${tone}`}>
       {label}
       {badge > 0 ? (
         <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#6D28D9] ring-1 ring-[#6D28D9]">
