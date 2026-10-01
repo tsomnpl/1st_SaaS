@@ -18,7 +18,7 @@ export default async function Home() {
   return (
     <CoverScene
       bar={
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="cover-bar-end">
           <AppearanceSwitch tone="cover" />
           <Actions variant="bar" />
         </div>

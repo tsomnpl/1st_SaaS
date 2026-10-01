@@ -107,8 +107,34 @@ textarea:focus-visible {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.75rem 1rem;
   padding: 1rem 1rem 0.25rem;
+}
+
+.cover-logo {
+  flex-shrink: 0;
+}
+
+.cover-bar-end,
+.cover-bar-links {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cover-bar-end {
+  min-width: 0;
+  margin-left: auto;
+}
+
+.cover-bar .cover-btn {
+  box-sizing: border-box;
+  width: auto;
+  white-space: nowrap;
+}
+
+.cover-bar .cover-btn-primary {
+  border: 1px solid transparent;
 }
 
 .cover-stage-wrap {
@@ -353,7 +379,26 @@ textarea:focus-visible {
     width: min(100%, 320px);
     transform: none;
   }
-  .cover-bar .cover-btn { width: auto; padding-inline: 0.75rem; }
+  .cover-bar {
+    flex-wrap: wrap;
+    row-gap: 0.65rem;
+  }
+  .cover-bar-end {
+    display: contents;
+  }
+  .cover-bar-links {
+    flex: 1 0 100%;
+    min-width: 0;
+    gap: 0.45rem;
+  }
+  .cover-bar .cover-btn {
+    flex: 1 1 0;
+    width: auto;
+    min-width: 0;
+    padding: 0.55rem 0.5rem;
+    font-size: 0.8125rem;
+    white-space: nowrap;
+  }
 }
 
 @media (min-width: 640px) {
@@ -368,6 +413,8 @@ textarea:focus-visible {
 
 @media (min-width: 768px) {
   .cover-bar { padding: 1.25rem 2rem 0; }
+  .cover-bar-end,
+  .cover-bar-links { gap: 0.75rem; }
   .cover-hero { width: min(34%, 360px); }
   .cover-band { padding: 2.4rem 2rem 1.8rem; }
 }
