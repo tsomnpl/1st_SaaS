@@ -128,17 +128,107 @@ function ctaFor(text: string) {
   return "";
 }
 
+const COLOR =
+  "rouge|noir|blanc|vert|bleu|or|dorée|doree|doré|dore|violet|violette|rose|orange|jaune|marron|beige|bordeaux|gold|red|black|white|green|blue|purple|pink";
+const COLOR_CLAUSE = new RegExp(
+  `(?:[,.]\\s*)?(?:je veux\\s+)?(?:des\\s+|en\\s+)?couleurs?\\s+((?:${COLOR})(?:\\s*(?:,|et)\\s*(?:${COLOR}))*)`,
+  "gi",
+);
+const THEME_CLAUSE =
+  /(?:[,.]\s*)?(?:sur\s+le\s+)?th[èe]me\s+(?:[«"“']([^»"”']+)[»"”']|([\p{L}][\p{L}'’-]+))/giu;
+const LEAD =
+  /^(?:je veux|je voudrais|j['’]aimerais|fais(?:-moi)?|cr[ée]e(?:r|z)?(?:\s+moi)?|une|un|la|le|affiche|poster|pour annoncer|annoncer)\s+/i;
+const SKIP_NAMES = new Set(["mon", "ma", "mes", "le", "la", "les", "un", "une", "notre", "nos", "ton", "ta", "son", "sa"]);
+
+export type AskGap = "date" | "names" | "who" | "price" | "poste" | "title";
+
+export type AskReading =
+  | { status: "empty" }
+  | { status: "incomplete"; missing: AskGap[] }
+  | { status: "ready"; brief: CreateBriefInput };
+
 function titleFrom(text: string) {
-  let value = text
-    .replace(/^(?:je veux|fais(?:-moi)?|cr[ée]e(?:r|z)?(?:\s+moi)?|affiche|poster|story|une|un|la|le)\s+/i, "")
-    .replace(/^[\s,.:;-]+/, "")
-    .split(/[.!?]/)[0]
-    ?.trim() ?? "";
-  value = value.replace(/^(?:une|un|la|le|affiche)\s+/i, "").trim();
+  let value = text.replace(/^[\s,.:;-]+/, "").split(/[.!?]/)[0]?.trim() ?? "";
+  for (let i = 0; i < 8; i += 1) {
+    const next = value.replace(LEAD, "").replace(/^[\s,.:;-]+/, "").trim();
+    if (next === value) break;
+    value = next;
+  }
   if (value.length > 110) value = value.slice(0, 110).replace(/\s+\S*$/, "").trim();
-  if (value.length < 2) value = text.replace(/\s+/g, " ").trim().slice(0, 110);
-  if (!value) return "";
+  if (/\b(?:je veux|couleurs?|th[èe]me)\b/i.test(value)) value = "";
+  if (value.length < 2) return "";
   return value.charAt(0).toUpperCase() + value.slice(1);
+}
+
+function pullColors(source: string) {
+  const found: string[] = [];
+  const rest = source.replace(COLOR_CLAUSE, (_all, list: string) => {
+    for (const color of list.split(/\s*(?:,|et)\s*/i)) {
+      const clean = color.trim().toLowerCase();
+      if (clean && !found.includes(clean)) found.push(clean);
+    }
+    return " ";
+  });
+  return { colors: found.slice(0, 4), rest: rest.replace(/\s+/g, " ").trim() };
+}
+
+function pullTheme(source: string) {
+  let theme = "";
+  const rest = source.replace(THEME_CLAUSE, (_all, quoted?: string, bare?: string) => {
+    theme = tidy(quoted || bare || "");
+    return " ";
+  });
+  return { theme, rest: rest.replace(/\s+/g, " ").trim() };
+}
+
+function named(value: string) {
+  const first = fold(value.split(/\s+/)[0] ?? "");
+  return value.trim().length > 1 && !SKIP_NAMES.has(first);
+}
+
+function coupleFrom(text: string) {
+  const match = text.match(/\bmariage\s+(?:de\s+|d['’])\s*([\p{L}][\p{L}'’-]+(?:\s+et\s+[\p{L}][\p{L}'’-]+)?)/iu);
+  const names = match?.[1]?.trim() ?? "";
+  return named(names) ? names : "";
+}
+
+export function missingFacts(brief: CreateBriefInput): AskGap[] {
+  const gaps: AskGap[] = [];
+  const blob = `${brief.objective} ${brief.title} ${brief.subtitle ?? ""}`;
+  const folded = fold(blob);
+  const coupleRest = fold(brief.title)
+    .replace(/\b(mariage|wedding|affiche|de|mon|ma|notre|le|la|les|un|une)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const names = brief.adaptiveData.noms?.trim() || coupleFrom(blob) || (coupleRest.length >= 2 ? brief.title : "");
+  const whoRest = fold(brief.title)
+    .replace(/\b(anniversaire|joyeux|happy|birthday|affiche|de|du|la|le|mon|ma)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const posteRest = fold(`${brief.title} ${brief.adaptiveData.poste ?? ""}`)
+    .replace(/\b(recrutement|offre|emploi|affiche|poste|d|de|du|des|un|une|le|la|pour)\b/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  const eventVisual = brief.visualType === "Affiche événement" || brief.visualType === "Save the date";
+  const needsDate =
+    brief.domain === "Mariage" ||
+    brief.domain === "Anniversaire" ||
+    (eventVisual && brief.domain !== "Musique") ||
+    (brief.domain === "Musique" && /\b(concert|soiree|gala|live|festival)\b/.test(folded));
+
+  if (needsDate && !brief.date?.trim()) gaps.push("date");
+  if (brief.domain === "Mariage" && !names) gaps.push("names");
+  if (brief.domain === "Anniversaire" && whoRest.length < 2) gaps.push("who");
+  if ((brief.visualType === "Menu" || /\b(promo|soldes|menu|tarif)\b/.test(folded)) && !brief.price?.trim()) gaps.push("price");
+  if (brief.domain === "Emploi & Recrutement" && posteRest.length < 3) gaps.push("poste");
+  if (brief.title.trim().length < 2 || /\b(?:je veux|couleurs?|th[èe]me)\b/i.test(brief.title)) gaps.push("title");
+  return gaps;
+}
+
+export function askGapSentence(missing: AskGap[], labels: Record<AskGap, string>, lead: string, andWord: string) {
+  const items = missing.map((gap) => labels[gap]);
+  const list = items.length <= 1 ? (items[0] ?? "") : `${items.slice(0, -1).join(", ")} ${andWord} ${items[items.length - 1]}`;
+  return `${lead} ${list}.`;
 }
 
 function phoneFits(value: string) {
@@ -146,13 +236,18 @@ function phoneFits(value: string) {
   return digits.length >= 8 && digits.length <= 15 && /^[0-9+\s().-]{6,20}$/.test(value.trim());
 }
 
-export function briefFromAsk(raw: string): CreateBriefInput | null {
+function parseAsk(raw: string): CreateBriefInput | null {
   const text = raw.replace(/\s+/g, " ").trim();
   if (text.length < 2) return null;
 
   const folded = fold(text);
-  const price = text.match(PRICE_RE)?.[0]?.replace(/\s+/g, " ").trim() ?? "";
-  let rest = cut(text, price);
+  const colored = pullColors(text);
+  const themed = pullTheme(colored.rest);
+  const colors = colored.colors;
+  const theme = themed.theme;
+  let rest = themed.rest;
+  const price = rest.match(PRICE_RE)?.[0]?.replace(/\s+/g, " ").trim() ?? "";
+  rest = cut(rest, price);
   const date = rest.match(DATE_RE)?.[0]?.replace(/\s+/g, " ").trim() ?? "";
   rest = cut(rest, date);
   const timeMatch = rest.match(TIME_RE);
@@ -172,10 +267,12 @@ export function briefFromAsk(raw: string): CreateBriefInput | null {
     rest.replace(/\b(?:appelle|appeler|appel|inscription|inscris-toi|inscris|r[ée]serve|commande|whatsapp|viens|entr[ée]e)\b/gi, " "),
   );
 
-  const title = titleFrom(rest);
+  const domain = domainFor(folded);
+  const names = coupleFrom(text);
+  let title = names && domain === "Mariage" ? `Mariage de ${names}` : titleFrom(rest);
+  if (title.length < 2 && domain === "Mariage") title = "Mariage";
   if (title.length < 2) return null;
 
-  const domain = domainFor(folded);
   const whatsapp = /\bwhatsapp\b/i.test(text);
   const visualType = visualFor(domain, folded);
   const format = formatFor(folded);
@@ -189,7 +286,7 @@ export function briefFromAsk(raw: string): CreateBriefInput | null {
     objective: text.slice(0, 240),
     targetAudience: (audience || "Public visé").slice(0, 240),
     title: title.slice(0, 120),
-    subtitle: "",
+    subtitle: theme.slice(0, 160),
     description: "",
     price: price.slice(0, 40),
     date: date.slice(0, 40),
@@ -200,11 +297,27 @@ export function briefFromAsk(raw: string): CreateBriefInput | null {
     cta: ctaFor(text),
     format,
     creativeFreedom: "copie_exacte",
-    colors: [],
+    colors,
+    style: theme ? `Thème ${theme}`.slice(0, 80) : undefined,
     market: marketFor(folded),
     seasonalDecline: true,
-    adaptiveData: {},
+    adaptiveData: theme ? { theme } : {},
   });
 
   return parsed.success ? parsed.data : null;
+}
+
+export function readAsk(raw: string): AskReading {
+  const text = raw.replace(/\s+/g, " ").trim();
+  if (text.length < 2) return { status: "empty" };
+  const brief = parseAsk(text);
+  if (!brief) return { status: "incomplete", missing: ["title"] };
+  const missing = missingFacts(brief);
+  if (missing.length) return { status: "incomplete", missing };
+  return { status: "ready", brief };
+}
+
+export function briefFromAsk(raw: string): CreateBriefInput | null {
+  const reading = readAsk(raw);
+  return reading.status === "ready" ? reading.brief : null;
 }

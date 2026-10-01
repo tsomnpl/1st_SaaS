@@ -9,7 +9,8 @@ import {
   FORMATS,
   VISUAL_TYPES,
 } from "@/lib/domains";
-import { briefFromAsk } from "@/lib/ask-brief";
+import { askGapSentence, missingFacts, readAsk, type AskGap } from "@/lib/ask-brief";
+import type { CreateBriefInput } from "@/lib/flyermint";
 import { publicErrorMessage } from "@/lib/errors";
 import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
 import { MintAsk } from "@/components/mint-ask";
@@ -38,6 +39,46 @@ type Result = {
   variants?: VariantView[];
   countdown?: { label: string; type: string } | null;
 };
+
+function formGap(
+  form: FormData,
+  domain: (typeof DOMAINS)[number],
+  copy: {
+    askHold: string;
+    askAnd: string;
+    askGapDate: string;
+    askGapNames: string;
+    askGapWho: string;
+    askGapPrice: string;
+    askGapPoste: string;
+    askGapTitle: string;
+  },
+) {
+  const adaptiveData = Object.fromEntries(
+    (ADAPTIVE_FIELDS[domain] ?? []).map((field) => [field.key, String(form.get(`adaptive_${field.key}`) ?? "")]),
+  );
+  const brief = {
+    domain,
+    visualType: String(form.get("visualType") ?? ""),
+    objective: String(form.get("objective") ?? ""),
+    title: String(form.get("title") ?? ""),
+    subtitle: String(form.get("subtitle") ?? ""),
+    date: String(form.get("date") ?? ""),
+    price: String(form.get("price") ?? ""),
+    adaptiveData,
+  } as CreateBriefInput;
+  const missing = missingFacts(brief);
+  if (!missing.length) return "";
+  const labels: Record<AskGap, string> = {
+    date: copy.askGapDate,
+    names: copy.askGapNames,
+    who: copy.askGapWho,
+    price: copy.askGapPrice,
+    poste: copy.askGapPoste,
+    title: copy.askGapTitle,
+  };
+  return askGapSentence(missing, labels, copy.askHold, copy.askAnd);
+}
 
 export function CreateFlyerForm({
   mintBalance,
@@ -90,7 +131,18 @@ export function CreateFlyerForm({
     return [...found];
   }, [seasonalOffers, domain]);
 
-  const askBrief = useMemo(() => briefFromAsk(askText), [askText]);
+  const askReading = useMemo(() => readAsk(askText), [askText]);
+  const askBrief = askReading.status === "ready" ? askReading.brief : null;
+  const askLabels: Record<AskGap, string> = {
+    date: t.form.askGapDate,
+    names: t.form.askGapNames,
+    who: t.form.askGapWho,
+    price: t.form.askGapPrice,
+    poste: t.form.askGapPoste,
+    title: t.form.askGapTitle,
+  };
+  const askWarning =
+    askReading.status === "incomplete" ? askGapSentence(askReading.missing, askLabels, t.form.askHold, t.form.askAnd) : "";
   const askPreview = askBrief
     ? [t.form.askExact, DOMAIN_LABELS[askBrief.domain], askBrief.title, askBrief.price, askBrief.date]
         .filter(Boolean)
@@ -129,6 +181,11 @@ export function CreateFlyerForm({
       const title = String(new FormData(form).get("title") ?? "").trim();
       if (!title) {
         setError(t.form.stepTitle);
+        return;
+      }
+      const gap = formGap(new FormData(form), domain, t.form);
+      if (gap) {
+        setError(gap);
         return;
       }
     }
@@ -171,11 +228,16 @@ export function CreateFlyerForm({
   }
 
   async function submitAsk() {
-    const brief = briefFromAsk(askText);
-    if (!brief) {
+    const reading = readAsk(askText);
+    if (reading.status === "empty") {
       setError(t.form.askEmpty);
       return;
     }
+    if (reading.status === "incomplete") {
+      setError(askGapSentence(reading.missing, askLabels, t.form.askHold, t.form.askAnd));
+      return;
+    }
+    const brief = reading.brief;
     await runGeneration({
       ...brief,
       mainImageUrl: mainImage || undefined,
@@ -205,6 +267,12 @@ export function CreateFlyerForm({
     if (!titleValue) {
       setStep(1);
       setError(t.form.stepTitle);
+      return;
+    }
+    const gap = formGap(new FormData(event.currentTarget), domain, t.form);
+    if (gap) {
+      setStep(1);
+      setError(gap);
       return;
     }
 
@@ -275,12 +343,13 @@ export function CreateFlyerForm({
           value={askText}
           onChange={setAskText}
           preview={askPreview}
+          warning={askWarning}
           attached={{ photo: Boolean(mainImage), logo: Boolean(logoImage), reference: Boolean(personalPoster) }}
           canReference={canUsePersonalReference}
           confirmMint={confirmMint}
           onConfirmMint={setConfirmMint}
           loading={loading}
-          canSend={balanceLeft > 0 && confirmMint && !loading && askText.trim().length >= 2}
+          canSend={balanceLeft > 0 && confirmMint && !loading && askReading.status === "ready"}
           onSend={() => void submitAsk()}
           onAttach={async (kind, file) => {
             try {
