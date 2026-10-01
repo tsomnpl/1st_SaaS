@@ -4,18 +4,6 @@ import { formatFcfa, paidPlans, type PlanSeed } from "@/lib/plans";
 import { localizedAvailability, localizePlan } from "@/lib/plan-copy";
 import { getDictionary } from "@/lib/locale";
 
-function isPremiumBenefit(feature: string) {
-  const folded = feature.toLowerCase();
-  return (
-    folded.includes("éditable") ||
-    folded.includes("editable") ||
-    folded.includes("référence") ||
-    folded.includes("reference") ||
-    folded.includes("variante") ||
-    folded.includes("variant")
-  );
-}
-
 export async function PricingGrid({
   plans,
   ctaHref,
@@ -48,12 +36,12 @@ export async function PricingGrid({
         return (
           <article
             key={plan.code}
-            className={`flex flex-col rounded-lg border p-6 ${
-              highlighted ? "border-[#1E293B] bg-[#f7f8fb]" : "border-[#e2e8f0] bg-white"
+            className={`flex flex-col rounded-lg border bg-white p-6 ${
+              highlighted ? "border-[#6D28D9]" : "border-slate-200"
             }`}
           >
             {plan.bestSeller ? (
-              <p className="mb-3 inline-flex w-fit rounded-lg bg-[#1E293B] px-3 py-1 text-xs font-semibold text-white">
+              <p className="mb-3 inline-flex w-fit rounded-full bg-[#6D28D9] px-3 py-1 text-xs font-semibold text-white">
                 {t.pricing.bestSeller}
               </p>
             ) : null}
@@ -74,18 +62,15 @@ export async function PricingGrid({
             {plan.offerEndsAt ? (
               <OfferCountdown endsAt={plan.offerEndsAt} prefix={t.pricing.endsIn} doneLabel={t.pricing.offerDone} />
             ) : null}
-            <ul className="mt-5 flex-1 space-y-2 text-sm text-slate-700">
-              {plan.features.map((feature) => {
-                const premium = isPremiumBenefit(feature);
-                return (
-                  <li key={feature} className={`flex gap-2 ${premium ? "font-semibold text-[#1E293B]" : ""}`}>
-                    <svg viewBox="0 0 16 16" className={`mt-0.5 h-4 w-4 shrink-0 ${premium ? "text-[#10B981]" : "text-slate-400"}`} aria-hidden="true">
-                      <path d="M3 8.5 6.2 12 13 4" fill="none" stroke="currentColor" strokeWidth="1.8" />
-                    </svg>
-                    <span>{feature}</span>
-                  </li>
-                );
-              })}
+            <ul className="mt-5 flex-1 space-y-2.5 text-sm text-slate-700">
+              {plan.features.map((feature) => (
+                <li key={feature} className="flex gap-2">
+                  <svg viewBox="0 0 16 16" className="mt-0.5 h-4 w-4 shrink-0 text-[#6D28D9]" aria-hidden="true">
+                    <path d="M3 8.5 6.2 12 13 4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+                  </svg>
+                  <span>{feature}</span>
+                </li>
+              ))}
             </ul>
             <Link
               href={ctaHref ? ctaHref(plan.code) : `/checkout?plan=${plan.code}`}

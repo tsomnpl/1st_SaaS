@@ -17,11 +17,11 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function CreationsPage() {
   const { t } = await getDictionary();
   return (
-    <div className="space-y-16 pb-8">
-      <div className="flex flex-wrap items-end justify-between gap-6">
+    <div className="space-y-8">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="display-title">{t.creations.title}</h1>
-          <p className="body-copy mt-4 max-w-xl text-slate-600">
+          <h1 className="text-3xl font-extrabold">{t.creations.title}</h1>
+          <p className="mt-2 max-w-xl text-slate-600">
             {posters.length} {t.creations.intro}
           </p>
         </div>
@@ -29,19 +29,15 @@ export default async function CreationsPage() {
           {t.nav.create}
         </Link>
       </div>
-      <div className="grid items-end gap-8 md:grid-cols-2">
-        {posters.slice(0, 2).map((poster, index) => (
-          <div key={poster.id} className={`space-y-3 ${index === 0 ? "md:-rotate-2" : "md:rotate-1 md:translate-y-6"}`}>
-            <VisualPoster title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
-            <p className="text-sm text-slate-500">{poster.label}</p>
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-4">
-        {posters.slice(2).map((poster) => (
+      <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
+        {posters.map((poster) => (
           <div key={poster.id} className="space-y-2">
-            <VisualPoster title={poster.label} subtitle={poster.domaine} imageSrc={poster.src} />
-            <p className="text-sm text-slate-500">{poster.label}</p>
+            <VisualPoster
+              title={poster.label}
+              subtitle={poster.domaine}
+              imageSrc={poster.src}
+            />
+            <p className="text-xs text-slate-500">{poster.label}</p>
           </div>
         ))}
       </div>

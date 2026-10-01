@@ -28,7 +28,7 @@ export function VisualPoster({
   }
 
   return (
-    <article className={`relative aspect-[3/4] overflow-hidden rounded-lg border border-[#e2e8f0] bg-white shadow-[0_16px_40px_rgba(15,23,42,0.14)] ${className}`}>
+    <article className={`relative aspect-[3/4] overflow-hidden rounded-lg border border-slate-200 bg-slate-50 ${className}`}>
       <img
         src={imageSrc}
         alt={subtitle ? `${title}, ${subtitle}` : title}

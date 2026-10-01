@@ -28,17 +28,17 @@ export default async function DiscoverPage() {
   }));
 
   return (
-    <div className="space-y-24 pb-16">
-      <section className="relative overflow-hidden rounded-lg border border-[#e2e8f0] bg-white px-4 py-12 md:px-12 md:py-16">
+    <div className="space-y-24 pb-8">
+      <section className="relative overflow-hidden rounded-lg border border-slate-200 bg-white px-5 py-10 md:px-10 md:py-14">
         <div className="relative grid items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div>
             <p className="inline-flex rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-[0.16em] text-[#6D28D9]">
               {t.discover.kicker}
             </p>
-            <h1 className="display-title mt-6 max-w-xl text-[#1E293B]">
+            <h1 className="mt-5 max-w-xl text-4xl font-extrabold leading-[1.05] tracking-tight text-[#1E293B] md:text-6xl">
               {t.cover.title}
             </h1>
-            <p className="body-copy mt-6 max-w-lg text-slate-600">{t.cover.lead}</p>
+            <p className="mt-4 max-w-lg text-base leading-relaxed text-slate-600 md:text-lg">{t.cover.lead}</p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/create" className="btn-primary px-6 py-3">
                 {t.nav.create}
@@ -69,9 +69,9 @@ export default async function DiscoverPage() {
       <section className="grid gap-4 lg:grid-cols-2">
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#6D28D9]">{t.discover.beforeAfter}</p>
-          <h2 className="section-title mt-3">{t.discover.beforeTitle}</h2>
+          <h3 className="mt-2 text-2xl font-extrabold">{t.discover.beforeTitle}</h3>
           <div className="mt-6 grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border border-[#e2e8f0] bg-white p-4">
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 p-4">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{t.discover.before}</p>
               <p className="mt-3 font-mono text-sm leading-relaxed text-slate-500">{t.discover.beforeText}</p>
             </div>
@@ -86,12 +86,12 @@ export default async function DiscoverPage() {
         </article>
         <article className="card p-6">
           <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#10B981]">{t.discover.quiz}</p>
-          <h2 className="section-title mt-3">{t.discover.quizTitle}</h2>
+          <h3 className="mt-2 text-2xl font-extrabold">{t.discover.quizTitle}</h3>
           <div className="mt-6 space-y-3">
             {t.discover.questions.map((question, index) => (
               <div
                 key={question}
-                className="flex items-center gap-3 rounded-lg border border-[#e2e8f0] bg-white px-4 py-3 text-sm leading-normal text-slate-700"
+                className="flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700"
               >
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-100 text-xs font-bold text-[#6D28D9]">
                   {index + 1}
@@ -107,7 +107,7 @@ export default async function DiscoverPage() {
         <div className="flex flex-wrap items-end justify-between gap-3">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">{t.discover.showcase}</p>
-            <h2 className="section-title mt-3">{t.discover.showcaseTitle}</h2>
+            <h2 className="mt-2 text-3xl font-extrabold tracking-tight">{t.discover.showcaseTitle}</h2>
           </div>
           <Link href="/creations" className="text-sm font-semibold text-[#6D28D9] hover:underline">
             {t.nav.gallery}
@@ -122,13 +122,13 @@ export default async function DiscoverPage() {
       </section>
 
       <section id="comment-ca-marche">
-        <h2 className="section-title">{t.discover.howTitle}</h2>
-        <p className="body-copy mt-4 max-w-2xl text-slate-600">{t.discover.howLead}</p>
+        <h2 className="text-3xl font-extrabold tracking-tight">{t.discover.howTitle}</h2>
+        <p className="mt-2 max-w-2xl text-slate-600">{t.discover.howLead}</p>
         <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {t.discover.steps.map((item) => (
             <article key={item.n} className="card p-5">
               <p className="text-xs font-bold text-[#6D28D9]">{item.n}</p>
-              <h3 className="mt-2 text-xl font-bold leading-tight">{item.title}</h3>
+              <h3 className="mt-2 text-lg font-bold">{item.title}</h3>
               <p className="mt-1 text-sm text-slate-600">{item.text}</p>
             </article>
           ))}
@@ -136,7 +136,7 @@ export default async function DiscoverPage() {
       </section>
 
       <section className="space-y-6">
-        <h2 className="section-title">{t.discover.domainsTitle}</h2>
+        <h2 className="text-3xl font-extrabold tracking-tight">{t.discover.domainsTitle}</h2>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {DOMAINS.map((domain) => (
             <article key={domain} className="rounded-lg border border-slate-200 bg-white px-3 py-4 text-sm font-semibold text-[#1E293B]">
@@ -150,7 +150,7 @@ export default async function DiscoverPage() {
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[#6D28D9]">{t.nav.pricing}</p>
-            <h2 className="section-title mt-3">{t.discover.priceTitle}</h2>
+            <h2 className="mt-2 text-3xl font-extrabold">{t.discover.priceTitle}</h2>
             <p className="mt-2 text-slate-600">{t.discover.priceLead}</p>
           </div>
           <Link href="/pricing" className="btn-primary">
@@ -165,7 +165,7 @@ export default async function DiscoverPage() {
               key={plan.code}
               href={`/checkout?plan=${plan.code}`}
               className={`rounded-lg border p-5 ${
-                plan.highlighted ? "border-[#1E293B] bg-white" : "border-[#e2e8f0] bg-white"
+                plan.highlighted ? "border-[#6D28D9] bg-white" : "border-slate-200 bg-slate-50"
               }`}
             >
               <p className="text-2xl font-extrabold text-[#1E293B]">{formatFcfa(plan.priceFcfa)}</p>
@@ -182,8 +182,8 @@ export default async function DiscoverPage() {
         </div>
       </section>
 
-      <section className="rounded-lg bg-[#1E293B] px-8 py-16 text-center text-white md:px-12">
-        <h2 className="section-title text-white">{t.discover.ready}</h2>
+      <section className="rounded-[1.8rem] bg-[#1E293B] px-8 py-12 text-center text-white md:px-12">
+        <h2 className="text-3xl font-extrabold md:text-4xl">{t.discover.ready}</h2>
         <p className="mx-auto mt-3 max-w-xl text-white/70">{t.discover.readyLead}</p>
         <Link href="/create" className="btn-mint mt-6">
           {t.nav.create}
