@@ -39,7 +39,7 @@ export function BrandLogo({
         className="shrink-0"
       />
       <span className="leading-tight">
-        <span className={`block font-extrabold tracking-tight ${dim.text}`}>
+        <span className={`block whitespace-nowrap font-extrabold tracking-tight ${dim.text}`}>
           <span className={onDark ? "text-white" : wordmark === "ink" ? "text-inherit" : "text-[#1E293B]"}>Flyer</span>
           <span className={wordmark === "ink" ? "text-inherit" : onDark ? "text-white" : "text-[#6D28D9]"}>
             Mint

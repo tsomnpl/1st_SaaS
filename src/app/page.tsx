@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { CoverGuestActions, CoverMemberActions } from "@/components/cover/cover-actions";
+import { CoverBar } from "@/components/cover/cover-bar";
 import { CoverScene } from "@/components/cover/cover-scene";
-import { AppearanceSwitch } from "@/components/chrome/appearance-switch";
 import { getDictionary } from "@/lib/locale";
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -17,12 +17,7 @@ export default async function Home() {
   const Actions = signedIn ? CoverMemberActions : CoverGuestActions;
   return (
     <CoverScene
-      bar={
-        <div className="cover-bar-end">
-          <AppearanceSwitch tone="cover" />
-          <Actions variant="bar" />
-        </div>
-      }
+      bar={<CoverBar signedIn={signedIn} />}
       band={<Actions variant="band" />}
     />
   );
