@@ -127,6 +127,16 @@ textarea:focus-visible {
   margin-left: auto;
 }
 
+.cover-bar .cover-btn {
+  box-sizing: border-box;
+  width: auto;
+  white-space: nowrap;
+}
+
+.cover-bar .cover-btn-primary {
+  border: 1px solid transparent;
+}
+
 .cover-stage-wrap {
   position: relative;
   display: flex;
