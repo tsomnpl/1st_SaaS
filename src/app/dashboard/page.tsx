@@ -11,6 +11,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 import { prisma } from "@/lib/prisma";
+import { listOwnedPosters, posterTitle } from "@/server/owned-posters";
 import { requireActiveCurrentUser } from "@/server/users";
 
 export default async function DashboardPage() {
@@ -18,11 +19,7 @@ export default async function DashboardPage() {
   const user = await requireActiveCurrentUser();
   const [account, lastGenerations] = await Promise.all([
     prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null),
-    prisma.generation.findMany({
-      where: { userId: user.id },
-      orderBy: { createdAt: "desc" },
-      take: 5,
-    }).catch(() => []),
+    listOwnedPosters(user.id, 5),
   ]);
 
   const balance = account?.balance ?? 0;
@@ -57,7 +54,7 @@ export default async function DashboardPage() {
           {lastGenerations.length === 0 ? <p className="text-slate-500">{t.dashboard.empty}</p> : null}
           {lastGenerations.map((generation) => (
             <div key={generation.id} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2">
-              <span>{String((generation.brief as { title?: string })?.title ?? t.dashboard.untitled)}</span>
+              <span>{posterTitle(generation.brief, t.dashboard.untitled)}</span>
               <span className="text-slate-500">{statusLabel(generation.status, t)}</span>
             </div>
           ))}

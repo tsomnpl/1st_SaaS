@@ -20,6 +20,7 @@ export default async function ProfilePage() {
   const user = await requireActiveCurrentUser();
   const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null);
   const kit = await getBrandKit(user.id);
+  const colors = Array.isArray(kit?.colors) ? kit.colors : [];
 
   return (
     <div className="card mx-auto max-w-xl space-y-5 p-6">
@@ -30,10 +31,10 @@ export default async function ProfilePage() {
       </p>
       <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4 text-sm">
         <p className="font-semibold">{t.profile.brand}</p>
-        {kit?.colors?.length || kit?.logoUrl ? (
+        {colors.length || kit?.logoUrl ? (
           <p className="mt-1 text-slate-600">
-            {t.profile.colors} : {kit.colors.join(", ") || t.profile.none}
-            {kit.logoUrl ? ` · ${t.profile.logoSaved}` : ""}
+            {t.profile.colors} : {colors.join(", ") || t.profile.none}
+            {kit?.logoUrl ? ` · ${t.profile.logoSaved}` : ""}
           </p>
         ) : (
           <p className="mt-1 text-slate-500">{t.profile.emptyKit}</p>

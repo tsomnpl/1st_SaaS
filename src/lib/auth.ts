@@ -1,7 +1,8 @@
 import { auth, clerkClient, currentUser } from "@clerk/nextjs/server";
-import { UserRole, UserStatus } from "@prisma/client";
+import { Prisma, UserRole, UserStatus, type User } from "@prisma/client";
 import { collectClerkEmails, isConfiguredAdmin } from "@/lib/admin";
 import { prisma } from "@/lib/prisma";
+import { ensureAccountColumns, isMissingColumn } from "@/server/schema-heal";
 
 export async function requireAuth() {
   const session = await auth();
@@ -48,7 +49,18 @@ export async function readClerkIdentity(clerkUserId: string) {
   return empty;
 }
 
-export async function ensureUserProfile(clerkUserId: string) {
+const userCoreSelect = {
+  id: true,
+  clerkUserId: true,
+  email: true,
+  name: true,
+  role: true,
+  status: true,
+  createdAt: true,
+  updatedAt: true,
+} satisfies Prisma.UserSelect;
+
+export async function ensureUserProfile(clerkUserId: string): Promise<User> {
   const identity = await readClerkIdentity(clerkUserId);
   const identityKnown = Boolean(identity.email || identity.verifiedEmails.length > 0);
   const admin = isConfiguredAdmin({
@@ -56,7 +68,7 @@ export async function ensureUserProfile(clerkUserId: string) {
     email: identity.email,
     emails: identity.verifiedEmails,
   });
-  return prisma.user.upsert({
+  const data = {
     where: { clerkUserId },
     update: {
       email: identity.email ?? undefined,
@@ -69,7 +81,20 @@ export async function ensureUserProfile(clerkUserId: string) {
       name: identity.name,
       role: admin ? UserRole.ADMIN : UserRole.USER,
     },
-  });
+  };
+  try {
+    return await prisma.user.upsert(data);
+  } catch (error) {
+    if (!isMissingColumn(error)) throw error;
+    await ensureAccountColumns();
+    try {
+      return await prisma.user.upsert(data);
+    } catch (again) {
+      if (!isMissingColumn(again)) throw again;
+      const row = await prisma.user.upsert({ ...data, select: userCoreSelect });
+      return { ...row, referralCode: null };
+    }
+  }
 }
 
 export async function requireAdminUser() {
