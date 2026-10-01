@@ -12,15 +12,26 @@ export async function getOrCreateCurrentUser() {
   const identity = await readClerkIdentity(clerkUserId);
 
   await ensureCreditAccount(user.id);
-  await expireCredits();
-  await grantWelcomeMintIfNeeded(user);
-  await redeemPendingMintGrants({
-    userId: user.id,
-    verifiedEmails: identity.verifiedEmails,
-  });
-  const referralCode = await ensureReferralCode(user.id);
-  await claimReferralFromCookie(user);
-  return { ...user, referralCode };
+  await quietAccountStep(() => expireCredits(new Date(), undefined, user.id));
+  await quietAccountStep(() => grantWelcomeMintIfNeeded(user));
+  await quietAccountStep(() =>
+    redeemPendingMintGrants({
+      userId: user.id,
+      verifiedEmails: identity.verifiedEmails,
+    }),
+  );
+  const referralCode = await quietAccountStep(() => ensureReferralCode(user.id));
+  await quietAccountStep(() => claimReferralFromCookie(user));
+  return { ...user, referralCode: referralCode ?? "" };
+}
+
+async function quietAccountStep<T>(step: () => Promise<T>): Promise<T | null> {
+  try {
+    return await step();
+  } catch (error) {
+    console.error("account-step", error instanceof Error ? error.message : error);
+    return null;
+  }
 }
 
 async function claimReferralFromCookie(user: { id: string; clerkUserId: string; createdAt: Date }) {

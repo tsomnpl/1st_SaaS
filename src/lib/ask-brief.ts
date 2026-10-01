@@ -200,12 +200,13 @@ export function missingFacts(brief: CreateBriefInput): AskGap[] {
     .replace(/\b(mariage|wedding|affiche|de|mon|ma|notre|le|la|les|un|une)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const names = brief.adaptiveData.noms?.trim() || coupleFrom(blob) || (coupleRest.length >= 2 ? brief.title : "");
+  const extra = brief.adaptiveData ?? {};
+  const names = extra.noms?.trim() || coupleFrom(blob) || (coupleRest.length >= 2 ? brief.title : "");
   const whoRest = fold(brief.title)
     .replace(/\b(anniversaire|joyeux|happy|birthday|affiche|de|du|la|le|mon|ma)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-  const posteRest = fold(`${brief.title} ${brief.adaptiveData.poste ?? ""}`)
+  const posteRest = fold(`${brief.title} ${extra.poste ?? ""}`)
     .replace(/\b(recrutement|offre|emploi|affiche|poste|d|de|du|des|un|une|le|la|pour)\b/g, " ")
     .replace(/\s+/g, " ")
     .trim();

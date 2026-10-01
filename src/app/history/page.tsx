@@ -18,13 +18,13 @@ import { userHasEditableExport } from "@/server/generation";
 export default async function HistoryPage() {
   const { locale, t } = await getDictionary();
   const user = await requireActiveCurrentUser();
-  const canExport = await userHasEditableExport(user.id);
+  const canExport = await userHasEditableExport(user.id).catch(() => false);
   const generations = await prisma.generation.findMany({
     where: { userId: user.id },
     orderBy: { createdAt: "desc" },
     take: 40,
     include: { group: { select: { selectedGenerationId: true } } },
-  });
+  }).catch(() => []);
 
   return (
     <div className="space-y-6">

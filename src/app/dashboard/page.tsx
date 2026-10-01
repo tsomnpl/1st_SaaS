@@ -17,12 +17,12 @@ export default async function DashboardPage() {
   const { t } = await getDictionary();
   const user = await requireActiveCurrentUser();
   const [account, lastGenerations] = await Promise.all([
-    prisma.creditAccount.findUnique({ where: { userId: user.id } }),
+    prisma.creditAccount.findUnique({ where: { userId: user.id } }).catch(() => null),
     prisma.generation.findMany({
       where: { userId: user.id },
       orderBy: { createdAt: "desc" },
       take: 5,
-    }),
+    }).catch(() => []),
   ]);
 
   const balance = account?.balance ?? 0;

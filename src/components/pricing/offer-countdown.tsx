@@ -22,9 +22,10 @@ export function OfferCountdown({
   prefix: string;
   doneLabel: string;
 }) {
-  const [text, setText] = useState(() => formatLeft(endsAt, doneLabel));
+  const [text, setText] = useState("");
 
   useEffect(() => {
+    setText(formatLeft(endsAt, doneLabel));
     const timer = window.setInterval(() => setText(formatLeft(endsAt, doneLabel)), 1000);
     return () => window.clearInterval(timer);
   }, [doneLabel, endsAt]);
