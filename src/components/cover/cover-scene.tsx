@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import Image from "next/image";
 import { Bebas_Neue } from "next/font/google";
-import { BrandLogo } from "@/components/brand/logo";
 import { EXACT_SHOWCASE } from "@/lib/exact-showcase";
 import { getDictionary } from "@/lib/locale";
 
@@ -31,10 +30,7 @@ export async function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNod
   const { t } = await getDictionary();
   return (
     <section className="cover-root">
-      <header className="cover-bar">
-        <BrandLogo size="sm" wordmark="ink" className="cover-logo" />
-        {bar}
-      </header>
+      <header className="cover-bar">{bar}</header>
 
       <div className="cover-stage-wrap">
         <p aria-hidden="true" className={`${display.className} cover-word`}>

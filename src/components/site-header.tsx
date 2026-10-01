@@ -1,6 +1,6 @@
 "use client";
 
-import { SignInButton, SignUpButton, SignedIn, SignedOut, UserButton, useAuth } from "@clerk/nextjs";
+import { SignedIn, UserButton, useAuth } from "@clerk/nextjs";
 import Link from "next/link";
 import { Suspense, useState } from "react";
 import { BrandLogo } from "@/components/brand/logo";
@@ -17,12 +17,66 @@ type Props = {
 
 const EMPTY_COUNTS: NoticeCounts = { total: 0, history: 0, admin: 0 };
 
-export function SiteHeader({ signedIn = false, mintBalance = null, showAdmin = false, adminHref = "" }: Props) {
+export function SiteHeader(props: Props) {
+  const t = useCopy();
+  const publicLinks = [
+    { href: "/decouvrir", label: t.nav.discover },
+    { href: "/creations", label: t.nav.creations },
+    { href: "/decouvrir#comment-ca-marche", label: t.nav.how },
+    { href: "/pricing", label: t.nav.pricing },
+  ];
+
+  return (
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
+      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
+        <BrandLogo size="sm" />
+        <Suspense fallback={null}>
+          <DesktopNav {...props} />
+        </Suspense>
+        <details className="menu-disclosure relative xl:hidden">
+          <summary
+            className="menu-summary inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-800 [&::-webkit-details-marker]:hidden"
+            aria-label={t.menu.open}
+            data-open={t.menu.open}
+            data-close={t.menu.close}
+          >
+            <BurgerGlyph />
+          </summary>
+          <div className="absolute right-0 z-50 mt-2 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
+            <AppearanceSwitch />
+            {publicLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+              >
+                {link.label}
+              </Link>
+            ))}
+            <Link href="/sign-in" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 text-sm font-semibold text-white">
+              {t.nav.signIn}
+            </Link>
+            <Link href="/sign-up" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#10B981] px-3 text-sm font-semibold text-[#1E293B]">
+              {t.nav.signUp}
+            </Link>
+            <Link href="/create" className="btn-primary min-h-11 whitespace-nowrap">
+              {t.nav.create}
+            </Link>
+            <Suspense fallback={null}>
+              <MobileSession {...props} />
+            </Suspense>
+          </div>
+        </details>
+      </div>
+    </header>
+  );
+}
+
+function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, adminHref = "" }: Props) {
   const t = useCopy();
   const locale = useLocale();
   const { isSignedIn } = useAuth();
   const live = signedIn || Boolean(isSignedIn);
-  const [open, setOpen] = useState(false);
   const [bellOpen, setBellOpen] = useState(false);
   const [balance, setBalance] = useState(mintBalance);
   const [counts, setCounts] = useState<NoticeCounts>(EMPTY_COUNTS);
@@ -49,27 +103,34 @@ export function SiteHeader({ signedIn = false, mintBalance = null, showAdmin = f
   }
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/50 bg-white/75 backdrop-blur-xl">
+    <>
       {live ? (
-        <Suspense fallback={null}>
-          <HeaderPulse
-            enabled
-            onPulse={(pulse) => {
-              if (typeof pulse.balance === "number") setBalance(pulse.balance);
-              setCounts(pulse.counts);
-              setItems(pulse.items);
-            }}
-          />
-        </Suspense>
+        <HeaderPulse
+          enabled
+          onPulse={(pulse) => {
+            if (typeof pulse.balance === "number") setBalance(pulse.balance);
+            setCounts(pulse.counts);
+            setItems(pulse.items);
+          }}
+        />
       ) : null}
-      <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-3 px-4 py-3">
-        <BrandLogo size="sm" />
-
-        <nav className="hidden flex-1 flex-wrap items-center justify-end gap-1.5 md:flex">
+      <nav className="hidden min-w-0 flex-1 flex-nowrap items-center justify-end gap-1.5 xl:flex">
+          <AppearanceSwitch />
           {publicLinks.map((link, index) => (
             <NavPill key={link.href} href={link.href} label={link.label} index={index} />
           ))}
+          {!signedIn ? (
+            <>
+              <Link href="/sign-in" className="guest-only whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 py-1.5 text-xs font-semibold text-white">
+                {t.nav.signIn}
+              </Link>
+              <Link href="/sign-up" className="guest-only whitespace-nowrap rounded-lg bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-[#1E293B]">
+                {t.nav.signUp}
+              </Link>
+            </>
+          ) : null}
           <SignedIn>
+            <style>{".guest-only{display:none !important}"}</style>
             {accountLinks.map((link, index) => (
               <NavPill key={link.href} href={link.href} label={link.label} index={index + publicLinks.length} badge={link.badge} />
             ))}
@@ -91,94 +152,92 @@ export function SiteHeader({ signedIn = false, mintBalance = null, showAdmin = f
             />
             <UserButton />
           </SignedIn>
-          <SignedOut>
-            <SignInButton mode="modal">
-              <button type="button" className="rounded-xl bg-[#6D28D9] px-3 py-1.5 text-xs font-semibold text-white">
-                {t.nav.signIn}
-              </button>
-            </SignInButton>
-            <SignUpButton mode="modal">
-              <button type="button" className="rounded-xl bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-[#1E293B]">
-                {t.nav.signUp}
-              </button>
-            </SignUpButton>
-          </SignedOut>
-          <Link href="/create" className="btn-primary px-3 py-1.5 text-xs">
+          <Link href="/create" className="btn-primary whitespace-nowrap px-3 py-1.5 text-xs">
             {t.nav.create}
           </Link>
         </nav>
+    </>
+  );
+}
 
-        <div className="flex items-center gap-2">
-          <AppearanceSwitch />
-          <button
-            type="button"
-            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white md:hidden"
-            aria-expanded={open}
-            aria-label={open ? t.menu.close : t.menu.open}
-            onClick={() => setOpen((value) => !value)}
-          >
-            <span className="flex flex-col gap-1.5">
-              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "translate-y-2 rotate-45" : ""}`} />
-              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "opacity-0" : ""}`} />
-              <span className={`h-0.5 w-4 bg-slate-800 transition ${open ? "-translate-y-2 -rotate-45" : ""}`} />
-            </span>
-          </button>
-        </div>
-      </div>
+function MobileSession({
+  signedIn = false,
+  mintBalance = null,
+  showAdmin = false,
+  adminHref = "",
+}: Props) {
+  const t = useCopy();
+  const locale = useLocale();
+  const { isSignedIn } = useAuth();
+  const live = signedIn || Boolean(isSignedIn);
+  const [bellOpen, setBellOpen] = useState(false);
+  const [balance, setBalance] = useState(mintBalance);
+  const [counts, setCounts] = useState<NoticeCounts>(EMPTY_COUNTS);
+  const [items, setItems] = useState<NoticeItem[]>([]);
+  const accountLinks = [
+    { href: "/dashboard", label: t.nav.dashboard, badge: 0 },
+    { href: "/history", label: t.nav.history, badge: counts.history },
+    { href: "/profile", label: t.nav.profile, badge: 0 },
+    ...(showAdmin && adminHref ? [{ href: adminHref, label: t.nav.admin, badge: counts.admin }] : []),
+  ];
 
-      {open ? (
-        <div className="border-t border-slate-100 bg-white px-4 py-4 md:hidden">
-          <div className="flex flex-col gap-2 text-sm">
-            {publicLinks.map((link, index) => (
-              <NavPill key={link.href} href={link.href} label={link.label} index={index} onClick={() => setOpen(false)} />
-            ))}
-            <SignedIn>
-              {accountLinks.map((link, index) => (
-                <NavPill
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  index={index + publicLinks.length}
-                  badge={link.badge}
-                  onClick={() => setOpen(false)}
-                />
-              ))}
-              {typeof balance === "number" ? (
-                <span className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-slate-700">
-                  {balance} Mint{balance > 1 ? "s" : ""}
-                </span>
-              ) : null}
-              <NotificationBell
-                label={t.notices.bell}
-                empty={t.notices.empty}
-                mark={t.notices.mark}
-                locale={locale}
-                open={bellOpen}
-                count={counts.total}
-                items={items}
-                onToggle={() => setBellOpen((value) => !value)}
-                onMark={() => void markRead()}
-              />
-            </SignedIn>
-            <SignedOut>
-              <SignInButton mode="modal">
-                <button type="button" className="rounded-xl bg-[#6D28D9] px-3 py-2 text-left text-xs font-semibold text-white">
-                  {t.nav.signIn}
-                </button>
-              </SignInButton>
-              <SignUpButton mode="modal">
-                <button type="button" className="rounded-xl bg-[#10B981] px-3 py-2 text-left text-xs font-semibold text-[#1E293B]">
-                  {t.nav.signUp}
-                </button>
-              </SignUpButton>
-            </SignedOut>
-            <Link href="/create" className="btn-primary mt-2" onClick={() => setOpen(false)}>
-              {t.nav.create}
-            </Link>
-          </div>
-        </div>
+  async function markRead() {
+    await fetch("/api/me/notifications", { method: "POST" });
+    setCounts(EMPTY_COUNTS);
+    setItems((current) => current.map((item) => ({ ...item, readAt: item.readAt ?? new Date().toISOString() })));
+    setBellOpen(false);
+  }
+
+  if (!live) return null;
+
+  return (
+    <>
+      <style>{".guest-only{display:none !important}"}</style>
+      <HeaderPulse
+        enabled
+        onPulse={(pulse) => {
+          if (typeof pulse.balance === "number") setBalance(pulse.balance);
+          setCounts(pulse.counts);
+          setItems(pulse.items);
+        }}
+      />
+      {accountLinks.map((link) => (
+        <Link
+          key={link.href}
+          href={link.href}
+          className="flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+        >
+          {link.label}
+          {link.badge > 0 ? <span className="ml-2 text-xs text-[#6D28D9]">{link.badge > 9 ? "9+" : link.badge}</span> : null}
+        </Link>
+      ))}
+      {typeof balance === "number" ? (
+        <span className="px-3 text-xs font-semibold text-slate-700">
+          {balance} Mint{balance > 1 ? "s" : ""}
+        </span>
       ) : null}
-    </header>
+      <NotificationBell
+        label={t.notices.bell}
+        empty={t.notices.empty}
+        mark={t.notices.mark}
+        locale={locale}
+        open={bellOpen}
+        count={counts.total}
+        items={items}
+        onToggle={() => setBellOpen((value) => !value)}
+        onMark={() => void markRead()}
+      />
+    </>
+  );
+}
+
+function BurgerGlyph() {
+  return (
+    <span className="flex flex-col gap-1.5" aria-hidden="true">
+      <span className="burger-top h-0.5 w-4 bg-current" />
+      <span className="burger-mid h-0.5 w-4 bg-current" />
+      <span className="burger-bot h-0.5 w-4 bg-current" />
+    </span>
   );
 }
 
@@ -197,7 +256,7 @@ function NavPill({
 }) {
   const tone = index % 2 === 0 ? "bg-[#6D28D9] text-white hover:bg-[#5B21B6]" : "bg-[#10B981] text-[#1E293B] hover:brightness-110";
   return (
-    <Link href={href} onClick={onClick} className={`relative rounded-xl px-2.5 py-1.5 text-xs font-semibold ${tone}`}>
+    <Link href={href} onClick={onClick} className={`relative whitespace-nowrap rounded-lg px-2.5 py-1.5 text-xs font-semibold ${tone}`}>
       {label}
       {badge > 0 ? (
         <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#6D28D9] ring-1 ring-[#6D28D9]">

@@ -24,6 +24,12 @@ export async function AuthChrome({ children }: { children: ReactNode }) {
         <script dangerouslySetInnerHTML={{ __html: THEME_BOOT }} />
       </head>
       <body className="flex min-h-full flex-col text-slate-900">
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "document.addEventListener('toggle',function(e){var d=e.target;if(!d||!d.classList||!d.classList.contains('menu-disclosure'))return;var s=d.querySelector('summary');if(!s)return;s.setAttribute('aria-label',d.open?s.getAttribute('data-close'):s.getAttribute('data-open'));},true);",
+          }}
+        />
         <LocaleProvider locale={locale}>
           <SiteFrame header={<SiteHeaderHost />} footer={<SiteFooter />}>
             {children}
