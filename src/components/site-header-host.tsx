@@ -4,6 +4,7 @@ import { isConfiguredAdmin } from "@/lib/admin";
 import { currentUserIsAdmin } from "@/lib/auth";
 import { getAdminPrivatePath } from "@/lib/env";
 import { auth } from "@clerk/nextjs/server";
+import { ensureAccountColumns } from "@/server/schema-heal";
 
 export async function SiteHeaderHost() {
   const session = await auth();
@@ -14,6 +15,11 @@ export async function SiteHeaderHost() {
       showAdmin = await currentUserIsAdmin();
     } catch {
       showAdmin = false;
+    }
+    try {
+      await ensureAccountColumns();
+    } catch {
+      // A failed repair must not hide a balance the database can already return.
     }
     try {
       const user = await prisma.user.findUnique({

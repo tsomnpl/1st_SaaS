@@ -44,7 +44,9 @@ export default async function AdminLayout({
   } catch {
     forbidden();
   }
-  await logAdminSession(admin.id);
+  await logAdminSession(admin.id).catch((error) => {
+    console.error("admin-session", error instanceof Error ? error.message : error);
+  });
   return (
     <AdminShell
       basePath={getAdminBasePath()}

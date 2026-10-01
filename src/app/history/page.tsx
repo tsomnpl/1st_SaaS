@@ -10,21 +10,16 @@ export async function generateMetadata(): Promise<Metadata> {
     robots: { index: false, follow: false },
   };
 }
-import { prisma } from "@/lib/prisma";
 import { requireActiveCurrentUser } from "@/server/users";
 import { ReportProblem } from "@/components/support/report-problem";
 import { userHasEditableExport } from "@/server/generation";
+import { listOwnedPosters, posterDomain, posterTitle } from "@/server/owned-posters";
 
 export default async function HistoryPage() {
   const { locale, t } = await getDictionary();
   const user = await requireActiveCurrentUser();
-  const canExport = await userHasEditableExport(user.id);
-  const generations = await prisma.generation.findMany({
-    where: { userId: user.id },
-    orderBy: { createdAt: "desc" },
-    take: 40,
-    include: { group: { select: { selectedGenerationId: true } } },
-  });
+  const canExport = await userHasEditableExport(user.id).catch(() => false);
+  const generations = await listOwnedPosters(user.id, 40);
 
   return (
     <div className="space-y-6">
@@ -43,7 +38,8 @@ export default async function HistoryPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {generations.map((generation) => {
-            const brief = generation.brief as { title?: string; domain?: string };
+            const title = posterTitle(generation.brief, t.history.untitled);
+            const domain = posterDomain(generation.brief);
             return (
               <article key={generation.id} className="card overflow-hidden">
                 {generation.outputUrl ? (
@@ -55,9 +51,9 @@ export default async function HistoryPage() {
                   </div>
                 )}
                 <div className="space-y-2 p-4">
-                  <p className="font-semibold">{brief.title ?? t.history.untitled}</p>
+                  <p className="font-semibold">{title}</p>
                   <p className="text-xs text-slate-500">
-                    {brief.domain ?? "n/a"} · {new Date(generation.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "fr-FR")}
+                    {domain || "n/a"} · {new Date(generation.createdAt).toLocaleDateString(locale === "en" ? "en-US" : "fr-FR")}
                     {generation.variant ? ` · Variante ${generation.variant}` : ""}
                     {generation.group?.selectedGenerationId === generation.id ? " · Choisie" : ""}
                   </p>

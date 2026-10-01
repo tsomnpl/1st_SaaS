@@ -87,7 +87,7 @@ export async function consumeOneMint(
     return prisma.$transaction((tx) => consumeOneMint(userId, { ...options, tx }));
   }
   const client = getClient(options.tx);
-  await expireCredits(new Date(), options.tx);
+  await expireCredits(new Date(), options.tx, userId);
   const account = await lockCreditAccount(userId, options.tx);
   if (account.balance < 1) throw new Error("INSUFFICIENT_MINTS");
 
@@ -188,10 +188,11 @@ export async function removeCredits(
   return { removed: removable, balanceAfter, transaction };
 }
 
-export async function expireCredits(now = new Date(), tx?: Prisma.TransactionClient) {
+export async function expireCredits(now = new Date(), tx?: Prisma.TransactionClient, userId?: string) {
   const run = async (client: PrismaClient | Prisma.TransactionClient) => {
     const expiredBuckets = await client.creditBucket.findMany({
       where: {
+        ...(userId ? { userId } : {}),
         expiresAt: { lte: now },
         remainingAmount: { gt: 0 },
       },
