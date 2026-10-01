@@ -1,4 +1,5 @@
 import { CreditTransactionType, GenerationStatus, GenerationVariant, Prisma } from "@prisma/client";
+import { missingFacts } from "@/lib/ask-brief";
 import { countdownForBrief, type EventCountdown } from "@/lib/countdown";
 import {
   applyExactCopyRepair,
@@ -234,6 +235,7 @@ async function prepareBrief(userId: string, unsafeInput: unknown, now: Date) {
     }
   }
   brief = { ...brief, creativeFreedom: "copie_exacte" };
+  if (missingFacts(brief).length) throw new Error("ASK_INCOMPLETE");
   if (brief.personalReferenceUrl) {
     assertPersonalReferenceAccess(await userHasPersonalReference(user.id), brief.personalReferenceUrl);
   }

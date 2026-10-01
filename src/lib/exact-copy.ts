@@ -111,8 +111,12 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     "Never keep an old word, number, date, price, name, brand, logo, or contact that is not in the replace list.",
     "Do not print the objective or the audience as poster copy.",
     accent
-      ? `Accent color only: change the matching accent to ${accent}. Do not recolor the whole poster.`
+      ? `Accent color only: change the matching accent to ${brief.colors
+          .map((color) => color.trim())
+          .filter(Boolean)
+          .join(", ")}. Do not recolor the whole poster.`
       : "Do not recolor the poster. Keep the reference colors.",
+    "Never print the client's instructions. Do not paint phrases such as je veux, couleurs, or theme onto the poster.",
     `Format stays ${brief.format}.`,
     "A pretty poster that changes the composition or keeps old content is a failure.",
   ];

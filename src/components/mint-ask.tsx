@@ -10,6 +10,7 @@ export function MintAsk({
   value,
   onChange,
   preview,
+  warning,
   attached,
   canReference,
   confirmMint,
@@ -23,6 +24,7 @@ export function MintAsk({
   value: string;
   onChange: (value: string) => void;
   preview: string;
+  warning?: string;
   attached: { photo: boolean; logo: boolean; reference: boolean };
   canReference: boolean;
   confirmMint: boolean;
@@ -74,7 +76,7 @@ export function MintAsk({
 
   function onWave() {
     const action = waveAction({ listening, text: value, canSend });
-    if (action === "send") {
+    if (action === "send" || (warning && value.trim() && !listening)) {
       onSend();
       return;
     }
@@ -123,7 +125,7 @@ export function MintAsk({
           onKeyDown={(event) => {
             if (event.key === "Enter" && !event.shiftKey) {
               event.preventDefault();
-              if (canSend) onSend();
+              if (canSend || warning) onSend();
             }
           }}
           className="max-h-32 min-h-10 flex-1 resize-none bg-transparent py-2 text-[15px] text-white outline-none placeholder:text-[#9A9AA3]"
@@ -166,7 +168,8 @@ export function MintAsk({
           ))}
         </div>
       ) : null}
-      {preview ? <p className="text-sm text-slate-600">{preview}</p> : null}
+      {warning ? <p className="text-sm font-semibold text-[#1E293B]">{warning}</p> : null}
+      {preview && !warning ? <p className="text-sm text-slate-600">{preview}</p> : null}
       <label className="flex items-center gap-2 text-sm">
         <input type="checkbox" checked={confirmMint} onChange={(event) => onConfirmMint(event.target.checked)} />
         {t.form.confirm}

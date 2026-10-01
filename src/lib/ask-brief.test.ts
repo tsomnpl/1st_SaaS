@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exactCopySlots, isExactCopy } from "@/lib/exact-copy";
-import { briefFromAsk } from "@/lib/ask-brief";
+import { askGapSentence, briefFromAsk, readAsk } from "@/lib/ask-brief";
 
 describe("brief from a direct ask", () => {
   it("turns a sentence into the exact-copy brief", () => {
@@ -54,5 +54,52 @@ describe("brief from a direct ask", () => {
 
   it("returns nothing when the ask is empty", () => {
     expect(briefFromAsk("  ")).toBeNull();
+  });
+
+  it("refuses a wedding ask that only states a theme and colors", () => {
+    const ask = 'je veux une affiche pour annoncer mon mariage sur le thème "Akatsuti", je veux des couleurs rouge et noir';
+    const reading = readAsk(ask);
+
+    expect(briefFromAsk(ask)).toBeNull();
+    expect(reading.status).toBe("incomplete");
+    if (reading.status !== "incomplete") return;
+    expect(reading.missing).toContain("date");
+    expect(reading.missing).toContain("names");
+    expect(reading.missing.join(" ")).not.toContain("je veux");
+    expect(
+      askGapSentence(
+        reading.missing,
+        {
+          date: "la date",
+          names: "les noms des mariés",
+          who: "le prénom",
+          price: "le prix",
+          poste: "le poste",
+          title: "le texte à écrire sur l’affiche",
+        },
+        "Je ne compose pas l’affiche. Il manque",
+        "et",
+      ),
+    ).toBe("Je ne compose pas l’affiche. Il manque la date et les noms des mariés.");
+  });
+
+  it("keeps a complete wedding ask as poster facts, not as the request", () => {
+    const brief = briefFromAsk(
+      'je veux une affiche pour annoncer le mariage d\'Ama et Kofi le samedi 12 octobre à Lomé sur le thème "Akatsuti", couleurs rouge et noir',
+    );
+
+    expect(brief?.title).toBe("Mariage de Ama et Kofi");
+    expect(brief?.title.toLowerCase()).not.toMatch(/je veux|couleurs|thème/);
+    expect(brief?.subtitle).toBe("Akatsuti");
+    expect(brief?.date?.toLowerCase()).toContain("octobre");
+    expect(brief?.location?.toLowerCase()).toContain("lom");
+    expect(brief?.colors).toEqual(["rouge", "noir"]);
+  });
+
+  it("refuses a menu ask that has no price", () => {
+    const reading = readAsk("Story menu burger à Cotonou");
+    expect(reading.status).toBe("incomplete");
+    if (reading.status !== "incomplete") return;
+    expect(reading.missing).toContain("price");
   });
 });
