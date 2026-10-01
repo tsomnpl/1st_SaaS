@@ -98,9 +98,9 @@ export function MintAsk({
   ].filter((item): item is { kind: AttachKind; label: string } => Boolean(item));
 
   return (
-    <div className="space-y-3">
+    <div className="max-w-xl space-y-3">
       <p className="text-sm text-slate-500">{t.form.askLead}</p>
-      <div className="relative flex items-end gap-2 rounded-full bg-[#1C1C1E] px-2 py-2 text-white shadow-[0_10px_30px_rgba(15,23,42,0.18)]">
+      <div className={`relative flex gap-2 rounded-[28px] bg-[#1C1C1E] px-2 py-2 text-white shadow-[0_10px_30px_rgba(15,23,42,0.18)] ${value.length > 42 ? "items-end" : "items-center"}`}>
         <button
           type="button"
           aria-label={t.form.askAttach}
@@ -125,7 +125,7 @@ export function MintAsk({
         ) : null}
         <textarea
           ref={box}
-          rows={1}
+          rows={value.trim() ? Math.min(5, Math.max(1, Math.ceil(value.length / 26))) : 1}
           value={value}
           placeholder={t.form.askPlaceholder}
           aria-label={t.form.askPlaceholder}
