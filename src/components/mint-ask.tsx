@@ -1,21 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useCopy } from "@/components/chrome/locale-provider";
-
-type SpeechResultEvent = {
-  results: ArrayLike<ArrayLike<{ transcript: string }>>;
-};
-
-type SpeechRecognizer = {
-  lang: string;
-  interimResults: boolean;
-  onresult: ((event: SpeechResultEvent) => void) | null;
-  onend: (() => void) | null;
-  onerror: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-};
+import { useCopy, useLocale } from "@/components/chrome/locale-provider";
+import { browserRecognizer, createDictation, requestMicrophone, waveAction, type DictationError } from "@/lib/speech-dictation";
 
 type AttachKind = "photo" | "logo" | "reference";
 
@@ -47,11 +34,31 @@ export function MintAsk({
   onClear: (kind: AttachKind) => void;
 }) {
   const t = useCopy();
+  const locale = useLocale();
   const [menu, setMenu] = useState(false);
   const [listening, setListening] = useState(false);
   const [micNote, setMicNote] = useState("");
   const box = useRef<HTMLTextAreaElement>(null);
-  const recognition = useRef<SpeechRecognizer | null>(null);
+  const valueRef = useRef(value);
+  const onChangeRef = useRef(onChange);
+  valueRef.current = value;
+  onChangeRef.current = onChange;
+  const dictation = useRef<ReturnType<typeof createDictation> | null>(null);
+  const formRef = useRef(t.form);
+  formRef.current = t.form;
+
+  useEffect(() => {
+    document.documentElement.dataset.hydrated = "yes";
+    dictation.current = createDictation({
+      locale,
+      getRecognizer: browserRecognizer,
+      requestMic: requestMicrophone,
+      readText: () => valueRef.current,
+      onText: (next) => onChangeRef.current(next),
+      onListening: setListening,
+      onError: (code) => setMicNote(micMessage(code, formRef.current)),
+    });
+  }, [locale]);
 
   useEffect(() => {
     const field = box.current;
@@ -61,34 +68,17 @@ export function MintAsk({
   }, [value]);
 
   function dictate() {
-    if (listening) {
-      recognition.current?.stop();
-      setListening(false);
-      return;
-    }
-    const host = window as Window & {
-      SpeechRecognition?: new () => SpeechRecognizer;
-      webkitSpeechRecognition?: new () => SpeechRecognizer;
-    };
-    const Ctor = host.SpeechRecognition ?? host.webkitSpeechRecognition;
-    if (!Ctor) {
-      setMicNote(t.form.askNoMic);
-      return;
-    }
-    const session = new Ctor();
-    session.lang = document.documentElement.lang === "en" ? "en-US" : "fr-FR";
-    session.interimResults = false;
-    session.onresult = (event) => {
-      const heard = event.results[event.results.length - 1]?.[0]?.transcript?.trim() ?? "";
-      if (!heard) return;
-      onChange(value ? `${value.trim()} ${heard}` : heard);
-    };
-    session.onerror = () => setListening(false);
-    session.onend = () => setListening(false);
-    recognition.current = session;
     setMicNote("");
-    setListening(true);
-    session.start();
+    void dictation.current?.toggle();
+  }
+
+  function onWave() {
+    const action = waveAction({ listening, text: value, canSend });
+    if (action === "send") {
+      onSend();
+      return;
+    }
+    dictate();
   }
 
   const chips: { kind: AttachKind; label: string }[] = [
@@ -98,7 +88,7 @@ export function MintAsk({
   ].filter((item): item is { kind: AttachKind; label: string } => Boolean(item));
 
   return (
-    <div className="max-w-xl space-y-3">
+    <div data-mint-ask className="max-w-xl space-y-3">
       <p className="text-sm text-slate-500">{t.form.askLead}</p>
       <div className={`relative flex gap-2 rounded-[28px] bg-[#1C1C1E] px-2 py-2 text-white shadow-[0_10px_30px_rgba(15,23,42,0.18)] ${value.length > 42 ? "items-end" : "items-center"}`}>
         <button
@@ -141,24 +131,27 @@ export function MintAsk({
         <button
           type="button"
           aria-label={t.form.askMic}
+          data-dictate="mic"
           aria-pressed={listening}
           onClick={dictate}
-          className={`grid h-10 w-10 shrink-0 place-items-center rounded-full hover:bg-white/10 ${listening ? "text-[#8EB4FF]" : "text-white/90"}`}
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full hover:bg-white/10 ${listening ? "text-[#8EB4FF]" : "text-white/90"}`}
         >
           <MicIcon />
         </button>
         <button
           type="button"
           aria-label={t.form.askSend}
-          disabled={!canSend}
-          onClick={onSend}
-          className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-[#315BFF] text-white disabled:opacity-40"
+          data-dictate="wave"
+          aria-pressed={listening}
+          onClick={onWave}
+          className={`grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[#315BFF] text-white ${listening ? "opacity-80" : ""}`}
         >
           <WaveIcon />
         </button>
       </div>
-      {listening ? <p className="text-sm text-[#315BFF]">{t.form.askListening}</p> : null}
-      {micNote ? <p className="text-sm text-slate-500">{micNote}</p> : null}
+      <p data-dictate-status className={`empty:hidden text-sm ${listening ? "text-[#315BFF]" : "text-slate-500"}`}>
+        {listening ? t.form.askListening : micNote}
+      </p>
       {chips.length > 0 ? (
         <div className="flex flex-wrap gap-2">
           {chips.map((chip) => (
@@ -181,6 +174,25 @@ export function MintAsk({
       {loading ? <p className="text-sm font-medium text-[#6D28D9]">{t.form.generating}</p> : null}
     </div>
   );
+}
+
+function micMessage(
+  code: DictationError,
+  form: {
+    askNoMic: string;
+    askMicDenied: string;
+    askNoSpeech: string;
+    askNoCapture: string;
+    askMicNetwork: string;
+    askMicError: string;
+  },
+) {
+  if (code === "unavailable") return form.askNoMic;
+  if (code === "not-allowed") return form.askMicDenied;
+  if (code === "no-speech") return form.askNoSpeech;
+  if (code === "audio-capture") return form.askNoCapture;
+  if (code === "network") return form.askMicNetwork;
+  return form.askMicError;
 }
 
 function AttachChoice({
