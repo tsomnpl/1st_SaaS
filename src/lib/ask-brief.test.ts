@@ -141,6 +141,27 @@ Cible : Femmes, familles, grand public`);
     expect(prompt.toLowerCase()).not.toContain("education");
   });
 
+  it("drops numbered brief stickers before they become poster text", () => {
+    const brief = briefFromAsk(`Événement : La Montée Contre le Cancer
+Organisé par : L’atelier de l’essentiel events
+1️⃣ Contexte
+Chaque année, Octobre Rose mobilise le monde entier dans la lutte contre le cancer du sein.
+Nom de l’événement : La Montée Contre le Cancer
+Mention : Octobre Rose
+Lieu : Pic d’Agou (Espace réservé pour date et partenaires si besoin)
+6️⃣ Cible
+Femmes Familles
+Format story`);
+
+    expect(brief?.description).toBe("Organisé par L’atelier de l’essentiel events");
+    expect(brief?.location?.toLowerCase()).not.toMatch(/cible|contexte/);
+    expect(brief?.description?.toLowerCase()).not.toMatch(/contexte/);
+    expect(`${brief?.title} ${brief?.location} ${brief?.description}`).not.toMatch(/[1-9]\uFE0F?\u20E3/);
+    const prompt = buildPrompt(brief!, buildArtDirection(brief!));
+    expect(prompt).not.toMatch(/contexte|cible/i);
+    expect(prompt).not.toMatch(/\d\uFE0F?\u20E3/);
+  });
+
   it("refuses a menu ask that has no price", () => {
     const reading = readAsk("Story menu burger à Cotonou");
     expect(reading.status).toBe("incomplete");

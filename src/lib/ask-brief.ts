@@ -76,6 +76,12 @@ function tidy(value: string) {
     .trim();
 }
 
+function dropBriefStickers(value: string) {
+  return value
+    .replace(/\d\uFE0F?\u20E3\s*(?:contexte|cible)?/gi, " ")
+    .replace(/(?:^|\s)[1-9]\s+(?:contexte|cible)\b/gi, " ");
+}
+
 function cut(source: string, piece: string) {
   if (!piece) return source;
   const index = source.toLowerCase().indexOf(piece.toLowerCase());
@@ -290,7 +296,7 @@ function structuredFacts(text: string) {
 }
 
 function parseAsk(raw: string): CreateBriefInput | null {
-  const text = raw.replace(/\s+/g, " ").trim();
+  const text = dropBriefStickers(raw).replace(/\s+/g, " ").trim();
   if (text.length < 2) return null;
 
   const folded = fold(text);
