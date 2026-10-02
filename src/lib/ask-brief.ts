@@ -38,7 +38,7 @@ const DATE_RE = new RegExp(
 const PRICE_RE = /(\d{1,3}(?:[ .\u00a0]\d{3})+|\d{2,7})\s*(?:fcfa|f\s*cfa|cfa|xof|€|eur)\b/i;
 const TIME_RE = /\b(\d{1,2})\s*h(?:\s*(\d{2}))?\b|\b(\d{1,2}:\d{2})\b/i;
 const PHONE_RE = /(?:\+\d{1,3}[\s.-]*)?(?:\d[\s.-]*){7,11}\d/;
-const AUDIENCE_RE = /\b(?:pour les|cible|public)\s*:?\s*([^.]{3,90})/i;
+const AUDIENCE_RE = /\b(?:pour les|cible|public)\s+([^,.]{3,40})/i;
 const PLACE_RE =
   /(?:^|[\s,])(?:à|a|au|aux|chez)\s+([A-Za-zÀ-ÿ][\p{L}'’-]{1,28}(?:\s+[A-Za-zÀ-ÿ][\p{L}'’-]{1,28})?)/iu;
 
@@ -133,7 +133,7 @@ function ctaFor(text: string) {
   if (/\bwhatsapp\b/i.test(text)) return "WhatsApp";
   if (/\b(?:appelle|appeler|appel)\b/i.test(text)) return "Appelle";
   if (/\b(?:inscri(?:s|t)|inscription)\b/i.test(text)) return "Inscris-toi";
-  if (/\br[ée]serv(?:e|ez|er|ation)\b/i.test(text)) return "Réserve";
+  if (/\br[ée]serv/i.test(text)) return "Réserve";
   if (/\b(?:command|ach[èe]te)/i.test(text)) return "Commande";
   if (/\bviens\b/i.test(text)) return "Viens";
   return "";
@@ -267,11 +267,7 @@ const NEXT_LABEL =
 
 function fieldValue(text: string, pattern: RegExp) {
   const raw = text.match(pattern)?.[1] ?? "";
-  const cut = tidy((raw.split(NEXT_LABEL)[0] ?? "").replace(/[.:;,-]+$/, ""));
-  return cut
-    .replace(/\s*(?:\(|\d\uFE0F?\u20E3).*$/u, "")
-    .replace(/\s+(?:contexte|objectif du|message principal|univers visuel|ton visuel|ambiance|formats? attendus)\b.*$/i, "")
-    .trim();
+  return tidy((raw.split(NEXT_LABEL)[0] ?? "").replace(/[.:;,-]+$/, ""));
 }
 
 function structuredFacts(text: string) {
@@ -322,12 +318,7 @@ function parseAsk(raw: string): CreateBriefInput | null {
   const place = placeRaw && !SKIP_PLACES.has(fold(placeRaw)) ? placeRaw : "";
   rest = place ? cut(rest, placeMatch?.[0] ?? place) : rest;
   const audienceMatch = rest.match(AUDIENCE_RE);
-  const audience = (audienceMatch?.[1] ?? "")
-    .split(",")[0]
-    .split(/\s+(?=formats?\b|ambiance\b|pas un\b|whatsapp\b|\d\uFE0F?\u20E3)/i)[0]
-    ?.replace(/[,:;]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim() ?? "";
+  const audience = audienceMatch?.[1]?.trim() ?? "";
   rest = audience ? cut(rest, audienceMatch?.[0] ?? "") : rest;
   rest = tidy(
     rest.replace(/\b(?:appelle|appeler|appel|inscription|inscris-toi|inscris|r[ée]serve|commande|whatsapp|viens|entr[ée]e)\b/gi, " "),
