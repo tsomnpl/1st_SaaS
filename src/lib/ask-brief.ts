@@ -84,16 +84,14 @@ function cut(source: string, piece: string) {
 }
 
 function isCauseEvent(folded: string) {
-  const hike = /montee|marche|randonnee|octobre rose|pic d|solidarite|sensibilisation/.test(folded);
+  const hike = /montee|marche|randonnee|pic d|solidarite|sensibilisation/.test(folded);
   const clinic = /clinique|hopital|pharmacie|medecin|consultation|cabinet/.test(folded);
   return hike && !clinic;
 }
 
 function domainFor(folded: string): Domain {
+  if (/cancer|octobre rose|ruban rose/.test(folded)) return "Sante & Clinique";
   if (isCauseEvent(folded)) return "Evenementiel";
-  if (/cancer/.test(folded) && /clinique|hopital|pharmacie|medecin|consultation|depistage/.test(folded)) {
-    return "Sante & Clinique";
-  }
   for (const hint of HINTS) {
     if (hint.words.some((word) => mentions(folded, word))) return hint.domain;
   }
@@ -106,6 +104,9 @@ function visualFor(domain: Domain, folded: string) {
   if (domain === "Immobilier") return "Annonce immobilière";
   if (domain === "Restauration" && mentions(folded, "menu")) return "Menu";
   if (domain === "Anniversaire" || domain === "Mariage" || domain === "Evenementiel" || domain === "Musique") {
+    return "Affiche événement";
+  }
+  if (domain === "Sante & Clinique" && /cancer|octobre rose|montee|sensibilisation/.test(folded)) {
     return "Affiche événement";
   }
   return "Affiche promotionnelle";
