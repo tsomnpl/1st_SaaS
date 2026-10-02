@@ -53,6 +53,10 @@ export function exactCopySlots(brief: CreateBriefInput) {
   return { provided, removed };
 }
 
+function askedColors(brief: CreateBriefInput) {
+  return brief.colors.map((color) => color.trim()).filter(Boolean).slice(0, 4);
+}
+
 function wantsReplacementIdentity(brief: CreateBriefInput) {
   const text = `${brief.style ?? ""} ${brief.description ?? ""} ${brief.subtitle ?? ""}`.toLowerCase();
   return text.includes("flyermint") || text.includes("logo de remplacement");
@@ -60,7 +64,7 @@ function wantsReplacementIdentity(brief: CreateBriefInput) {
 
 export function buildExactCopyPrompt(brief: CreateBriefInput, selection: ReferenceSelection | null) {
   const { provided, removed } = exactCopySlots(brief);
-  const accent = brief.colors.find((color) => color.trim())?.trim();
+  const colors = askedColors(brief);
   const ref = selection?.selected;
   const allowedWords = provided.map((slot) => slot.value).join(" | ");
   const personal = Boolean(brief.personalReferenceUrl);
@@ -81,7 +85,9 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     "Modify the supplied reference poster. Keep its composition and visual structure. Replace only the elements allowed by the new brief.",
     "IMAGE EDIT of the attached poster. Do not generate a new poster.",
     "Keep the same photograph, the same faces, the same products, the same background, and the same decorations. Do not redraw them.",
-    "Keep the same font, the same letter shapes, the same text color, the same text size, and the same text position. Change only the characters inside a slot the client filled.",
+    colors.length
+      ? "Keep the same font, the same letter shapes, the same text size, and the same text position. Recolor the shapes and the type with the requested palette so the text stays readable."
+      : "Keep the same font, the same letter shapes, the same text color, the same text size, and the same text position. Change only the characters inside a slot the client filled.",
     "Do not create a new design. Do not invent a new grid, a new hierarchy, a new crop, or a new layout.",
     "The original reference is the priority. Do not apply a 2-3 color limit, an official FlyerMint palette, or a single-hero recomposition.",
     ref
@@ -110,11 +116,8 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
     ...removed.map((slot) => `- ${slot}`),
     "Never keep an old word, number, date, price, name, brand, logo, or contact that is not in the replace list.",
     "Do not print the objective or the audience as poster copy.",
-    accent
-      ? `Accent color only: change the matching accent to ${brief.colors
-          .map((color) => color.trim())
-          .filter(Boolean)
-          .join(", ")}. Do not recolor the whole poster.`
+    colors.length
+      ? `The client asked for these colors: ${colors.join(", ")}. This is still an exact copy of the composition. Change the poster colors to that palette. Do not keep the old dominant colors.`
       : "Do not recolor the poster. Keep the reference colors.",
     "Never print the client's instructions. Do not paint phrases such as je veux, couleurs, or theme onto the poster.",
     `Format stays ${brief.format}.`,
@@ -124,12 +127,12 @@ export function buildExactCopyPrompt(brief: CreateBriefInput, selection: Referen
 }
 
 export function exactCopyArtDirection(brief: CreateBriefInput, selection: ReferenceSelection | null): Partial<ArtDirection> {
-  const accent = brief.colors.filter((color) => color.trim()).slice(0, 1);
+  const colors = askedColors(brief);
   const ref = selection?.selected;
   return {
     concept: "Copie exacte: modifier la reference, conserver la composition",
     composition: ref?.texts || "Conserver la structure visuelle de la reference",
-    color_palette: accent.length ? accent : ref?.palette?.length ? ref.palette : ["palette de la reference"],
+    color_palette: colors.length ? colors : ref?.palette?.length ? ref.palette : ["palette de la reference"],
     visual_hierarchy: ["Conserver l'emplacement du titre et des blocs de la reference"],
     reference_principles: [
       "structure originale prioritaire",
@@ -140,7 +143,7 @@ export function exactCopyArtDirection(brief: CreateBriefInput, selection: Refere
     avoid: [
       "nouvelle grille",
       "nouvelle composition",
-      "recoloration totale",
+      ...(colors.length ? [] : ["recoloration totale"]),
       "ancien texte, ancien prix, ancienne date, ancien logo",
     ],
   };
@@ -175,7 +178,9 @@ export function exactCopyQcPrompt(brief: CreateBriefInput, selection: ReferenceS
     "Reply with one JSON object and no markdown.",
     "Keys: visible_text (string), same_layout (boolean).",
     "visible_text must list every readable word painted on image 2 only, including small labels, prices, buttons and the bottom row. Do not transcribe image 1.",
-    "same_layout is true only if the person stays on the same side, the blocks stay in the same places, and the background colors still match image 1.",
+    askedColors(brief).length
+      ? "same_layout is true if the person stays on the same side and the blocks stay in the same places. A requested color change is allowed."
+      : "same_layout is true only if the person stays on the same side, the blocks stay in the same places, and the background colors still match image 1.",
     "Do not decide if the poster is pretty. Only transcribe image 2 and compare the layout.",
     `Expected words: ${provided.map((slot) => slot.value).join(" | ") || brief.title}.`,
     `These slots should no longer contain old words: ${removed.join(", ") || "none"}.`,

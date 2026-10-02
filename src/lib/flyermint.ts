@@ -114,11 +114,8 @@ export function buildArtDirection(
   context?: ArtDirectionContext,
 ): ArtDirection {
   const exact = isExactCopy(input);
-  const palette = exact
-    ? input.colors.filter((color) => color.trim()).slice(0, 1)
-    : input.colors.length > 0
-      ? input.colors.slice(0, 3)
-      : ["#1E293B", "#6D28D9", "#10B981"];
+  const palette = input.colors.filter((color) => color.trim()).slice(0, exact ? 4 : 3);
+  const filledPalette = palette.length ? palette : ["#1E293B", "#6D28D9", "#10B981"];
   const inspiration = selectInspirationReferences(input);
   const playbook = inspiration.selected[0];
   const human = humanStagingFor(input.domain);
@@ -186,7 +183,7 @@ export function buildArtDirection(
       "CTA calibre conversion (WhatsApp/telephone si fourni)",
     ],
     ...(exactPatch ? exactRest : {}),
-    color_palette: exactPalette?.length ? exactPalette : palette,
+    color_palette: exactPalette?.length ? exactPalette : filledPalette,
     countdown,
     countdownOnPoster: countdownFitsPoster(input.domain, input.visualType, input.objective, countdown),
     seasonal: context?.seasonal ?? null,

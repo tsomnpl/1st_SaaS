@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { exactCopySlots, isExactCopy } from "@/lib/exact-copy";
 import { askFieldValues, askGapSentence, briefFromAsk, readAsk } from "@/lib/ask-brief";
+import { buildArtDirection, buildPrompt } from "@/lib/flyermint";
 
 describe("brief from a direct ask", () => {
   it("turns a sentence into the exact-copy brief", () => {
@@ -107,6 +108,36 @@ describe("brief from a direct ask", () => {
     expect(fields.date?.toLowerCase()).toContain("octobre");
     expect(fields.location?.toLowerCase()).toContain("lom");
     expect(fields.adaptive_theme).toBe("Akatsuti");
+  });
+
+  it("reads a solidarity hike as an event and keeps the requested colors", () => {
+    const brief = briefFromAsk(`🎨 BRIEF
+Événement : La Montée Contre le Cancer
+Organisé par : L’atelier de l’essentiel events
+Chaque année, Octobre Rose mobilise le monde entier dans la lutte contre le cancer du sein.
+La Montée Contre le Cancer allie activité physique, sensibilisation et solidarité au Pic d’Agou.
+🎨 Couleurs
+Rose (référence Octobre Rose)
+Blanc (espoir)
+Vert naturel (référence au Pic d’Agou)
+Nom de l’événement : La Montée Contre le Cancer
+Mention : Octobre Rose
+Lieu : Pic d’Agou
+Espace réservé pour date et partenaires si besoin
+Cible : Femmes, familles, grand public`);
+
+    expect(brief?.domain).toBe("Evenementiel");
+    expect(brief?.title).toBe("La Montée Contre le Cancer");
+    expect(brief?.subtitle).toBe("Octobre Rose");
+    expect(brief?.description?.toLowerCase()).toContain("essentiel");
+    expect(brief?.location).toContain("Pic");
+    expect(brief?.colors).toEqual(expect.arrayContaining(["rose", "blanc", "vert"]));
+    expect(brief?.adaptiveData.dateSpace).toBe("reserved");
+    expect(readAsk("La Montée Contre le Cancer au Pic d’Agou, Octobre Rose, organisé par L’atelier de l’essentiel").status).not.toBe("empty");
+    const prompt = buildPrompt(brief!, buildArtDirection(brief!));
+    expect(prompt).toContain("rose, blanc, vert");
+    expect(prompt).toContain("Change the poster colors");
+    expect(prompt.toLowerCase()).not.toContain("education");
   });
 
   it("refuses a menu ask that has no price", () => {
