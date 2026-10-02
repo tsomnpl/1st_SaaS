@@ -260,6 +260,28 @@ function textFromChat(data: RodiumResponse) {
   return "";
 }
 
+export async function completeRodiumText(prompt: string) {
+  if (!env.RODIUMAI_API_KEY) return "";
+  const model = env.RODIUMAI_TEXT_MODEL?.trim() || "google/gemini-3.5-flash";
+  try {
+    const response = await fetch(`${env.RODIUMAI_BASE_URL}/chat/completions`, {
+      method: "POST",
+      headers: rodiumHeaders(),
+      body: JSON.stringify({
+        model,
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0,
+        max_tokens: 8000,
+      }),
+    });
+    if (!response.ok) return "";
+    const data = (await response.json()) as RodiumResponse;
+    return textFromChat(data).trim();
+  } catch {
+    return "";
+  }
+}
+
 export async function reviewPosterQuality(input: { imageUrl: string; prompt: string; referenceImageUrl?: string }) {
   if (!env.RODIUMAI_API_KEY) return "";
   const model = env.RODIUMAI_TEXT_MODEL?.trim() || "google/gemini-3.5-flash";

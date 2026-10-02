@@ -9,7 +9,7 @@ import {
   FORMATS,
   VISUAL_TYPES,
 } from "@/lib/domains";
-import { askFieldValues, askGapSentence, missingFacts, readAsk, type AskGap } from "@/lib/ask-brief";
+import { askGapSentence, missingFacts, type AskGap } from "@/lib/ask-brief";
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { publicErrorMessage } from "@/lib/errors";
 import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
@@ -105,9 +105,8 @@ export function CreateFlyerForm({
   const steps = t.form.steps;
   const [mode, setMode] = useState<"form" | "ask">("form");
   const [askText, setAskText] = useState("");
-  const [askNotice, setAskNotice] = useState("");
-  const [fieldSeed, setFieldSeed] = useState<Record<string, string> | null>(null);
-  const [fillId, setFillId] = useState(0);
+  const fieldSeed = null as Record<string, string> | null;
+  const fillId = 0;
   const [step, setStep] = useState(0);
   const [balanceLeft, setBalanceLeft] = useState(mintBalance);
   const formRef = useRef<HTMLFormElement>(null);
@@ -134,23 +133,6 @@ export function CreateFlyerForm({
     return [...found];
   }, [seasonalOffers, domain]);
 
-  const askReading = useMemo(() => readAsk(askText), [askText]);
-  const askBrief = askReading.status === "ready" ? askReading.brief : null;
-  const askLabels: Record<AskGap, string> = {
-    date: t.form.askGapDate,
-    names: t.form.askGapNames,
-    who: t.form.askGapWho,
-    price: t.form.askGapPrice,
-    poste: t.form.askGapPoste,
-    title: t.form.askGapTitle,
-  };
-  const askWarning =
-    askReading.status === "incomplete" ? askGapSentence(askReading.missing, askLabels, t.form.askHold, t.form.askAnd) : "";
-  const askPreview = askBrief
-    ? [t.form.askExact, DOMAIN_LABELS[askBrief.domain], askBrief.title, askBrief.price, askBrief.date]
-        .filter(Boolean)
-        .join(" · ")
-    : "";
   const adaptiveFields = useMemo(() => ADAPTIVE_FIELDS[domain] ?? [], [domain]);
   const seasonalOffer = useMemo(
     () =>
@@ -231,25 +213,22 @@ export function CreateFlyerForm({
   }
 
   function submitAsk() {
-    const reading = readAsk(askText);
-    if (reading.status === "empty") {
+    const text = askText.trim();
+    if (text.length < 2) {
       setError(t.form.askEmpty);
       return;
     }
-    const brief = reading.status === "ready" || reading.status === "incomplete" ? reading.brief : null;
-    const missing = reading.status === "incomplete" ? reading.missing : [];
-    if (brief) {
-      setDomain(brief.domain);
-      if (brief.market === "TG" || brief.market === "BJ") setMarket(brief.market);
-      setFieldSeed(askFieldValues(brief));
-    } else {
-      setFieldSeed({ objective: askText.trim() });
+    if (!confirmMint) {
+      setError(t.form.askNeedMint);
+      return;
     }
-    setFillId((value) => value + 1);
-    setMode("form");
-    setStep(brief ? 1 : 0);
-    setAskNotice(missing.length ? t.form.askPlaced : t.form.askFilled);
-    setError(missing.length ? askGapSentence(missing, askLabels, t.form.askHold, t.form.askAnd) : null);
+    void runGeneration({
+      ask: text,
+      mainImageUrl: mainImage || undefined,
+      logoUrl: logoImage || undefined,
+      personalReferenceUrl: canUsePersonalReference && personalPoster ? personalPoster : undefined,
+      rememberBrand,
+    });
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -345,8 +324,7 @@ export function CreateFlyerForm({
         <MintAsk
           value={askText}
           onChange={setAskText}
-          preview={askPreview}
-          warning={askWarning}
+          preview=""
           attached={{ photo: Boolean(mainImage), logo: Boolean(logoImage), reference: Boolean(personalPoster) }}
           canReference={canUsePersonalReference}
           confirmMint={confirmMint}
@@ -371,8 +349,6 @@ export function CreateFlyerForm({
           }}
         />
       ) : null}
-
-      {mode === "form" && askNotice ? <p className="text-sm font-semibold text-[#1E293B]">{askNotice}</p> : null}
 
       <div className={mode === "form" ? "flex gap-2" : "hidden"}>
         {steps.map((label, index) => (

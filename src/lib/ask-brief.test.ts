@@ -57,19 +57,19 @@ describe("brief from a direct ask", () => {
     expect(briefFromAsk("  ")).toBeNull();
   });
 
-  it("refuses a wedding ask that only states a theme and colors", () => {
+  it("keeps a wedding ask that only states a theme and colors", () => {
     const ask = 'je veux une affiche pour annoncer mon mariage sur le thème "Akatsuti", je veux des couleurs rouge et noir';
     const reading = readAsk(ask);
+    const brief = briefFromAsk(ask);
 
-    expect(briefFromAsk(ask)).toBeNull();
-    expect(reading.status).toBe("incomplete");
-    if (reading.status !== "incomplete") return;
-    expect(reading.missing).toContain("date");
-    expect(reading.missing).toContain("names");
-    expect(reading.missing.join(" ")).not.toContain("je veux");
-    expect(reading.brief?.subtitle).toBe("Akatsuti");
-    expect(reading.brief?.colors).toEqual(["rouge", "noir"]);
-    const fields = askFieldValues(reading.brief!);
+    expect(brief).not.toBeNull();
+    expect(reading.status).toBe("ready");
+    expect(brief?.domain).toBe("Mariage");
+    expect(brief?.subtitle).toBe("Akatsuti");
+    expect(brief?.colors).toEqual(["rouge", "noir"]);
+    expect(brief?.date ?? "").toBe("");
+    expect(brief?.title.toLowerCase()).not.toMatch(/je veux|couleurs/);
+    const fields = askFieldValues(brief!);
     expect(fields.title.toLowerCase()).not.toMatch(/je veux|couleurs/);
     expect(fields.colors).toBe("rouge, noir");
     expect(fields.adaptive_theme).toBe("Akatsuti");
@@ -77,7 +77,7 @@ describe("brief from a direct ask", () => {
     expect(fields.adaptive_noms ?? "").toBe("");
     expect(
       askGapSentence(
-        reading.missing,
+        ["title"],
         {
           date: "la date",
           names: "les noms des mariés",
@@ -89,7 +89,7 @@ describe("brief from a direct ask", () => {
         "Je ne compose pas l’affiche. Il manque",
         "et",
       ),
-    ).toBe("Je ne compose pas l’affiche. Il manque la date et les noms des mariés.");
+    ).toBe("Je ne compose pas l’affiche. Il manque le texte à écrire sur l’affiche.");
   });
 
   it("keeps a complete wedding ask as poster facts, not as the request", () => {
@@ -162,10 +162,11 @@ Format story`);
     expect(prompt).not.toMatch(/\d\uFE0F?\u20E3/);
   });
 
-  it("refuses a menu ask that has no price", () => {
+  it("keeps a menu ask that has no price", () => {
     const reading = readAsk("Story menu burger à Cotonou");
-    expect(reading.status).toBe("incomplete");
-    if (reading.status !== "incomplete") return;
-    expect(reading.missing).toContain("price");
+    expect(reading.status).toBe("ready");
+    if (reading.status !== "ready") return;
+    expect(reading.brief.price ?? "").toBe("");
+    expect(reading.brief.domain).toBe("Restauration");
   });
 });

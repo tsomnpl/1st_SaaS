@@ -1,5 +1,6 @@
 import { CreditTransactionType, GenerationStatus, GenerationVariant, Prisma } from "@prisma/client";
-import { missingFacts } from "@/lib/ask-brief";
+import { briefFromAsk, missingFacts } from "@/lib/ask-brief";
+import { askTextOf, askUnderstandPrompt, briefFromModelJson, mergeAskAssets } from "@/lib/ask-understand";
 import { countdownForBrief, type EventCountdown } from "@/lib/countdown";
 import {
   applyExactCopyRepair,
@@ -33,7 +34,7 @@ import { prisma } from "@/lib/prisma";
 import { consumeOneMint, grantCredits } from "@/server/credits";
 import { notifyAdmin, sendGenerationFailed, sendGenerationSucceeded } from "@/server/mail";
 import { notifyUser } from "@/server/notifications";
-import { generateWithRodium, reviewPosterQuality } from "@/server/rodium";
+import { completeRodiumText, generateWithRodium, reviewPosterQuality } from "@/server/rodium";
 import { saveBrandKit } from "@/server/brand-kit";
 import { resolveSeasonalForBrief } from "@/server/seasonal";
 
@@ -219,12 +220,27 @@ function applySeasonalReference(
   return { selection: next, seasonal: { ...note, usedReferenceIds: used } };
 }
 
+async function resolveInput(unsafeInput: unknown) {
+  const ask = askTextOf(unsafeInput);
+  if (ask === null) return unsafeInput;
+  if (ask.length < 2) throw new Error("ASK_INCOMPLETE");
+  const transcript = await completeRodiumText(askUnderstandPrompt(ask));
+  const understood = (transcript ? briefFromModelJson(transcript, ask) : null) ?? briefFromAsk(ask);
+  if (!understood) throw new Error("ASK_INCOMPLETE");
+  return mergeAskAssets(understood, unsafeInput);
+}
+
 async function prepareBrief(userId: string, unsafeInput: unknown, now: Date) {
   const user = await prisma.user.findUnique({ where: { clerkUserId: userId } });
   if (!user) throw new Error("USER_NOT_FOUND");
   if (user.status === "SUSPENDED") throw new Error("ACCOUNT_SUSPENDED");
 
-  let brief = createBriefSchema.parse(unsafeInput);
+  if (askTextOf(unsafeInput) !== null) {
+    const account = await prisma.creditAccount.findUnique({ where: { userId: user.id } });
+    if (!account || account.balance < 1) throw new Error("INSUFFICIENT_MINTS");
+  }
+
+  let brief = createBriefSchema.parse(await resolveInput(unsafeInput));
   if (brief.regenerateFromId) {
     const previous = await prisma.generation.findFirst({
       where: { id: brief.regenerateFromId, userId: user.id, status: GenerationStatus.COMPLETED },
