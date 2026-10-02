@@ -19,7 +19,7 @@ const EMPTY_COUNTS: NoticeCounts = { total: 0, history: 0, admin: 0 };
 
 export function SiteHeader(props: Props) {
   return (
-    <header className="sticky top-0 z-50 overflow-x-hidden border-b border-slate-200 bg-white">
+    <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
       <div className={`mx-auto w-full min-w-0 px-4 py-3 ${props.showAdmin ? "max-w-[1500px]" : "max-w-6xl"}`}>
         <Suspense fallback={null}>
           <DesktopNav {...props} />
