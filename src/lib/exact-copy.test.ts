@@ -225,7 +225,9 @@ describe("exact copy prompt and model", () => {
     expect(prompt).toContain("DO NOT CREATE A NEW DESIGN.");
     expect(prompt).toContain("Do not invent a phone, address, price, date, name, URL, or offer.");
     expect(prompt).toContain("Do not copy the logo printed on the reference.");
-    expect(prompt).toContain("Do not recolor the whole poster.");
+    expect(prompt).toContain("Change the poster colors to that palette.");
+    expect(prompt).toContain("#10B981");
+    expect(prompt).not.toContain("Do not recolor the whole poster.");
     const body = buildImageGenerationBody({
       model,
       prompt,

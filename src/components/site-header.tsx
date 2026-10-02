@@ -18,57 +18,12 @@ type Props = {
 const EMPTY_COUNTS: NoticeCounts = { total: 0, history: 0, admin: 0 };
 
 export function SiteHeader(props: Props) {
-  const t = useCopy();
-  const publicLinks = [
-    { href: "/decouvrir", label: t.nav.discover },
-    { href: "/creations", label: t.nav.creations },
-    { href: "/decouvrir#comment-ca-marche", label: t.nav.how },
-    { href: "/pricing", label: t.nav.pricing },
-  ];
-
   return (
     <header className="sticky top-0 z-50 border-b border-slate-200 bg-white">
-      <div className={`mx-auto flex w-full min-w-0 items-center justify-between gap-3 px-4 py-3 ${props.showAdmin ? "max-w-[1500px]" : "max-w-6xl"}`}>
-        <div className="shrink-0">
-          <BrandLogo size="sm" />
-        </div>
+      <div className={`mx-auto w-full min-w-0 px-4 py-3 ${props.showAdmin ? "max-w-[1500px]" : "max-w-6xl"}`}>
         <Suspense fallback={null}>
           <DesktopNav {...props} />
         </Suspense>
-        <details className="menu-disclosure relative xl:hidden">
-          <summary
-            className="menu-summary inline-flex h-11 w-11 cursor-pointer list-none items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-800 [&::-webkit-details-marker]:hidden"
-            aria-label={t.menu.open}
-            data-open={t.menu.open}
-            data-close={t.menu.close}
-          >
-            <BurgerGlyph />
-          </summary>
-          <div className="absolute right-0 z-50 mt-2 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
-            <AppearanceSwitch />
-            {publicLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className="flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-              >
-                {link.label}
-              </Link>
-            ))}
-            <Link href="/sign-in" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 text-sm font-semibold text-white">
-              {t.nav.signIn}
-            </Link>
-            <Link href="/sign-up" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#10B981] px-3 text-sm font-semibold text-[#1E293B]">
-              {t.nav.signUp}
-            </Link>
-            <Link href="/create" className="btn-primary min-h-11 whitespace-nowrap">
-              {t.nav.create}
-            </Link>
-            <Suspense fallback={null}>
-              <MobileSession {...props} />
-            </Suspense>
-          </div>
-        </details>
       </div>
     </header>
   );
@@ -85,10 +40,10 @@ function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, a
   const [items, setItems] = useState<NoticeItem[]>([]);
 
   const publicLinks = [
-    { href: "/decouvrir", label: t.nav.discover },
-    { href: "/creations", label: t.nav.creations },
-    { href: "/decouvrir#comment-ca-marche", label: t.nav.how },
-    { href: "/pricing", label: t.nav.pricing },
+    { href: "/decouvrir", label: t.nav.discover, badge: 0 },
+    { href: "/creations", label: t.nav.creations, badge: 0 },
+    { href: "/decouvrir#comment-ca-marche", label: t.nav.how, badge: 0 },
+    { href: "/pricing", label: t.nav.pricing, badge: 0 },
   ];
   const accountLinks = [
     { href: "/dashboard", label: t.nav.dashboard, badge: 0 },
@@ -96,6 +51,13 @@ function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, a
     { href: "/profile", label: t.nav.profile, badge: 0 },
     ...(showAdmin && adminHref ? [{ href: adminHref, label: t.nav.admin, badge: counts.admin }] : []),
   ];
+  const createLink = { href: "/create", label: t.nav.create, badge: 0 };
+  const primaryLinks = live
+    ? [publicLinks[0], accountLinks[0], createLink]
+    : [publicLinks[0], publicLinks[3], createLink];
+  const overflowLinks = [...publicLinks, ...(live ? accountLinks : [])].filter(
+    (link) => !primaryLinks.some((item) => item.href === link.href),
+  );
 
   async function markRead() {
     await fetch("/api/me/notifications", { method: "POST" });
@@ -116,154 +78,72 @@ function DesktopNav({ signedIn = false, mintBalance = null, showAdmin = false, a
           }}
         />
       ) : null}
-      <div className={`hidden min-w-0 flex-1 items-center gap-1.5 xl:flex ${showAdmin ? "" : "justify-end"}`}>
-        {showAdmin ? (
-          <div className="flex shrink-0 items-center gap-1.5">
-            <AppearanceSwitch />
-            <NavPill href="/decouvrir" label={t.nav.discover} index={0} />
-          </div>
-        ) : null}
-        <nav
-          className={`flex min-w-0 flex-nowrap items-center ${
-            showAdmin ? "header-scroll flex-1 gap-1 overflow-x-auto overflow-y-hidden" : "justify-end gap-1.5"
-          }`}
-        >
-          {showAdmin ? null : <AppearanceSwitch />}
-          {(showAdmin ? publicLinks.slice(1) : publicLinks).map((link, index) => (
-            <NavPill
-              key={link.href}
-              href={link.href}
-              label={link.label}
-              index={showAdmin ? index + 1 : index}
-              compact={showAdmin}
-            />
-          ))}
-          {!live ? (
-            <>
-              <Link href="/sign-in" className="guest-only whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 py-1.5 text-xs font-semibold text-white">
-                {t.nav.signIn}
-              </Link>
-              <Link href="/sign-up" className="guest-only whitespace-nowrap rounded-lg bg-[#10B981] px-3 py-1.5 text-xs font-semibold text-[#1E293B]">
-                {t.nav.signUp}
-              </Link>
-            </>
-          ) : (
-            <>
-              <style>{".guest-only{display:none !important}"}</style>
-              {accountLinks.map((link, index) => (
-                <NavPill
-                  key={link.href}
-                  href={link.href}
-                  label={link.label}
-                  index={index + publicLinks.length}
-                  badge={link.badge}
-                  compact={showAdmin}
-                />
+      <div className="flex min-w-0 items-center justify-between gap-2">
+        <div className="shrink-0">
+          <BrandLogo size="sm" />
+        </div>
+        <div className="flex min-w-0 items-center justify-end gap-1.5">
+          <AppearanceSwitch />
+          <nav className="hidden min-w-0 items-center justify-end gap-1.5 md:flex">
+            {primaryLinks.map((link) => (
+              <NavPill key={link.href} href={link.href} label={link.label} badge={link.badge} />
+            ))}
+          </nav>
+          <details className="menu-disclosure relative">
+            <summary
+              className="menu-summary inline-flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-lg bg-[#6D28D9] text-white [&::-webkit-details-marker]:hidden"
+              aria-label={t.menu.open}
+              data-open={t.menu.open}
+              data-close={t.menu.close}
+            >
+              <BurgerGlyph />
+            </summary>
+            <div className="absolute right-0 z-50 mt-2 flex w-[min(20rem,calc(100vw-2rem))] flex-col gap-2 rounded-lg border border-slate-200 bg-white p-3 shadow-[0_12px_32px_rgba(15,23,42,0.12)]">
+              {overflowLinks.map((link) => (
+                <NavPill key={link.href} href={link.href} label={link.label} badge={link.badge} />
               ))}
-              {typeof balance === "number" ? (
-                <span className={`shrink-0 rounded-xl border border-slate-200 bg-white py-1.5 text-xs font-semibold text-slate-700 ${showAdmin ? "px-2.5" : "px-3"}`}>
-                  {balance} Mint{balance > 1 ? "s" : ""}
-                </span>
-              ) : null}
-              <NotificationBell
-                label={t.notices.bell}
-                empty={t.notices.empty}
-                mark={t.notices.mark}
-                locale={locale}
-                open={bellOpen}
-                count={counts.total}
-                items={items}
-                onToggle={() => setBellOpen((value) => !value)}
-                onMark={() => void markRead()}
-              />
-              <SignedIn>
-                <UserButton />
-              </SignedIn>
-            </>
-          )}
-          {showAdmin ? null : (
-            <Link href="/create" className="btn-primary shrink-0 whitespace-nowrap px-3 py-1.5 text-xs">
-              {t.nav.create}
-            </Link>
-          )}
-        </nav>
-        {showAdmin ? (
-          <Link href="/create" className="btn-primary shrink-0 whitespace-nowrap px-3 py-1.5 text-xs">
-            {t.nav.create}
-          </Link>
-        ) : null}
+              {!live ? (
+                <>
+                  <Link href="/sign-in" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 text-sm font-semibold text-white">
+                    {t.nav.signIn}
+                  </Link>
+                  <Link href="/sign-up" className="guest-only flex min-h-11 items-center whitespace-nowrap rounded-lg bg-[#6D28D9] px-3 text-sm font-semibold text-white">
+                    {t.nav.signUp}
+                  </Link>
+                </>
+              ) : (
+                <>
+                  <style>{".guest-only{display:none !important}"}</style>
+                  {typeof balance === "number" ? (
+                    <span className="px-3 text-xs font-semibold text-slate-700">
+                      {balance} Mint{balance > 1 ? "s" : ""}
+                    </span>
+                  ) : null}
+                  <NotificationBell
+                    label={t.notices.bell}
+                    empty={t.notices.empty}
+                    mark={t.notices.mark}
+                    locale={locale}
+                    open={bellOpen}
+                    count={counts.total}
+                    items={items}
+                    onToggle={() => setBellOpen((value) => !value)}
+                    onMark={() => void markRead()}
+                  />
+                  <SignedIn>
+                    <UserButton />
+                  </SignedIn>
+                </>
+              )}
+            </div>
+          </details>
+        </div>
       </div>
-    </>
-  );
-}
-
-function MobileSession({
-  signedIn = false,
-  mintBalance = null,
-  showAdmin = false,
-  adminHref = "",
-}: Props) {
-  const t = useCopy();
-  const locale = useLocale();
-  const { isSignedIn } = useAuth();
-  const live = signedIn || Boolean(isSignedIn);
-  const [bellOpen, setBellOpen] = useState(false);
-  const [balance, setBalance] = useState(mintBalance);
-  const [counts, setCounts] = useState<NoticeCounts>(EMPTY_COUNTS);
-  const [items, setItems] = useState<NoticeItem[]>([]);
-  const accountLinks = [
-    { href: "/dashboard", label: t.nav.dashboard, badge: 0 },
-    { href: "/history", label: t.nav.history, badge: counts.history },
-    { href: "/profile", label: t.nav.profile, badge: 0 },
-    ...(showAdmin && adminHref ? [{ href: adminHref, label: t.nav.admin, badge: counts.admin }] : []),
-  ];
-
-  async function markRead() {
-    await fetch("/api/me/notifications", { method: "POST" });
-    setCounts(EMPTY_COUNTS);
-    setItems((current) => current.map((item) => ({ ...item, readAt: item.readAt ?? new Date().toISOString() })));
-    setBellOpen(false);
-  }
-
-  if (!live) return null;
-
-  return (
-    <>
-      <style>{".guest-only{display:none !important}"}</style>
-      <HeaderPulse
-        enabled
-        onPulse={(pulse) => {
-          if (typeof pulse.balance === "number") setBalance(pulse.balance);
-          setCounts(pulse.counts);
-          setItems(pulse.items);
-        }}
-      />
-      {accountLinks.map((link) => (
-        <Link
-          key={link.href}
-          href={link.href}
-          className="flex min-h-11 items-center whitespace-nowrap rounded-lg px-3 text-sm font-semibold text-slate-800 hover:bg-slate-100"
-        >
-          {link.label}
-          {link.badge > 0 ? <span className="ml-2 text-xs text-[#6D28D9]">{link.badge > 9 ? "9+" : link.badge}</span> : null}
-        </Link>
-      ))}
-      {typeof balance === "number" ? (
-        <span className="px-3 text-xs font-semibold text-slate-700">
-          {balance} Mint{balance > 1 ? "s" : ""}
-        </span>
-      ) : null}
-      <NotificationBell
-        label={t.notices.bell}
-        empty={t.notices.empty}
-        mark={t.notices.mark}
-        locale={locale}
-        open={bellOpen}
-        count={counts.total}
-        items={items}
-        onToggle={() => setBellOpen((value) => !value)}
-        onMark={() => void markRead()}
-      />
+      <nav className="mt-2 flex gap-1.5 md:hidden">
+        {primaryLinks.map((link) => (
+          <NavPill key={link.href} href={link.href} label={link.label} badge={link.badge} />
+        ))}
+      </nav>
     </>
   );
 }
@@ -281,21 +161,16 @@ function BurgerGlyph() {
 function NavPill({
   href,
   label,
-  index,
   badge = 0,
-  compact = false,
   onClick,
 }: {
   href: string;
   label: string;
-  index: number;
   badge?: number;
-  compact?: boolean;
   onClick?: () => void;
 }) {
-  const tone = index % 2 === 0 ? "bg-[#6D28D9] text-white hover:bg-[#5B21B6]" : "bg-[#10B981] text-[#1E293B] hover:brightness-110";
   return (
-    <Link href={href} onClick={onClick} className={`relative shrink-0 whitespace-nowrap rounded-lg py-1.5 text-xs font-semibold ${compact ? "px-2" : "px-2.5"} ${tone}`}>
+    <Link href={href} onClick={onClick} className="relative shrink-0 whitespace-nowrap rounded-lg bg-[#6D28D9] px-2.5 py-1.5 text-xs font-semibold text-white hover:bg-[#5B21B6]">
       {label}
       {badge > 0 ? (
         <span className="absolute -right-1.5 -top-1.5 inline-flex min-h-4 min-w-4 items-center justify-center rounded-full bg-white px-1 text-[10px] font-bold text-[#6D28D9] ring-1 ring-[#6D28D9]">
@@ -331,7 +206,7 @@ function NotificationBell({
     <div className="relative">
       <button
         type="button"
-        className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#10B981] text-[#1E293B]"
+        className="relative inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[#6D28D9] text-white"
         aria-label={label}
         aria-expanded={open}
         onClick={onToggle}

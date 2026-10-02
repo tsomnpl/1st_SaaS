@@ -9,7 +9,7 @@ const HINTS: { domain: Domain; words: string[] }[] = [
   { domain: "Restauration", words: ["restaurant", "resto", "menu", "burger", "pizza", "plat", "cuisine", "snack", "maquis"] },
   { domain: "Beaute & Soins", words: ["beaute", "coiffure", "maquillage", "spa", "salon", "soin", "ongles"] },
   { domain: "Immobilier", words: ["immobilier", "appartement", "villa", "loyer", "terrain"] },
-  { domain: "Education & Formation", words: ["formation", "cours", "atelier", "ecole", "bootcamp", "universite"] },
+  { domain: "Education & Formation", words: ["formation", "cours", "ecole", "bootcamp", "universite"] },
   { domain: "Emploi & Recrutement", words: ["recrutement", "embauche", "emploi", "poste"] },
   { domain: "Technologie", words: ["application", "logiciel", "startup", "saas"] },
   { domain: "Sante & Clinique", words: ["clinique", "medecin", "sante", "pharmacie", "hopital"] },
@@ -83,10 +83,21 @@ function cut(source: string, piece: string) {
   return `${source.slice(0, index)} ${source.slice(index + piece.length)}`.replace(/\s+/g, " ").trim();
 }
 
+function isCauseEvent(folded: string) {
+  const hike = /montee|marche|randonnee|octobre rose|pic d|solidarite|sensibilisation/.test(folded);
+  const clinic = /clinique|hopital|pharmacie|medecin|consultation|cabinet/.test(folded);
+  return hike && !clinic;
+}
+
 function domainFor(folded: string): Domain {
+  if (isCauseEvent(folded)) return "Evenementiel";
+  if (/cancer/.test(folded) && /clinique|hopital|pharmacie|medecin|consultation|depistage/.test(folded)) {
+    return "Sante & Clinique";
+  }
   for (const hint of HINTS) {
     if (hint.words.some((word) => mentions(folded, word))) return hint.domain;
   }
+  if (mentions(folded, "atelier") && /formation|cours|certificat|eleve/.test(folded)) return "Education & Formation";
   return "Evenementiel";
 }
 
@@ -217,7 +228,8 @@ export function missingFacts(brief: CreateBriefInput): AskGap[] {
     (eventVisual && brief.domain !== "Musique") ||
     (brief.domain === "Musique" && /\b(concert|soiree|gala|live|festival)\b/.test(folded));
 
-  if (needsDate && !brief.date?.trim()) gaps.push("date");
+  const dateReserved = brief.adaptiveData?.dateSpace === "reserved";
+  if (needsDate && !brief.date?.trim() && !dateReserved) gaps.push("date");
   if (brief.domain === "Mariage" && !names) gaps.push("names");
   if (brief.domain === "Anniversaire" && whoRest.length < 2) gaps.push("who");
   if ((brief.visualType === "Menu" || /\b(promo|soldes|menu|tarif)\b/.test(folded)) && !brief.price?.trim()) gaps.push("price");
@@ -237,14 +249,58 @@ function phoneFits(value: string) {
   return digits.length >= 8 && digits.length <= 15 && /^[0-9+\s().-]{6,20}$/.test(value.trim());
 }
 
+function colorsInSection(text: string) {
+  const start = text.search(/couleurs?/i);
+  if (start < 0) return [];
+  const window = text.slice(start, start + 420);
+  const found: string[] = [];
+  const named = new RegExp(`\\b(${COLOR})\\b`, "gi");
+  for (const match of window.matchAll(named)) {
+    const clean = match[1].toLowerCase();
+    if (!found.includes(clean)) found.push(clean);
+  }
+  return found.slice(0, 4);
+}
+
+const NEXT_LABEL =
+  /\s+(?=(?:organis[eé]e?\s+par|mention\s*:|lieu\s*:|espace\s+r[ée]serv|cible\s*:|couleurs?\b|nom de l['’]|objectif du|direction artistique|message principal|ambiance recherch|formats? attendus|univers visuel|ton visuel|chaque ann[ée]e|dans cette|le cadre|[ée]l[ée]ments à))/i;
+
+function fieldValue(text: string, pattern: RegExp) {
+  const raw = text.match(pattern)?.[1] ?? "";
+  return tidy((raw.split(NEXT_LABEL)[0] ?? "").replace(/[.:;,-]+$/, ""));
+}
+
+function structuredFacts(text: string) {
+  const title =
+    fieldValue(text, /nom de l['’]év[ée]nement\s*:\s*([^\n]{3,160})/i) ||
+    fieldValue(text, /(?:^|\n)\s*[ée]v[ée]nement\s*:\s*([^\n]{3,160})/i) ||
+    fieldValue(text, /[ée]v[ée]nement\s*:\s*([^\n]{3,160})/i);
+  const organizer = fieldValue(text, /organis[eé]e?\s+par\s*:?\s*([^\n]{3,160})/i);
+  const place =
+    fieldValue(text, /(?:^|\n)\s*lieu\s*:\s*([^\n]{2,120})/i) ||
+    fieldValue(text, /\blieu\s*:\s*([^\n]{2,120})/i);
+  return {
+    title,
+    organizer,
+    place,
+    rose: /octobre rose/i.test(text),
+    dateReserved: /espace r[ée]serv[ée][^\n.]{0,48}date/i.test(text),
+  };
+}
+
 function parseAsk(raw: string): CreateBriefInput | null {
   const text = raw.replace(/\s+/g, " ").trim();
   if (text.length < 2) return null;
 
   const folded = fold(text);
+  const facts = structuredFacts(text);
   const colored = pullColors(text);
   const themed = pullTheme(colored.rest);
-  const colors = colored.colors;
+  const colors = colored.colors.slice();
+  for (const color of colorsInSection(text)) {
+    if (!colors.includes(color)) colors.push(color);
+  }
+  colors.splice(4);
   const theme = themed.theme;
   let rest = themed.rest;
   const price = rest.match(PRICE_RE)?.[0]?.replace(/\s+/g, " ").trim() ?? "";
@@ -270,7 +326,7 @@ function parseAsk(raw: string): CreateBriefInput | null {
 
   const domain = domainFor(folded);
   const names = coupleFrom(text);
-  let title = names && domain === "Mariage" ? `Mariage de ${names}` : titleFrom(rest);
+  let title = facts.title || (names && domain === "Mariage" ? `Mariage de ${names}` : titleFrom(rest));
   if (title.length < 2 && domain === "Mariage") title = "Mariage";
   if (title.length < 2) return null;
 
@@ -284,15 +340,15 @@ function parseAsk(raw: string): CreateBriefInput | null {
   const parsed = createBriefSchema.safeParse({
     visualType,
     domain,
-    objective: text.slice(0, 240),
+    objective: (facts.title ? `${facts.title}${facts.place ? `, ${facts.place}` : ""}` : text).slice(0, 240),
     targetAudience: (audience || "Public visé").slice(0, 240),
     title: title.slice(0, 120),
-    subtitle: theme.slice(0, 160),
-    description: "",
+    subtitle: (facts.rose ? "Octobre Rose" : theme).slice(0, 160),
+    description: (facts.organizer ? `Organisé par ${facts.organizer}` : "").slice(0, 240),
     price: price.slice(0, 40),
     date: date.slice(0, 40),
     time: time.slice(0, 40),
-    location: place.slice(0, 160),
+    location: (facts.place || place).slice(0, 160),
     contactPhone: whatsapp ? "" : phone,
     whatsapp: whatsapp ? phone : "",
     cta: ctaFor(text),
@@ -302,7 +358,10 @@ function parseAsk(raw: string): CreateBriefInput | null {
     style: theme ? `Thème ${theme}`.slice(0, 80) : undefined,
     market: marketFor(folded),
     seasonalDecline: true,
-    adaptiveData: theme ? { theme } : {},
+    adaptiveData: {
+      ...(theme ? { theme } : {}),
+      ...(facts.dateReserved ? { dateSpace: "reserved" } : {}),
+    },
   });
 
   return parsed.success ? parsed.data : null;

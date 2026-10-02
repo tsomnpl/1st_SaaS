@@ -1,6 +1,7 @@
 import { INSPIRATION_LIBRARY } from "@/lib/inspiration";
 import { loadShowcaseReferenceCatalog } from "@/lib/showcase-references";
 import { AdminReferencesForm } from "@/components/admin/admin-references-form";
+import { InspirationUploadForm } from "@/components/admin/inspiration-upload-form";
 import { AdminReferencesList } from "@/components/admin/admin-references-list";
 import { prisma } from "@/lib/prisma";
 
@@ -23,7 +24,11 @@ export default async function AdminReferencesPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-extrabold">Références</h1>
       <p className="text-sm text-slate-500">
-        Gabarits de style uniquement. Le contenu d’une fiche (titre, prix, marque) n’est jamais réutilisé tel quel.
+        Pour ajouter une affiche dans les sources, choisis le domaine puis l’image. C’est cette bibliothèque que la copie exacte utilise.
+      </p>
+      <InspirationUploadForm />
+      <p className="text-sm text-slate-500">
+        Les fiches ci-dessous décrivent seulement un style. Leur titre, leur prix et leur marque ne sont jamais recopiés.
       </p>
       <AdminReferencesForm />
       <AdminReferencesList
