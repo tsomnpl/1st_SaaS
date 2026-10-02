@@ -205,7 +205,8 @@ describe("exact copy prompt and model", () => {
       brief: { ...brief, mainImageUrl: "data:image/png;base64,UEhPVE8=" },
       referenceImageDataUrl: reference,
     });
-    expect(withPhoto.image).toEqual([reference, "data:image/png;base64,UEhPVE8="]);
+    expect(withPhoto.image).toBe(reference);
+    expect(withPhoto.images).toEqual([reference, "data:image/png;base64,UEhPVE8="]);
     expect(String(body.prompt)).toContain("Modify the supplied reference poster.");
   });
 

@@ -180,7 +180,8 @@ export function buildImageGenerationBody(params: {
     ? params.brief.mainImageUrl
     : "";
   if (reference?.startsWith("data:image/") && String(body.model).toLowerCase().includes("gemini")) {
-    body.image = clientPhoto ? [reference, clientPhoto] : reference;
+    body.image = reference;
+    if (clientPhoto) body.images = [reference, clientPhoto];
   }
   const attached = Array.isArray(body.image) ? body.image[0] : body.image;
   if (exact && attached !== params.referenceImageDataUrl) throw new Error("EXACT_COPY_REFERENCE_MISSING");
