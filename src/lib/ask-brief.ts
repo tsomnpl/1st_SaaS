@@ -144,7 +144,7 @@ export type AskGap = "date" | "names" | "who" | "price" | "poste" | "title";
 
 export type AskReading =
   | { status: "empty" }
-  | { status: "incomplete"; missing: AskGap[] }
+  | { status: "incomplete"; missing: AskGap[]; brief: CreateBriefInput | null }
   | { status: "ready"; brief: CreateBriefInput };
 
 function titleFrom(text: string) {
@@ -308,13 +308,42 @@ function parseAsk(raw: string): CreateBriefInput | null {
   return parsed.success ? parsed.data : null;
 }
 
+export function askFieldValues(brief: CreateBriefInput) {
+  const adaptive = brief.adaptiveData ?? {};
+  const fields: Record<string, string> = {
+    visualType: brief.visualType,
+    objective: brief.objective,
+    targetAudience: brief.targetAudience,
+    title: brief.title,
+    subtitle: brief.subtitle ?? "",
+    description: brief.description ?? "",
+    price: brief.price ?? "",
+    date: brief.date ?? "",
+    time: brief.time ?? "",
+    location: brief.location ?? "",
+    contactPhone: brief.contactPhone ?? "",
+    whatsapp: brief.whatsapp ?? "",
+    cta: brief.cta ?? "",
+    style: brief.style ?? "",
+    mood: brief.mood ?? "",
+    format: brief.format,
+    colors: (brief.colors ?? []).join(", "),
+  };
+  for (const [key, value] of Object.entries(adaptive)) {
+    if (value.trim()) fields[`adaptive_${key}`] = value;
+  }
+  const names = adaptive.noms?.trim() || coupleFrom(`${brief.title} ${brief.objective}`);
+  if (names) fields.adaptive_noms = names;
+  return fields;
+}
+
 export function readAsk(raw: string): AskReading {
   const text = raw.replace(/\s+/g, " ").trim();
   if (text.length < 2) return { status: "empty" };
   const brief = parseAsk(text);
-  if (!brief) return { status: "incomplete", missing: ["title"] };
+  if (!brief) return { status: "incomplete", missing: ["title"], brief: null };
   const missing = missingFacts(brief);
-  if (missing.length) return { status: "incomplete", missing };
+  if (missing.length) return { status: "incomplete", missing, brief };
   return { status: "ready", brief };
 }
 

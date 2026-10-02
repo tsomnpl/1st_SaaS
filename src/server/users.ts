@@ -4,7 +4,7 @@ import { requireAuth, ensureUserProfile, readClerkIdentity } from "@/lib/auth";
 import { REFERRAL_COOKIE } from "@/lib/referral-code";
 import { ensureCreditAccount, expireCredits, grantWelcomeMintIfNeeded } from "@/server/credits";
 import { redeemPendingMintGrants } from "@/server/mint-grants";
-import { claimReferral, ensureReferralCode } from "@/server/referral";
+import { claimReferral, ensureReferralCode, settleReferralReward } from "@/server/referral";
 import { ensureAccountColumns, isMissingColumn } from "@/server/schema-heal";
 
 export async function getOrCreateCurrentUser() {
@@ -24,6 +24,7 @@ export async function getOrCreateCurrentUser() {
   );
   const referralCode = await quietAccountStep(() => ensureReferralCode(user.id));
   await quietAccountStep(() => claimReferralFromCookie(user));
+  await quietAccountStep(() => settleReferralReward(user.id));
   return { ...user, referralCode: referralCode ?? "" };
 }
 

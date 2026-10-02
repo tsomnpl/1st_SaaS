@@ -3,6 +3,7 @@ import { env, getAppUrl } from "@/lib/env";
 import { sanitizeRecord } from "@/lib/sanitize";
 import { prisma } from "@/lib/prisma";
 import { grantCredits } from "@/server/credits";
+import { settleReferralReward } from "@/server/referral";
 import { notifyAdmin, sendPaymentConfirmed, sendPaymentFailed } from "@/server/mail";
 import { adminAlertsHref, notifyAdmins, notifyUser } from "@/server/notifications";
 import { LAUNCH_OFFER_CODE } from "@/lib/plans";
@@ -341,6 +342,11 @@ export async function confirmPaymentByToken(
   });
 
   if (credited) {
+    try {
+      await settleReferralReward(payment.userId);
+    } catch (error) {
+      console.error("referral-reward", error instanceof Error ? error.message : error);
+    }
     await emailPaymentOutcome(payment.userId, "confirmed", details, payment.user.email);
   }
 

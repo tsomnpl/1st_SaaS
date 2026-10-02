@@ -9,7 +9,7 @@ import {
   FORMATS,
   VISUAL_TYPES,
 } from "@/lib/domains";
-import { askGapSentence, missingFacts, readAsk, type AskGap } from "@/lib/ask-brief";
+import { askFieldValues, askGapSentence, missingFacts, readAsk, type AskGap } from "@/lib/ask-brief";
 import type { CreateBriefInput } from "@/lib/flyermint";
 import { publicErrorMessage } from "@/lib/errors";
 import { campaignMatchesDomain, campaignMatchesMarket } from "@/lib/seasonal";
@@ -105,6 +105,9 @@ export function CreateFlyerForm({
   const steps = t.form.steps;
   const [mode, setMode] = useState<"form" | "ask">("form");
   const [askText, setAskText] = useState("");
+  const [askNotice, setAskNotice] = useState("");
+  const [fieldSeed, setFieldSeed] = useState<Record<string, string> | null>(null);
+  const [fillId, setFillId] = useState(0);
   const [step, setStep] = useState(0);
   const [balanceLeft, setBalanceLeft] = useState(mintBalance);
   const formRef = useRef<HTMLFormElement>(null);
@@ -227,26 +230,26 @@ export function CreateFlyerForm({
     }
   }
 
-  async function submitAsk() {
+  function submitAsk() {
     const reading = readAsk(askText);
     if (reading.status === "empty") {
       setError(t.form.askEmpty);
       return;
     }
-    if (reading.status === "incomplete") {
-      setError(askGapSentence(reading.missing, askLabels, t.form.askHold, t.form.askAnd));
-      return;
+    const brief = reading.status === "ready" || reading.status === "incomplete" ? reading.brief : null;
+    const missing = reading.status === "incomplete" ? reading.missing : [];
+    if (brief) {
+      setDomain(brief.domain);
+      if (brief.market === "TG" || brief.market === "BJ") setMarket(brief.market);
+      setFieldSeed(askFieldValues(brief));
+    } else {
+      setFieldSeed({ objective: askText.trim() });
     }
-    const brief = reading.brief;
-    await runGeneration({
-      ...brief,
-      mainImageUrl: mainImage || undefined,
-      logoUrl: logoImage || undefined,
-      personalReferenceUrl: canUsePersonalReference && personalPoster ? personalPoster : undefined,
-      rememberBrand: Boolean(logoImage),
-      regenerateFromId: regenerateFromId || undefined,
-      seasonalDecline: true,
-    });
+    setFillId((value) => value + 1);
+    setMode("form");
+    setStep(brief ? 1 : 0);
+    setAskNotice(missing.length ? t.form.askPlaced : t.form.askFilled);
+    setError(missing.length ? askGapSentence(missing, askLabels, t.form.askHold, t.form.askAnd) : null);
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -349,8 +352,8 @@ export function CreateFlyerForm({
           confirmMint={confirmMint}
           onConfirmMint={setConfirmMint}
           loading={loading}
-          canSend={balanceLeft > 0 && confirmMint && !loading && askReading.status === "ready"}
-          onSend={() => void submitAsk()}
+          canSend={!loading && askText.trim().length > 1}
+          onSend={submitAsk}
           onAttach={async (kind, file) => {
             try {
               const image = await readImage(file);
@@ -368,6 +371,8 @@ export function CreateFlyerForm({
           }}
         />
       ) : null}
+
+      {mode === "form" && askNotice ? <p className="text-sm font-semibold text-[#1E293B]">{askNotice}</p> : null}
 
       <div className={mode === "form" ? "flex gap-2" : "hidden"}>
         {steps.map((label, index) => (
@@ -395,6 +400,8 @@ export function CreateFlyerForm({
           name="visualType"
           label={t.form.visualType}
           options={VISUAL_TYPES.map((item) => ({ value: item, label: item }))}
+          defaultValue={fieldSeed?.visualType}
+          seed={fillId}
         />
         <label className="space-y-1 text-sm">
           <span className="font-medium text-slate-700">{t.form.domain}</span>
@@ -410,44 +417,52 @@ export function CreateFlyerForm({
             ))}
           </select>
         </label>
-        <Input name="objective" label={t.form.objective} placeholder="Attirer du monde samedi" />
-        <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" />
+        <Input name="objective" label={t.form.objective} placeholder="Attirer du monde samedi" defaultValue={fieldSeed?.objective} seed={fillId} />
+        <Input name="targetAudience" label={t.form.audience} placeholder="Jeunes actifs, familles…" defaultValue={fieldSeed?.targetAudience} seed={fillId} />
       </div>
 
       <div data-step="1" className={mode === "form" && step === 1 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="title" label={t.form.title} placeholder="Formation intensive" />
-        <Input name="subtitle" label={t.form.subtitle} placeholder="Places limitées" />
-        <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" />
-        <Input name="price" label={t.form.price} placeholder="25 000 FCFA" />
-        <Input name="oldPrice" label={t.form.oldPrice} placeholder="optionnel" />
+        <Input name="title" label={t.form.title} placeholder="Formation intensive" defaultValue={fieldSeed?.title} seed={fillId} />
+        <Input name="subtitle" label={t.form.subtitle} placeholder="Places limitées" defaultValue={fieldSeed?.subtitle} seed={fillId} />
+        <Input name="description" label={t.form.body} placeholder="Ce que les gens doivent retenir" defaultValue={fieldSeed?.description} seed={fillId} />
+        <Input name="price" label={t.form.price} placeholder="25 000 FCFA" defaultValue={fieldSeed?.price} seed={fillId} />
+        <Input name="oldPrice" label={t.form.oldPrice} placeholder="optionnel" defaultValue={fieldSeed?.oldPrice} seed={fillId} />
         <div className="space-y-1">
-          <Input name="date" label={t.form.date} placeholder="30 septembre 2026" />
+          <Input name="date" label={t.form.date} placeholder="30 septembre 2026" defaultValue={fieldSeed?.date} seed={fillId} />
           <p className="text-xs text-slate-500">{t.form.dateHint}</p>
         </div>
-        <Input name="time" label={t.form.time} placeholder="19h" />
-        <Input name="location" label={t.form.place} placeholder="Abidjan" />
-        <Input name="contactPhone" label={t.form.phone} placeholder="+225…" />
-        <Input name="whatsapp" label={t.form.whatsapp} placeholder="+225…" />
-        <Input name="cta" label={t.form.cta} placeholder="Inscris-toi maintenant" />
+        <Input name="time" label={t.form.time} placeholder="19h" defaultValue={fieldSeed?.time} seed={fillId} />
+        <Input name="location" label={t.form.place} placeholder="Abidjan" defaultValue={fieldSeed?.location} seed={fillId} />
+        <Input name="contactPhone" label={t.form.phone} placeholder="+225…" defaultValue={fieldSeed?.contactPhone} seed={fillId} />
+        <Input name="whatsapp" label={t.form.whatsapp} placeholder="+225…" defaultValue={fieldSeed?.whatsapp} seed={fillId} />
+        <Input name="cta" label={t.form.cta} placeholder="Inscris-toi maintenant" defaultValue={fieldSeed?.cta} seed={fillId} />
         {adaptiveFields.map((field) => (
-          <Input key={field.key} name={`adaptive_${field.key}`} label={field.label} />
+          <Input
+            key={`${field.key}-${fillId}`}
+            name={`adaptive_${field.key}`}
+            label={field.label}
+            defaultValue={fieldSeed?.[`adaptive_${field.key}`]}
+            seed={fillId}
+          />
         ))}
       </div>
 
       <div className={mode === "form" && step === 2 ? "grid gap-4 md:grid-cols-2" : "hidden"}>
-        <Input name="style" label={t.form.style} placeholder="Premium moderne" />
-        <Input name="mood" label={t.form.mood} placeholder="Énergique, chic, chaleureux…" />
+        <Input name="style" label={t.form.style} placeholder="Premium moderne" defaultValue={fieldSeed?.style} seed={fillId} />
+        <Input name="mood" label={t.form.mood} placeholder="Énergique, chic, chaleureux…" defaultValue={fieldSeed?.mood} seed={fillId} />
         <Input
           name="colors"
           label={t.form.colors}
           placeholder="#1E293B, #6D28D9"
-          defaultValue={brandColors.join(", ")}
+          defaultValue={fieldSeed ? (fieldSeed.colors ?? "") : brandColors.join(", ")}
+          seed={fillId}
         />
         <Select
           name="format"
           label={t.form.format}
           options={FORMATS.map((item) => item)}
-          defaultValue={initialFormat || undefined}
+          defaultValue={fieldSeed?.format || initialFormat || undefined}
+          seed={fillId}
         />
         <input type="hidden" name="creativeFreedom" value="copie_exacte" />
         <p className="text-xs text-slate-500 md:col-span-2">{t.form.exact}</p>
@@ -698,17 +713,20 @@ function Input({
   placeholder,
   required,
   defaultValue,
+  seed = 0,
 }: {
   name: string;
   label: string;
   placeholder?: string;
   required?: boolean;
   defaultValue?: string;
+  seed?: number;
 }) {
   return (
     <label className="space-y-1 text-sm">
       <span className="font-medium text-slate-700">{label}</span>
       <input
+        key={`${name}-${seed}`}
         name={name}
         required={required}
         placeholder={placeholder}
@@ -724,16 +742,18 @@ function Select({
   label,
   options,
   defaultValue,
+  seed = 0,
 }: {
   name: string;
   label: string;
   options: readonly { value: string; label: string }[] | { value: string; label: string }[];
   defaultValue?: string;
+  seed?: number;
 }) {
   return (
     <label className="space-y-1 text-sm">
       <span className="font-medium text-slate-700">{label}</span>
-      <select name={name} defaultValue={defaultValue} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
+      <select key={`${name}-${seed}`} name={name} defaultValue={defaultValue} className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2">
         {options.map((option) => (
           <option key={option.value} value={option.value}>
             {option.label}

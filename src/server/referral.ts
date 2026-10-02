@@ -1,5 +1,5 @@
 import { randomBytes } from "node:crypto";
-import { CreditTransactionType, Prisma, ReferralStatus } from "@prisma/client";
+import { CreditTransactionType, PaymentStatus, Prisma, ReferralStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import {
   REFERRAL_ALPHABET,
@@ -54,7 +54,54 @@ export type ClaimResult =
   | { status: "too_old" }
   | { status: "self" }
   | { status: "already" }
+  | { status: "linked"; referralId: string }
   | { status: "rewarded"; referralId: string };
+
+async function payReferralPair(referralId: string, tx: Prisma.TransactionClient, now: Date) {
+  const claimed = await tx.referral.updateMany({
+    where: { id: referralId, status: ReferralStatus.PENDING },
+    data: { status: ReferralStatus.REWARDED, rewardedAt: now },
+  });
+  if (claimed.count !== 1) return false;
+  const referral = await tx.referral.findUniqueOrThrow({ where: { id: referralId } });
+  const reason = `Parrainage, ${referral.code}`;
+  await grantCredits(
+    referral.referrerUserId,
+    REFERRAL_BONUS_MINTS,
+    CreditTransactionType.BONUS,
+    {
+      tx,
+      reference: `referral:${referral.id}:referrer`,
+      metadata: { reason, referredUserId: referral.referredUserId },
+    },
+    null,
+  );
+  await grantCredits(
+    referral.referredUserId,
+    REFERRAL_BONUS_MINTS,
+    CreditTransactionType.BONUS,
+    {
+      tx,
+      reference: `referral:${referral.id}:guest`,
+      metadata: { reason, referrerUserId: referral.referrerUserId },
+    },
+    null,
+  );
+  return true;
+}
+
+export async function settleReferralReward(referredUserId: string, now = new Date()) {
+  return prisma.$transaction(async (tx) => {
+    const referral = await tx.referral.findUnique({ where: { referredUserId } });
+    if (!referral || referral.status !== ReferralStatus.PENDING) return false;
+    const paid = await tx.payment.findFirst({
+      where: { userId: referredUserId, status: PaymentStatus.COMPLETED, creditedAt: { not: null } },
+      select: { id: true },
+    });
+    if (!paid) return false;
+    return payReferralPair(referral.id, tx, now);
+  });
+}
 
 export async function claimReferral(input: {
   referredUserId: string;
@@ -77,7 +124,12 @@ export async function claimReferral(input: {
   }
 
   const existing = await prisma.referral.findUnique({ where: { referredUserId: input.referredUserId } });
-  if (existing) return { status: "already" };
+  if (existing) {
+    if (existing.status === ReferralStatus.PENDING && (await settleReferralReward(input.referredUserId, now))) {
+      return { status: "rewarded", referralId: existing.id };
+    }
+    return { status: "already" };
+  }
 
   try {
     const referralId = await prisma.$transaction(async (tx) => {
@@ -86,24 +138,15 @@ export async function claimReferral(input: {
           referrerUserId: referrer.id,
           referredUserId: input.referredUserId,
           code,
-          status: ReferralStatus.REWARDED,
-          rewardedAt: now,
+          status: ReferralStatus.PENDING,
         },
       });
-      await grantCredits(
-        referrer.id,
-        REFERRAL_BONUS_MINTS,
-        CreditTransactionType.BONUS,
-        {
-          tx,
-          reference: created.id,
-          metadata: { reason: `Parrainage, ${code}`, referredUserId: input.referredUserId },
-        },
-        null,
-      );
       return created.id;
     });
-    return { status: "rewarded", referralId };
+    if (await settleReferralReward(input.referredUserId, now)) {
+      return { status: "rewarded", referralId };
+    }
+    return { status: "linked", referralId };
   } catch (error) {
     if (isUnique(error)) return { status: "already" };
     throw error;
