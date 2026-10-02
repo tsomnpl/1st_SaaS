@@ -48,7 +48,8 @@ export async function CoverScene({ bar, band }: { bar: ReactNode; band: ReactNod
                 width={poster.width}
                 height={poster.height}
                 priority={poster.priority}
-                sizes={poster.priority ? "(max-width: 768px) 68vw, 280px" : "170px"}
+                unoptimized
+                sizes={poster.priority ? "(max-width: 767px) 320px, 360px" : "(max-width: 767px) 320px, 250px"}
                 className="h-auto w-full"
               />
             </div>
