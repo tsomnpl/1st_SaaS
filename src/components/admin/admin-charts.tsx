@@ -20,6 +20,13 @@ export function Sparkline({
   );
 }
 
+const CHART_HEIGHT = 144;
+
+export function barHeight(value: number, max: number) {
+  if (max <= 0 || value <= 0) return 3;
+  return Math.max(8, Math.round((value / max) * CHART_HEIGHT));
+}
+
 export function BarChart({
   points,
   color = "#6D28D9",
@@ -29,19 +36,19 @@ export function BarChart({
   color?: string;
   label: string;
 }) {
-  const max = Math.max(...points.map((point) => point.value), 1);
+  const max = Math.max(...points.map((point) => point.value), 0);
   return (
     <section className="admin-card p-4">
       <h2 className="text-sm font-semibold text-slate-600">{label}</h2>
-      <div className="mt-4 flex h-40 items-end gap-1">
+      <div className="mt-4 flex h-36 items-end gap-px border-b border-slate-200">
         {points.map((point) => (
-          <div key={point.label} className="flex min-w-0 flex-1 flex-col items-center gap-1">
+          <div key={point.label} className="flex h-full min-w-0 flex-1 items-end">
             <div
-              className="w-full rounded-t-md"
+              className="w-full rounded-t-sm"
               style={{
-                height: `${Math.max(4, (point.value / max) * 100)}%`,
+                height: barHeight(point.value, max),
                 background: color,
-                opacity: 0.85,
+                opacity: point.value > 0 ? 0.92 : 0.45,
               }}
               title={`${point.label}: ${point.value.toLocaleString("fr-FR")}`}
             />
