@@ -212,35 +212,6 @@ function coupleFrom(text: string) {
 
 export function missingFacts(brief: CreateBriefInput): AskGap[] {
   const gaps: AskGap[] = [];
-  const blob = `${brief.objective} ${brief.title} ${brief.subtitle ?? ""}`;
-  const folded = fold(blob);
-  const coupleRest = fold(brief.title)
-    .replace(/\b(mariage|wedding|affiche|de|mon|ma|notre|le|la|les|un|une)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const extra = brief.adaptiveData ?? {};
-  const names = extra.noms?.trim() || coupleFrom(blob) || (coupleRest.length >= 2 ? brief.title : "");
-  const whoRest = fold(brief.title)
-    .replace(/\b(anniversaire|joyeux|happy|birthday|affiche|de|du|la|le|mon|ma)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const posteRest = fold(`${brief.title} ${extra.poste ?? ""}`)
-    .replace(/\b(recrutement|offre|emploi|affiche|poste|d|de|du|des|un|une|le|la|pour)\b/g, " ")
-    .replace(/\s+/g, " ")
-    .trim();
-  const eventVisual = brief.visualType === "Affiche événement" || brief.visualType === "Save the date";
-  const needsDate =
-    brief.domain === "Mariage" ||
-    brief.domain === "Anniversaire" ||
-    (eventVisual && brief.domain !== "Musique") ||
-    (brief.domain === "Musique" && /\b(concert|soiree|gala|live|festival)\b/.test(folded));
-
-  const dateReserved = brief.adaptiveData?.dateSpace === "reserved";
-  if (needsDate && !brief.date?.trim() && !dateReserved) gaps.push("date");
-  if (brief.domain === "Mariage" && !names) gaps.push("names");
-  if (brief.domain === "Anniversaire" && whoRest.length < 2) gaps.push("who");
-  if ((brief.visualType === "Menu" || /\b(promo|soldes|menu|tarif)\b/.test(folded)) && !brief.price?.trim()) gaps.push("price");
-  if (brief.domain === "Emploi & Recrutement" && posteRest.length < 3) gaps.push("poste");
   if (brief.title.trim().length < 2 || /\b(?:je veux|couleurs?|th[èe]me)\b/i.test(brief.title)) gaps.push("title");
   return gaps;
 }
