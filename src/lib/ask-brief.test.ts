@@ -126,7 +126,8 @@ Lieu : Pic d’Agou
 Espace réservé pour date et partenaires si besoin
 Cible : Femmes, familles, grand public`);
 
-    expect(brief?.domain).toBe("Evenementiel");
+    expect(brief?.domain).toBe("Sante & Clinique");
+    expect(brief?.visualType).toBe("Affiche événement");
     expect(brief?.title).toBe("La Montée Contre le Cancer");
     expect(brief?.subtitle).toBe("Octobre Rose");
     expect(brief?.description?.toLowerCase()).toContain("essentiel");
