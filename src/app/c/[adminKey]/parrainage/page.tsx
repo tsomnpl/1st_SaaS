@@ -21,7 +21,8 @@ export default async function AdminReferralPage() {
               {referral.code} · {referral.status}
             </p>
             <p className="text-slate-500">
-              Parrain {referral.referrer.id} · invité {referral.referred.id} · bonus {referral.status === "REWARDED" ? "1 Mint" : "0"} ·{" "}
+              Parrain {referral.referrer.id} · invité {referral.referred.id} · bonus{" "}
+              {referral.status === "REWARDED" ? "1 Mint chacun" : "0, en attente du pack"} ·{" "}
               {referral.rewardedAt ? referral.rewardedAt.toLocaleString("fr-FR") : "pas encore"}
             </p>
           </article>

@@ -2,6 +2,7 @@
 
 import { useAuth } from "@clerk/nextjs";
 import { useState } from "react";
+import { useCopy } from "@/components/chrome/locale-provider";
 import { referralPath } from "@/lib/referral-code";
 
 type ReferralPayload = {
@@ -12,6 +13,7 @@ type ReferralPayload = {
 
 export function ReferralFloat() {
   const { isSignedIn } = useAuth();
+  const t = useCopy();
   const [open, setOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [info, setInfo] = useState<ReferralPayload | null>(null);
@@ -38,14 +40,14 @@ export function ReferralFloat() {
     <div className="relative">
       {open ? (
         <div className="card absolute bottom-full right-0 mb-3 w-[min(18rem,calc(100vw-2rem))] space-y-3 p-4 text-sm shadow-[0_12px_40px_rgba(15,23,42,0.16)]">
-          <p className="font-semibold">Invitez un ami et gagnez 1 Mint lorsqu&apos;il crée son compte.</p>
+          <p className="font-semibold">{t.referral.lead}</p>
           <p className="font-mono text-base font-bold tracking-wide">{info?.code ?? "..."}</p>
           <button type="button" className="btn-primary w-full" onClick={() => void copyLink()} disabled={!info}>
-            {copied ? "Lien copié" : "Copier le lien"}
+            {copied ? t.referral.copied : t.referral.copy}
           </button>
           {info ? (
             <p className="text-xs text-slate-500">
-              Invités : {info.invited}. Récompenses : {info.rewarded} Mint{info.rewarded > 1 ? "s" : ""}.
+              {t.referral.invited} : {info.invited}. {t.referral.paid} : {info.rewarded}.
             </p>
           ) : null}
         </div>
@@ -55,7 +57,7 @@ export function ReferralFloat() {
         onClick={() => void toggle()}
         className="rounded-xl bg-[#6D28D9] px-3 py-2 text-sm font-semibold text-white shadow-[0_4px_12px_rgba(30,41,59,0.12)] hover:bg-[#5B21B6]"
       >
-        Parrainer
+        {t.referral.button}
       </button>
     </div>
   );

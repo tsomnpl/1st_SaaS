@@ -2,6 +2,7 @@ import { CreditTransactionType } from "@prisma/client";
 import { afterAll, describe, expect, it } from "vitest";
 import { REFERRAL_CODE_PATTERN } from "@/lib/referral-code";
 import { prisma } from "@/lib/prisma";
+import { confirmPaymentByToken } from "@/server/payments";
 import { claimReferral, ensureReferralCode } from "@/server/referral";
 
 const prefix = `it_ref_${Date.now()}`;
@@ -17,11 +18,13 @@ describe.sequential("referral bonus", () => {
       await prisma.referral.deleteMany({
         where: { OR: [{ referrerUserId: { in: userIds } }, { referredUserId: { in: userIds } }] },
       });
+      await prisma.payment.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.creditTransaction.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.creditBucket.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.creditAccount.deleteMany({ where: { userId: { in: userIds } } });
       await prisma.user.deleteMany({ where: { id: { in: userIds } } });
     }
+    await prisma.webhookEvent.deleteMany({ where: { eventKey: { contains: prefix } } });
     await prisma.$disconnect();
   });
 
@@ -31,7 +34,7 @@ describe.sequential("referral bonus", () => {
     });
   }
 
-  it("gives a stable unique code and one bonus after a real signup", async () => {
+  it("gives a stable unique code and waits for a paid pack before the bonus", async () => {
     const referrer = await makeUser("referrer");
     const first = await ensureReferralCode(referrer.id);
     const second = await ensureReferralCode(referrer.id);
@@ -50,7 +53,7 @@ describe.sequential("referral bonus", () => {
       referredCreatedAt: invited.createdAt,
       code: first,
     });
-    expect(rewarded.status).toBe("rewarded");
+    expect(rewarded.status).toBe("linked");
     const again = await claimReferral({
       referredUserId: invited.id,
       referredClerkUserId: invited.clerkUserId,
@@ -58,14 +61,12 @@ describe.sequential("referral bonus", () => {
       code: first,
     });
     expect(again.status).toBe("already");
-    const bonuses = await prisma.creditTransaction.findMany({
+    const bonusesBeforePay = await prisma.creditTransaction.findMany({
       where: { userId: referrer.id, type: CreditTransactionType.BONUS },
     });
-    expect(bonuses).toHaveLength(1);
-    expect(bonuses[0]?.amount).toBe(1);
-    expect(JSON.stringify(bonuses[0]?.metadata)).toContain(`Parrainage, ${first}`);
-    const account = await prisma.creditAccount.findUnique({ where: { userId: referrer.id } });
-    expect(account?.balance).toBe(1);
+    expect(bonusesBeforePay).toHaveLength(0);
+    const accountBefore = await prisma.creditAccount.findUnique({ where: { userId: referrer.id } });
+    expect(accountBefore?.balance ?? 0).toBe(0);
 
     const parallelGuest = await makeUser("parallel");
     const raced = await Promise.all([
@@ -82,12 +83,52 @@ describe.sequential("referral bonus", () => {
         code: first,
       }),
     ]);
-    expect(raced.filter((item) => item.status === "rewarded")).toHaveLength(1);
+    expect(raced.filter((item) => item.status === "linked")).toHaveLength(1);
     expect(raced.filter((item) => item.status === "already")).toHaveLength(1);
     const afterRace = await prisma.creditTransaction.count({
       where: { userId: referrer.id, type: CreditTransactionType.BONUS },
     });
-    expect(afterRace).toBe(2);
+    expect(afterRace).toBe(0);
+  });
+
+  it("gives 1 Mint to the referrer and 1 Mint to the invited person after the pack is paid", async () => {
+    const referrer = await prisma.user.findFirstOrThrow({ where: { clerkUserId: `${prefix}_referrer` } });
+    const invited = await prisma.user.findFirstOrThrow({ where: { clerkUserId: `${prefix}_invited` } });
+    const plan = await prisma.plan.findUniqueOrThrow({ where: { code: "STARTER_2K" } });
+    const orderId = `${prefix}-order`;
+    const token = `${prefix}-token`;
+    await prisma.payment.create({
+      data: {
+        userId: invited.id,
+        planId: plan.id,
+        orderId,
+        tokenPay: token,
+        amountFcfa: plan.priceFcfa,
+        status: "PENDING",
+      },
+    });
+    const verified = async () => ({ status: "completed", orderId, amount: plan.priceFcfa });
+    const payload = { status: "payin.session.completed", orderId, amount: plan.priceFcfa };
+    await confirmPaymentByToken(token, payload, verified);
+    await confirmPaymentByToken(token, payload, verified);
+
+    const referrerBonus = await prisma.creditTransaction.findMany({
+      where: { userId: referrer.id, type: CreditTransactionType.BONUS },
+    });
+    const guestBonus = await prisma.creditTransaction.findMany({
+      where: { userId: invited.id, type: CreditTransactionType.BONUS },
+    });
+    expect(referrerBonus).toHaveLength(1);
+    expect(guestBonus).toHaveLength(1);
+    expect(referrerBonus[0]?.amount).toBe(1);
+    expect(guestBonus[0]?.amount).toBe(1);
+    expect(JSON.stringify(referrerBonus[0]?.metadata)).toContain(`Parrainage, ${referrer.referralCode}`);
+    const referrerAccount = await prisma.creditAccount.findUniqueOrThrow({ where: { userId: referrer.id } });
+    const guestAccount = await prisma.creditAccount.findUniqueOrThrow({ where: { userId: invited.id } });
+    expect(referrerAccount.balance).toBe(1);
+    expect(guestAccount.balance).toBe(plan.mintAmount + 1);
+    const row = await prisma.referral.findUniqueOrThrow({ where: { referredUserId: invited.id } });
+    expect(row.status).toBe("REWARDED");
   });
 
   it("blocks self referral, old accounts, invalid codes, and still pays several real invites", async () => {
@@ -146,8 +187,8 @@ describe.sequential("referral bonus", () => {
         now: new Date(Date.now() + index),
       });
     }));
-    expect(extra.every((item) => item.status === "rewarded")).toBe(true);
+    expect(extra.every((item) => item.status === "linked")).toBe(true);
     const balance = await prisma.creditAccount.findUnique({ where: { userId: referrer.id } });
-    expect(balance?.balance).toBeGreaterThanOrEqual(5);
+    expect(balance?.balance).toBe(1);
   });
 });

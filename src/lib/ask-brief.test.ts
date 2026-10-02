@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { exactCopySlots, isExactCopy } from "@/lib/exact-copy";
-import { askGapSentence, briefFromAsk, readAsk } from "@/lib/ask-brief";
+import { askFieldValues, askGapSentence, briefFromAsk, readAsk } from "@/lib/ask-brief";
 
 describe("brief from a direct ask", () => {
   it("turns a sentence into the exact-copy brief", () => {
@@ -66,6 +66,14 @@ describe("brief from a direct ask", () => {
     expect(reading.missing).toContain("date");
     expect(reading.missing).toContain("names");
     expect(reading.missing.join(" ")).not.toContain("je veux");
+    expect(reading.brief?.subtitle).toBe("Akatsuti");
+    expect(reading.brief?.colors).toEqual(["rouge", "noir"]);
+    const fields = askFieldValues(reading.brief!);
+    expect(fields.title.toLowerCase()).not.toMatch(/je veux|couleurs/);
+    expect(fields.colors).toBe("rouge, noir");
+    expect(fields.adaptive_theme).toBe("Akatsuti");
+    expect(fields.date).toBe("");
+    expect(fields.adaptive_noms ?? "").toBe("");
     expect(
       askGapSentence(
         reading.missing,
@@ -94,6 +102,11 @@ describe("brief from a direct ask", () => {
     expect(brief?.date?.toLowerCase()).toContain("octobre");
     expect(brief?.location?.toLowerCase()).toContain("lom");
     expect(brief?.colors).toEqual(["rouge", "noir"]);
+    const fields = askFieldValues(brief!);
+    expect(fields.adaptive_noms).toBe("Ama et Kofi");
+    expect(fields.date?.toLowerCase()).toContain("octobre");
+    expect(fields.location?.toLowerCase()).toContain("lom");
+    expect(fields.adaptive_theme).toBe("Akatsuti");
   });
 
   it("refuses a menu ask that has no price", () => {
